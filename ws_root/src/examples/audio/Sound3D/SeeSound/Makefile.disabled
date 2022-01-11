@@ -1,0 +1,16 @@
+# @(#) Makefile.disabled 96/03/21 1.4
+
+ifdef MEMDEBUG
+    CDEFINES +=		-DMEMDEBUG
+endif
+
+EXAMPLE_CLASS =		Audio/Sound3D/SeeSound
+LINK_LIBS =		music eventbroker spmath c ${GFX_LIBS} ${GFX_OS_LIBS}
+MODULES =		audio audiopatch audiopatchfile iff graphics gstate
+
+include ${CODEMGR_WS}/ws_root/variables/makeexamples
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/subtree
+include ${CODEMGR_WS}/ws_root/rules/makeexamples
+include ${CODEMGR_WS}/ws_root/rules/linkexec
+

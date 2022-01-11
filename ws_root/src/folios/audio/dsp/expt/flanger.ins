@@ -1,0 +1,107 @@
+\ $Id$
+\ Flanger - output mono samples to a delay line.
+\
+\ Copyright 1994 3DO
+\ Phil Burk & Bill Barton
+
+include? DFID_FLANGER function_ids.j
+
+anew task-flanger.ins
+
+_RED
+dspp{
+ins{
+DFID_FLANGER dspp-function-id !
+$" flanger.dsp" ins-name !
+
+ALLOC.IMEM     Input
+ALLOC.OUTFIFO  OutFIFO
+ALLOC.INFIFO   Tap0
+
+ALLOC.IMEM    Phase
+ALLOC.IMEM    OldVal
+ALLOC.IMEM    NewVal
+ALLOC.IMEM    Frequency
+ALLOC.IMEM    SampleError
+ALLOC.IMEM    SamplerOutput
+
+$ -8000 $ 7FFF -20 ALLOC.KNOB LowLimit
+$ -8000 $ 7FFF 20 ALLOC.KNOB HighLimit
+$ 8000 $ FFFF $ 8000 100 + ALLOC.KNOB HighRate
+$ 0 $ 8000 $ 8000 100 - ALLOC.KNOB LowRate
+
+$ -8000 $ 7FFF $ -4000 ALLOC.KNOB Tap0Send
+$ -8000 $ 7FFF $ 3FFF ALLOC.KNOB OriginalSend
+
+$ -8000 $ 7FFF $ 3FFF ALLOC.KNOB Tap0Mix
+$ -8000 $ 7FFF $ 3FFF ALLOC.KNOB OriginalMix
+
+ALLOC.OUTPUT   Output
+
+100 ALLOC.TICKS \ %Q NOT REALLY
+
+
+\ ************************************************************************************
+\ This version uses fixed point frequency that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ The fractional phase is a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+\
+\ Phase goes from 0->$7FFF
+\ If it goes minus, normalize the phase to 0=>$7FFF, take a sample.
+\ If it goes minus twice, take two samples.
+\ If it stays positive, just interpolate.
+
+\ Calculate phase increment
+	Phase _%A Frequency _A _+
+\ Determine whether to get 0,1,or 2 samples
+	_BMI:	@Once
+	_BCC:	@Interpolate
+	
+\ Get two samples
+	SampleError _%A _CLIP _--       \ track how many we read
+	OldVal _A Tap0 _A	_MOVE 	\ OldVal<-FIFO
+	_JUMP: @GetNewVal
+	
+_LABEL: @Once
+\ Get one sample
+	Phase _%A #$ 8000	_-		\ wrap back to positive phase
+	OldVal _A NewVal _A	_MOVE		\ OldVal<-newval
+	
+_LABEL: @GetNewVal
+	SampleError _%A _CLIP _--       \ track how many we read
+	NewVal _A Tap0 _A _MOVE		\ NewVal<-FIFO
+
+_LABEL: @Interpolate
+	Phase _A OldVal _A OldVal _A _*-		\ old*(frac-1)	= old*frac-old
+	SamplerOutput _A _= NewVal _A Phase _A ACCUME _*-  \ interpolate new value
+
+\ Mix Output
+	_NOP
+	Tap0Mix _A  ACCUME  _*
+	Output _A _= OriginalMix _A  Input _A  ACCUME _CLIP _*+
+
+\ Mix for delay line
+	SampleError _%A #$ 0001 _+
+	Tap0Send _A  SamplerOutput _A  _*
+	OutFIFO _A   _= OriginalSend _A  Input _A  ACCUME _CLIP _*+
+	
+\ update frequency if outside limits
+	SampleError _A HighLimit _A _-
+	_BLE:  @BelowHigh
+	Frequency _A HighRate _A _MOVE
+\	ARMOut0 8 + _A Frequency _A _MOVE  \ %T DEBUG
+\	ARMOut0 10 + _A SampleError _A _MOVE  \ %T DEBUG
+	_JUMP: @Done
+	
+_LABEL: @BelowHigh
+	SampleError _A LowLimit _A _-
+	_BGE:  @Done
+	Frequency _A LowRate _A _MOVE
+\	ARMOut0 8 + _A Frequency _A _MOVE  \ %T DEBUG
+\	ARMOut0 11 + _A SampleError _A _MOVE  \ %T DEBUG
+	
+_LABEL: @Done
+\	ARMOut0 9 + _A SampleError _A _MOVE  \ %T DEBUG
+}ins
+}dspp

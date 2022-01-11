@@ -1,0 +1,29 @@
+/* @(#) MPEGVideo.h 95/06/27 1.2 */
+/* file: MPEGVideo.h */
+/* MPEG Video stream definitions */
+/* 3/28/94 George Mitsuoka */
+/* The 3DO Company Copyright © 1994 */
+
+#ifndef MPEG_SYSTEM_HEADER
+#define MPEG_SYSTEM_HEADER
+
+#define START_CODE_PREFIX			0x100L
+#define PICTURE_START_CODE			0x100L
+#define SLICE_START_CODE_MIN		0x101L
+#define SLICE_START_CODE_MAX		0x1afL
+#define USER_DATA_START_CODE		0x1b2L
+#define SEQUENCE_HEADER_CODE		0x1b3L
+#define SEQUENCE_ERROR_CODE			0x1b4L
+#define EXTENSION_START_CODE		0x1b5L
+#define SEQUENCE_END_CODE			0x1b7L
+#define GROUP_START_CODE			0x1b8L
+#define SYSTEM_START_CODE_MIN		0x1b9L
+#define SYSTEM_START_CODE_MAX		0x1ffL
+
+#define DEFAULT_WIDTH				352L
+#define DEFAULT_HEIGHT				288L
+#define MACROBLOCKWIDTH				16L
+#define MACROBLOCKHEIGHT			16L
+
+#endif
+

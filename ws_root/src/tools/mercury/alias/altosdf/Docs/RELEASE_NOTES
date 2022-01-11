@@ -1,0 +1,46 @@
+********* External Release Notes *************
+
+version 1.0 a3 - 2/29/96 
+
+* Lighting information is written out to ASCII SDF file.
+
+* Unified the command line interface across all conversion tools. 
+
+* Separate materials and textures in different files.
+
+version 1.0 a2 
+
+*	Object types not supported
+	1. Camera
+	2. Light
+	3. Key frame animation data
+
+*	Texture tiling information is not exported yet. Default
+	is assumed to be "clamping"
+	
+*	.utf texture files
+	The converter does not output the utf files automatically. 
+	You need to use texture conversion  utilities to convert 
+	Alias PIX images to .utf files.
+	
+*	Textures, materials and models are shared where ever possible
+			
+*	Tiled textures needs be to powers-of-two in the direction of tiling
+
+*	Alias by default uses double-sided rendering but the converter
+	uses the direction of the normals for the polygons. You will see
+	some of the geometry inverted on M2 because of this. To avoid
+	the problem turn-off the double-sidedness in Alias and then
+	flip the geometry to make it look right.
+
+*	Procedural textures in Alias does not have a file associated with
+	them so the converter creates a dummy file reference using 
+	texture object name. You need to generate a .utf file corresponding 
+	to this procedural texture.
+	
+*	All of the models and hierarchies from the file are enclosed
+	in a top-level node named as "filename_world". If the prefix
+	is requested then it will be "prefix_world". This convention is
+	used to generate unique names for each file
+
+***********************************************

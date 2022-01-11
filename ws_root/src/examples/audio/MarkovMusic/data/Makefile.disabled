@@ -1,0 +1,8 @@
+# @(#) Makefile.disabled 96/09/06 1.4
+# Markov Music example data
+
+EXAMPLE_CLASS =		Audio/MarkovMusic
+EXAMPLE_DATA_REV =	21Jun96
+
+include ${CODEMGR_WS}/ws_root/variables/exampledata
+include ${CODEMGR_WS}/ws_root/rules/exampledata

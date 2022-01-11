@@ -1,0 +1,113 @@
+\ @(#) expmod_unsigned.ins 96/03/11 1.9
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Arithmetic -name expmod_unsigned.dsp
+\\\	Exponential modulation of an unsigned signal.
+\\\
+\\\	  Description
+\\\
+\\\	    Implements the function Input*(2.0**(Modulation)).
+\\\
+\\\	  Knobs
+\\\
+\\\	    Input - AUDIO_SIGNAL_TYPE_GENERIC_UNSIGNED
+\\\	        Unsigned scalar in the range of 0.0 to 2.0. Defaults to 1.0.
+\\\
+\\\	    Modulation - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed exponent in the range of -1.0 to 1.0. Defaults to 0.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - AUDIO_SIGNAL_TYPE_GENERIC_UNSIGNED
+\\\	        Input*(2.0**(Modulation)) clipped to the range of 0.0 to 2.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 31
+\\\
+\\\	    Code: 29 words
+\\\
+\\\	    Data: 4 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V28
+\\\
+\\\	  Caveats
+\\\
+\\\	    Multiplication can result in a value greater than 2.0 which will be clipped
+\\\	    to 2.0.
+\\\
+\\\	  See Also
+\\\
+\\\	    add.dsp(@), multiply.dsp(@)
+
+include? DFID_EXPMOD_UNSIGNED function_ids.j
+
+anew task-expmod_unsigned.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_EXPMOD_UNSIGNED dspp-function-id !
+$" expmod_unsigned.dsp" ins-name !
+
+
+ALLOC.UNSIGNED.OUTPUT Output
+$ 8000 KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 Input
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Modulation
+_IMPORT ALLOC.VARIABLE  gScratch1
+_IMPORT ALLOC.VARIABLE  gScratch2
+31 ALLOC.TICKS
+
+\ Use Taylor expansion to calculate function.
+\ factor out to keep intermediate values under 1.0 and to use MAC
+\ = 1 + w + w*w/2 + w*w*w/6 + w*w*w*w/24
+\ = 1 + w*(1 + w/2 + w*w/6 + w*w*w/24)
+\ = 1 + w*(1 + w(1/2 + w/6 + w*w/24))
+\ = 1 + w*(1 + w*(1/2 + w*(1/6 + w/24)))
+\ = 2.0(1/2 + w*(1/2 + w*(1/4 + w*(1/12 + w/48)))
+
+
+: FLOAT>FP15
+	32768.0 f* 0.5 f+ f>s
+;
+
+: FACTORIAL  ( n -- n! )
+	dup 1 >
+	IF
+		dup 1- recurse *
+	ELSE
+		drop 1
+	THEN
+;
+
+: GEN.COEFF  ( n -- coeff )
+	0.5
+	factorial s>f f/ float>fp15
+	." Coeff = " dup .hex cr
+;
+
+2.0 FLN fconstant FLN2.0  \ around 0.69
+FLN2.0 FLOAT>FP15 DRSC_AT_ALLOC ALLOC.VARIABLE.DEFAULT  ILN2.0
+
+	gScratch1 _A _=  Input _A  1 _>>' _TRL  \ unsigned divide by 2
+	gScratch2 _A _=  Modulation _A  ILN2.0 _A _*
+
+	5 gen.coeff _#   ACCUME    4 gen.coeff _#  _CLIP _*+
+	gScratch2 _A     ACCUME    3 gen.coeff _#  _CLIP _*+
+	gScratch2 _A     ACCUME    2 gen.coeff _#  _CLIP _*+
+	gScratch2 _A     ACCUME    1 gen.coeff _#  _CLIP _*+
+	gScratch2 _A     ACCUME    1 gen.coeff _#  _CLIP _*+    \ ACCUME = 2**x/2, range = 0.25 to 1.0
+
+	gScratch1 _A ACCUME _*   \ value between 0 and 1, 0.0 to 0.5 is valid
+	ACCUME ACCUME _CLIP _+
+	Output _A _= ACCUME 1 _<<' _TRA
+
+}ins
+}dspp

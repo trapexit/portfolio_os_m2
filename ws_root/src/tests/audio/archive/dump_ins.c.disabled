@@ -1,0 +1,232 @@
+/* @(#) dump_ins.c.disabled 95/09/06 1.8 */
+/* $Id: dump_ins.c,v 1.2 1994/12/14 21:14:27 peabody Exp $ */
+/************************************************************
+**
+** Dump 3DI *.dsp instrument file.
+**
+** Copyright 1994 3DO
+** Author: Phil Burk
+**
+************************************************************/
+
+#include <audio/audio.h>
+#include <audio/iff_fs_tools.h>
+#include <dspptouch/dspp_instructions.h>
+#include <file/filefunctions.h>
+#include <kernel/operror.h>
+#include <stdio.h>
+#include <stdlib.h>         /* malloc() */
+#include <string.h>
+
+#include "dspp.h"
+
+#define PRT(x) { printf x; }
+#define ERR(x) PRT(x)
+#define DBUG(x) /* PRT(x) */
+
+#define CHECKERR(msg) \
+	if (result < 0) \
+	{ \
+		PRT(msg); \
+		goto error; \
+	}
+
+#if 0
+#define	ID_3INS			MAKE_ID('3','I','N','S')
+#define	ID_DSPP			MAKE_ID('D','S','P','P')
+#define	ID_DSPS			MAKE_ID('D','S','P','S')
+#define	ID_NAME			MAKE_ID('N','A','M','E')
+#define	ID_ATSM			MAKE_ID('A','T','S','M')
+#define	ID_HOOK			MAKE_ID('H','O','O','K')
+#define	ID_DCOD			MAKE_ID('D','C','O','D')
+#define	ID_DRSC			MAKE_ID('D','R','S','C')
+#define	ID_DRLC			MAKE_ID('D','R','L','C')
+#define	ID_DINI			MAKE_ID('D','I','N','I')
+#define	ID_DKNB			MAKE_ID('D','K','N','B')
+#define	ID_DNMS			MAKE_ID('D','N','M','S')
+#define	ID_DHDR			MAKE_ID('D','H','D','R')
+#define	ID_AIFF			MAKE_ID('A','I','F','F')
+#define	ID_SSND			MAKE_ID('S','S','N','D')
+#define	ID_COMM			MAKE_ID('C','O','M','M')
+#define	ID_MARK			MAKE_ID('M','A','R','K')
+#define	ID_INST			MAKE_ID('I','N','S','T')
+#define	ID_APPL			MAKE_ID('A','P','P','L')
+#define	ID_AIFC			MAKE_ID('A','I','F','C')
+#define	ID_FVER			MAKE_ID('F','V','E','R')
+#define	ID_ATNV			MAKE_ID('A','T','N','V')
+#define	ID_ENVL			MAKE_ID('E','N','V','L')
+#define	ID_ENVH			MAKE_ID('E','N','V','H')
+#define	ID_PNTS			MAKE_ID('P','N','T','S')
+#define	ID_CRDC			MAKE_ID('C','R','D','C')
+#endif
+
+int32 DumpChunk (iff_control *iffc, uint32 ChunkType, uint32 ChunkSize);
+int32 DumpForm (iff_control *iffc, uint32 FormType, uint32 Length);
+void DumpMemory( const void *addr, int32 cnt);
+void IndentMargin( void );
+
+int32 IndentBy = 0;
+
+void IndentMargin( void );
+
+int main(int argc, char *argv[])
+{
+	int32 result = 0;
+	iff_control iffcb;
+
+	if (argc > 1)
+	{
+		PRT(("Dump DSP Instrument file: %s\n", argv[1]));
+		IndentBy = 0;
+		iffcb.iffc_ChunkHandler = DumpChunk;
+		iffcb.iffc_FormHandler = DumpForm;
+
+		result = iffParseFile( &iffcb, argv[1]);
+		PRT(("Finished parsing IFF file.\n"));
+	}
+	else
+	{
+		PRT(("No file specified!\n"));
+	}
+
+	return((int)result);
+}
+
+/******************************************************************/
+
+void IndentMargin( void )
+{
+	int32 i;
+	for(i=0; i<IndentBy; i++)
+	{
+		PRT(("    "));
+	}
+}
+
+/******************************************************************/
+
+int32 DumpForm (iff_control *iffc, uint32 FormType, uint32 Length)
+{
+	uint32 scratch[2];
+
+	scratch[0] = FormType;
+	scratch[1] = 0;
+	IndentMargin();
+	PRT(("DumpForm: type = %s,  size = %d >>>>>>>>>>>>>>>\n", scratch, Length));
+
+	IndentBy += 1;
+	iffScanChunks ( iffc, Length );
+	IndentBy -= 1;
+	IndentMargin();
+	PRT(("Form ends: <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"));
+
+	return 0;
+}
+
+#define MAX_CHUNK_SIZE (2048)
+/******************************************************************/
+int32 DumpChunk (iff_control *iffc, uint32 ChunkType, uint32 ChunkSize)
+{
+/*	uint32 formtype; */
+	int32 result, i;
+/*	iff_control nested_iffc; */
+	int32 ReadSize;
+	int32 NumStructs;
+	char *Buffer;
+
+	IndentMargin();
+	PRT(("DumpChunk: type = %.4s,  size = %d\n", &ChunkType, ChunkSize));
+
+	ReadSize = (ChunkSize < MAX_CHUNK_SIZE) ? ChunkSize : MAX_CHUNK_SIZE;
+
+	Buffer = (char *)malloc( ReadSize );
+	if( Buffer == NULL )
+	{
+		ERR(("DumpChunk could not allocate %d bytes\n", ReadSize ));
+		return -1;
+	}
+
+	result = iffReadChunkData(iffc, Buffer, ReadSize);
+	CHECKERR(("Error reading CHUNK data = %d\n", result));
+
+	switch( ChunkType )
+	{
+	case ID_MRSC:
+		{
+			const DSPPResource *drsc = (DSPPResource *) Buffer;
+			NumStructs = ReadSize / sizeof( DSPPResource );
+			PRT(("Resources\n"));
+			for( i=0; i<NumStructs; i++, drsc++ )
+			{
+			    const char *id;
+
+			    switch (drsc->drsc_Type) {
+                    case DRSC_TYPE_CODE:  id = "words"; break;
+                    case DRSC_TYPE_TICKS: id = "ticks"; break;
+			        default:              id = "";      break;
+			    }
+
+				PRT(("Type = %d, Many = %d %s\n",
+					drsc->drsc_Type, drsc->drsc_Many, id));
+			}
+		}
+		break;
+
+	case ID_DHDR:
+	    {
+	        const DSPPHeader * const dhdr = (DSPPHeader *)Buffer;
+
+	        PRT(("Function ID: %ld (0x%lx)\n", dhdr->dhdr_FunctionID, dhdr->dhdr_FunctionID));
+	    }
+	    break;
+
+	case ID_DCOD:
+	    {
+	        const DSPPCodeHeader * const dcod = (DSPPCodeHeader *)Buffer;
+
+	        dspnDisassemble (dsppGetCodeHunkImage(dcod,0), 0, dcod[0].dcod_Size, "Hunk 0");
+	    }
+	    break;
+
+	default:
+		DumpMemory((unsigned char *) Buffer, ReadSize);
+		break;
+	}
+
+	IndentMargin();
+	PRT(("%d bytes remaining.\n", iffc->iffc_length));
+
+error:
+	return result;
+}
+
+
+/*****************************************************************/
+void DumpMemory( const void *addr, int32 cnt)
+{
+	int32 ln, cn, nlines;
+	unsigned char *ptr, *cptr, c;
+
+	nlines = (cnt + 15) / 16;
+
+	ptr = (unsigned char *) addr;
+
+	for (ln=0; ln<nlines; ln++)
+	{
+		PRT(("%8x: ", ptr));
+		cptr = ptr;
+		for (cn=0; cn<16; cn++)
+		{
+			PRT(("%02x ", *cptr++));
+		}
+		PRT(("  "));
+		for (cn=0; cn<16; cn++)
+		{
+			c = *ptr++;
+			if ((c < ' ') || (c > '}')) c = '.';
+			PRT(("%c", c));
+		}
+		PRT(("\n"));
+	}
+}
+

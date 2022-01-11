@@ -1,0 +1,13 @@
+# @(#) quicklook 96/08/26 1.35
+
+fg
+^/Examples/Graphics/CLT/GSquare/gsquare
+^/Tests/Bench/m2bench
+^/Examples/Kernel/UserExceptions
+^/Tests/Audio/ta_auto
+^/Examples/Streaming/VideoPlayer/VideoPlayer
+^/Examples/Streaming/PlaySA/PlaySA mono_sqs2.stream
+^/Examples/Streaming/EZFlixPlayer/EZFlixPlayer mad.stream
+^/Examples/Graphics/Fonts/Showfont/showfont default_14
+^/Tests/File/microlook
+bg

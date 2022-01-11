@@ -1,0 +1,96 @@
+\ @(#) filter_2o2p.ins.disabled 96/05/28 1.2
+\ First Order, One Zero filter
+
+\\\	AUTODOC -disabled -class DSP -group Effects -name filter_2o2z.dsp
+\\\	First Order, One Zero filter.   FIXME
+\\\
+\\\	  Description
+\\\
+\\\
+\\\	    A thorough description of the digital filter theory needed to fully describe
+\\\	    this filter is beyond the scope of this document.
+\\\
+\\\	    Calculating coefficients is non-intuitive; the interested user is referred
+\\\	    to one of the standard texts on filter theory (e.g., Moore, "Elements of
+\\\	    Computer Music", section 2.4).
+\\\
+\\\	  Knobs
+\\\
+\\\	    A0, A1 - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Filter coefficients, -1.0 to 1.0, default = 0.5.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signal to process.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Filtered signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 11
+\\\
+\\\	    Code: 11 words
+\\\
+\\\	    Data: 4 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V29
+\\\
+\\\	  See Also
+\\\
+\\\	    svfilter.dsp(@)
+
+\ Phil Burk, Robert Marsanyi
+\ Copyright 1996 3DO
+include? DFID_FILTER_1O1Z function_ids.j
+
+anew task-filter_1o1z.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_FILTER_1o1z dspp-function-id !
+$" filter_1o1z.dsp" ins-name !   \ FIXME - new ID
+
+\ ************************************************************************************
+ALLOC.INPUT  Input
+ALLOC.OUTPUT Output
+ALLOC.VARIABLE X(1)
+ALLOC.VARIABLE X(2)
+ALLOC.VARIABLE Y(1)
+ALLOC.VARIABLE Y(2)
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Alpha
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Beta
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Gamma
+
+1 constant IF_A+A
+IF_A+A not [if]
+	_IMPORT ALLOC.VARIABLE   gScratch1
+[then]
+
+11 ALLOC.TICKS
+	Y(2)  _A  Y(1)   _A  _MOVE
+	Y(1)  _A  Output _A  _MOVE
+	Y(2)  _A  Beta   _A  _*
+	X(2)  _A  Alpha  _A  ACCUME _CLIP _*+
+	Input _A  Alpha  _A  ACCUME _CLIP _*-
+IF_A+A not  [if]
+	gScratch1  _A  _=  Y(1)  _A  Gamma  _A  ACCUME _CLIP _*+
+	_NOP
+	_NOP  \ FIXME - ACCUM+ACCUM
+	Output _A _= gScratch1 _A  ACCUME  _CLIP _+  \ 2* with clip
+[else]
+	Y(1)  _A  Gamma  _A  ACCUME _CLIP _*+
+	Output _A _= ACCUME  ACCUME  _CLIP _+  \ 2* with clip
+[then]
+	X(2)  _A  X(1)   _A  _MOVE
+	X(1)  _A  Input  _A  _MOVE
+
+}ins
+}dspp

@@ -1,0 +1,30 @@
+fg
+bigcircle -ld -p
+bigcircle -ld -p -rnotex 
+bigcircle -lenv -p 
+bigcircle -ld -p -rtrans 
+bigcircle -ld -p -rtrans -rnotex 
+bigcircle -lenv -p -rtrans 
+bigcircle -ld -p -lf
+bigcircle -ld -p -lf -rnotex
+bigcircle -lenv -p -lf 
+bigcircle -ld -p -lf -rnotex -rtrans
+bigcircle -ldst -p 
+bigcircle -lds -p -rnotex
+bigcircle -lds -lenv -p 
+bigcircle -lds -p -rnotex -rtrans
+bigcircle -ld -p -lp -rpre
+bigcircle -ld -p -lp -rnotex -rpre
+bigcircle -ld -p -lp -rtrans -rpre
+bigcircle -ld -p -lp -rtrans -rnotex -rpre
+bigcircle -ld -p -lp -lf -rpre
+bigcircle -ld -p -lp -lf -rnotex -rpre
+bigcircle -ld -p -lp -lf -rnotex -rtrans -rpre
+bigcircle -ld -p  -aa
+bigcircle -ld -p  -aaline
+bigcircle -ld -p  -aa -rnotex
+bigcircle -ld -p  -aaline -rnotex
+bigcircle -ld -p  -aa -rpre
+bigcircle -ld -p  -aaline -rpre
+bigcircle -ld -p  -aa -rnotex -rpre
+bigcircle -ld -p  -aaline -rnotex -rpre

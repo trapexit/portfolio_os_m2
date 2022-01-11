@@ -1,0 +1,61 @@
+\ @(#) delay_f1.ins 96/03/11 1.9
+\ $Id: delaymono.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ DelayMono - output mono samples to a delay line.
+\
+\ Copyright 1992 3DO
+\ Phil Burk
+\
+
+\\\	AUTODOC -class DSP -group Effects -name delay_f1.dsp
+\\\	Sends mono input to a delay line.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument writes input to an output FIFO. It is used as a building
+\\\	    block for reverberation and echo effects when used in conjunction with a
+\\\	    sample player (e.g. sampler_16_f1.dsp(@)). It can only write to special
+\\\	    Sample(@)s created using CreateDelayLine().
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Mono signal to delay.
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    OutFIFO
+\\\	        Writes monophonic, 16-bit sample data to delay line Sample(@) attached
+\\\	        to this port.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 4
+\\\
+\\\	    Code: 4 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    delay_f2.dsp(@), sampler_16_f1.dsp(@), CreateDelayLine()
+
+include? DFID_DELAY_F1 function_ids.j
+
+anew task-delaymono.ins
+
+_RED
+dspp{
+ins{
+DFID_DELAY_F1 dspp-function-id !
+$" delay_f1.dsp" ins-name !
+
+ALLOC.OUTFIFO  OutFIFO
+ALLOC.INPUT     Input
+4 ALLOC.TICKS
+
+	OutFIFO _A   Input _A  _MOVE
+}ins

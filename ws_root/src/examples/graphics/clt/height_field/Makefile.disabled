@@ -1,0 +1,15 @@
+# @(#)Makefile.disabled 95/11/29 1.6
+
+EXAMPLE_CLASS =     Graphics/CLT/height_field
+DELIVER_THESE_FILES =   hf.c hf.h opthf.c sample.h testhf.c height_field.make
+
+INCDIRS += ${SRC}/libs/frame_utils/includes
+LINK_LIBS = ${GFX_LIBS} ${GFX_OS_LIBS}
+MODULES = graphics gstate
+
+include ${CODEMGR_WS}/ws_root/variables/makeexamples
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/subtree
+include ${CODEMGR_WS}/ws_root/rules/makeexamples
+include ${CODEMGR_WS}/ws_root/rules/linkexec
+

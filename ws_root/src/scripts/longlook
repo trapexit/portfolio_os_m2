@@ -1,0 +1,26 @@
+# @(#) quicklook 95/11/28 1.23
+
+fg
+/remote/Examples/Graphics/CLT/GSquare/gsquare
+/remote/Examples/Graphics/Frame/newview/newview /remote/QuickLook/texcow.csf
+testspin texcow.csf
+cd ../Tests/Bench
+m2bench
+cd ../Audio
+ta_auto
+cd ../..
+cd Examples/Streaming/VideoPlayer
+VideoPlayer
+cd ../../..
+cd Examples/Streaming/PlaySA
+PlaySA mono_sqs2.stream
+cd ../../..
+cd Examples/Streaming/EZFlixPlayer
+EZFlixPlayer mad.stream
+cd ../../..
+cd Examples/Graphics/Fonts
+showfont default_14
+cd ../../..
+cd /remote
+/remote/tests/file/microlook -f
+bg

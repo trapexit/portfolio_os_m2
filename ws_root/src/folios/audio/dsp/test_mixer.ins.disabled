@@ -1,0 +1,92 @@
+\ @(#) test_mixer.ins.disabled 96/03/07 1.5
+\ $Id: mixer4x2.ins,v 1.9 1995/01/20 20:20:23 peabody Exp $
+\ 4x2 Mixer
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\ 930617 PLB Added clipping.
+
+decimal
+
+include? DFID_MIXER function_ids.j
+
+anew task-mixer.f
+
+_BULLDOG
+dspp-echo on
+dspp{
+ins{
+
+\ select options
+0 constant AMPLITUDE_KNOB_OPTION
+0 constant LINE_OUT_OPTION
+
+DFID_MIXER dspp-function-id !
+$" mixer.dsp" ins-name !
+
+4 constant NUM_INPUTS
+2 constant NUM_OUTPUTS
+$ 7FFF KNOB_TYPE_RAW_SIGNED   NUM_INPUTS NUM_OUTPUTS * ALLOC.KNOB.ARRAY Gain
+NUM_INPUTS ALLOC.INPUT.ARRAY Input
+
+AMPLITUDE_KNOB_OPTION
+[IF]
+	$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+[THEN]
+
+LINE_OUT_OPTION
+[IF]
+	_IMPORT 2 ALLOC.VARIABLE.ARRAY gMixer
+[ELSE]
+	NUM_OUTPUTS ALLOC.OUTPUT.ARRAY Output
+[THEN]
+
+32 ALLOC.TICKS
+
+\ left side
+	NUM_OUTPUTS 0
+	DO
+." Start output # " i . cr
+		Gain i NUM_INPUTS * PART+ _A  Input 0 PART+ _A  _*
+		NUM_INPUTS 1
+		?DO
+." MAC - input # " i . cr
+			Gain  j NUM_INPUTS * i + PART+ _A
+			Input i PART+ _A    ACCUME   _CLIP _*+
+		LOOP
+." Output stage" cr
+[
+AMPLITUDE_KNOB_OPTION
+[IF]
+	LINE_OUT_OPTION
+	[IF]
+		] Amplitude _A    ACCUME   gMixer i PART+ _%A    _CLIP _*+ [ 
+	[ELSE]
+		] Output i PART+ _A  _=  Amplitude _A  ACCUME  _* [ 
+	[THEN]
+[ELSE]
+
+	LINE_OUT_OPTION
+	[IF]
+		]  _NOP
+			ACCUME    gMixer i PART+ _%A    _CLIP _+ [
+	[ELSE]
+		] 
+		Output i PART+ _A  _=
+			Gain  0 PART+ _A
+			Input NUM_INPUTS 1- PART+ _A    ACCUME   _CLIP _*+
+		
+		Output i PART+ _A  _= Gain  0 PART+ _A
+			Input NUM_INPUTS 1- PART+ _A _*
+		[
+	[THEN]
+[THEN]
+]
+	LOOP
+
+
+}ins
+}dspp
+

@@ -1,0 +1,139 @@
+\ @(#) mixer12x2.ins 95/11/16 1.8
+\ $Id: mixer12x2.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ 12x2 Mixer
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\\\	NOAUTODOC -private -class DSP -name mixer12x2.dsp
+\\\	OBSOLETE - Twelve-channel stereo mixer.
+\\\
+\\\	  Function
+\\\
+\\\	    This is a twelve-channel stereo mixer. The total gain on a side should
+\\\	    not exceed 0x7FFF. Its output is added to the output of the other mixers
+\\\	    at the end of each frame and then sent to the DAC FIFO.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    LeftGain0, LeftGain1, ..., LeftGain11
+\\\	        Left channel gain for each channel in the range of 0..0x7FFF. Defaults to
+\\\	        0.
+\\\
+\\\	    RightGain0, RightGain1, ..., RightGain11
+\\\	        Right channel gain for each channel in the range of 0..0x7FFF. Defaults
+\\\	        to 0.
+\\\
+\\\	  Inputs -enumerated
+\\\
+\\\	    Input0, Input1, ..., Input11
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 80
+\\\
+\\\	    Code: 80 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    directout.dsp, mixer2x2.dsp, mixer4x2.dsp, mixer8x2.dsp, submixer8x2.dsp
+\\\
+
+decimal
+
+$ 106 constant MixLeft
+$ 107 constant MixRight
+include? DFID_MIXER12X2 function_ids.j
+
+anew task-mixer12x2.f
+
+_RED
+dspp{
+ins{
+
+DFID_MIXER12X2 dspp-function-id !
+$" mixer12x2.dsp" ins-name !
+
+
+
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain0
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain1
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain2
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain3
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain4
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain5
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain6
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain7
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain8
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain9
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain10
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain11
+
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain0
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain1
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain2
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain3
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain4
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain5
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain6
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain7
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain8
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain9
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain10
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain11
+
+ALLOC.IMEM Input0
+ALLOC.IMEM Input1
+ALLOC.IMEM Input2
+ALLOC.IMEM Input3
+ALLOC.IMEM Input4
+ALLOC.IMEM Input5
+ALLOC.IMEM Input6
+ALLOC.IMEM Input7
+ALLOC.IMEM Input8
+ALLOC.IMEM Input9
+ALLOC.IMEM Input10
+ALLOC.IMEM Input11
+
+80 ALLOC.TICKS
+
+\ left side
+	LeftGain0 _A   Input0 _A  _*
+	LeftGain1 _A   Input1 _A  ACCUME _CLIP _*+
+	LeftGain2 _A   Input2 _A  ACCUME _CLIP _*+
+	LeftGain3 _A   Input3 _A  ACCUME _CLIP _*+
+	LeftGain4 _A   Input4 _A  ACCUME _CLIP _*+
+	LeftGain5 _A   Input5 _A  ACCUME _CLIP _*+
+	LeftGain6 _A   Input6 _A  ACCUME _CLIP _*+
+	LeftGain7 _A   Input7 _A  ACCUME _CLIP _*+
+	LeftGain8 _A   Input8 _A  ACCUME _CLIP _*+
+	LeftGain9 _A   Input9 _A  ACCUME _CLIP _*+
+	LeftGain10 _A  Input10 _A  ACCUME _CLIP _*+
+	LeftGain11 _A  Input11 _A  ACCUME _CLIP _*+
+	_NOP
+	MixLeft _%A ACCUME _CLIP _+
+
+\ right side
+	RightGain0 _A  Input0 _A  _*
+	RightGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	RightGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	RightGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	RightGain4 _A  Input4 _A  ACCUME _CLIP _*+
+	RightGain5 _A  Input5 _A  ACCUME _CLIP _*+
+	RightGain6 _A  Input6 _A  ACCUME _CLIP _*+
+	RightGain7 _A  Input7 _A  ACCUME _CLIP _*+
+	RightGain8 _A  Input8 _A  ACCUME _CLIP _*+
+	RightGain9 _A  Input9 _A  ACCUME _CLIP _*+
+	RightGain10 _A  Input10 _A  ACCUME _CLIP _*+
+	RightGain11 _A  Input11 _A  ACCUME _CLIP _*+
+	_NOP
+	MixRight _%A ACCUME _CLIP _+
+
+}ins
+}dspp
+

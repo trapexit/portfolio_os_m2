@@ -1,0 +1,21 @@
+set exit 0; ¶
+#	Make sure the object directory always exists
+If "`Exists -d ":objects:"`" == ""
+	newfolder :objects:
+End
+If "`Exists -d ":objects:Mac:"`" == ""
+	newfolder :objects:Mac:
+End
+#	Make sure the libs directory always exists
+If "`Exists -d ":::libs:"`" == ""
+	newfolder :::libs:
+End
+If "`Exists -d ":::libs:Mac"`" == ""
+	newfolder :::libs:Mac:
+End
+
+make -f Makefile.Mac {1} {2} > makeout; ¶
+makeout; ¶
+delete makeout; ¶
+set exit 1; ¶
+exit 0

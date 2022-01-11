@@ -1,0 +1,56 @@
+\ @(#) sub_envelope.ins 96/05/06 1.3
+\ Envelope low level ramp function
+\
+\ to initialize the envelope:
+\    Set Env.incr and Env.Request
+\    set Env.current to starting value.
+\    set Env.target to != Env.request
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+include? DFID_SUB_ENVELOPE function_ids.j
+include? ENV_BASE_DATA_REG envelope_regs.j
+anew task-sub_envelope.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PRIVILEGED DHDR_F_SHARED or dspp-header-flags !
+DFID_SUB_ENVELOPE dspp-function-id !
+
+$" sub_envelope.dsp" ins-name !
+
+_EXPORT _LABEL: sub_envelope
+
+\ ------------------ Basic Envelope Module ----------------
+\ Compare Current and Requested Target
+	ENV_REG_REQUEST _reg ENV_REG_TARGET _reg _-
+	_BEQ: RunPhase
+
+\ not calculating new value may cause some jitter on the envelope
+	ENV_REG_SOURCE _reg _= ENV_REG_CURRENT _reg _TRL	\ pass through ACCUME
+	ENV_REG_PHASE _reg #$ 0000 _MOVE
+	ENV_REG_TARGET _reg ENV_REG_REQUEST _reg _MOVE
+	_JUMP: Done
+
+_LABEL: RunPhase
+\ Calculate new phase, phase ranges from 0-0.9999
+	 ENV_REG_PHASE _%reg ENV_REG_INCR _reg _CLIP _+
+
+\ sample = new*frac + old*(1-frac)  ; crossfade interpolation
+\        = new*frac - old*(frac-1)
+\        = new*frac - (old*frac-old)
+	ACCUME ENV_REG_SOURCE _reg ENV_REG_SOURCE _reg _*-
+	ENV_REG_CURRENT _reg _= ENV_REG_TARGET _reg ENV_REG_PHASE _reg ACCUME	_*-
+
+_LABEL: Done
+
+\ ---------------------------------------------------------
+	ENV_REG_Output _reg _= ACCUME ENV_REG_amplitude _reg _*
+	_RTS
+
+}ins
+}dspp

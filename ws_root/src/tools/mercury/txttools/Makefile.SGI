@@ -1,0 +1,154 @@
+#
+# @(#) Makefile.SGI 96/11/19 1.13
+#
+SHELL = /bin/sh
+
+PLATFORM = SGI
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../libs/$(PLATFORM)
+OBJDIR = ../txtlib/src/objects/$(PLATFORM)
+HGRELEASEDIR = ../release/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+
+M2TXLIB = M2TXlib.a
+IFFLIB = IFFlib.a
+LIBPPM = libppm.a
+LIBPBM = libpbm.a
+LIBPGM = libpgm.a
+LIBTIFF = libtiff.a
+PPMINCLUDES = -I/usr/local/src/pbmplus/ppm -I/usr/local/src/pbmplus/pgm -I/usr/local/src/pbmplus/pbm -I.
+
+INCLUDES = -I../txtlib/include -I../ifflib/ -I./
+
+LIBS = $(LIBDIR)/$(M2TXLIB) $(LIBDIR)/$(IFFLIB) -lm
+PPMLIBS = $(LIBDIR)/$(LIBPPM) $(LIBDIR)/$(LIBPBM) $(LIBDIR)/$(LIBPGM)
+TIFFLIB = $(LIBDIR)/$(LIBTIFF)
+
+CC = gcc
+
+CCFLAGS = -O -ansi -DTEXTOOLS_VERISION="\"3.1b1\"" $(INCLUDES)
+
+
+AUTOMAGIC_DIR = \
+	bin     \
+	$(BINDIR)	\
+	$(HGRELEASEDIR)
+
+TOOLS = \
+	$(BINDIR)/psdtoutf \
+	$(BINDIR)/quantizer \
+	$(BINDIR)/quanttopip \
+	$(BINDIR)/sgitoutf \
+	$(BINDIR)/utfaclean \
+	$(BINDIR)/utfaddlod \
+	$(BINDIR)/utfapip \
+	$(BINDIR)/utfcompress \
+	$(BINDIR)/utfinfo \
+	$(BINDIR)/utffit \
+	$(BINDIR)/utfflip \
+	$(BINDIR)/utflitdown \
+	$(BINDIR)/utfmakelod \
+	$(BINDIR)/utfmakepip \
+	$(BINDIR)/utfmakesame \
+	$(BINDIR)/utfmerge \
+	$(BINDIR)/utfmipcat \
+	$(BINDIR)/utfmodpip \
+	$(BINDIR)/utfpopfine \
+	$(BINDIR)/utfresize \
+	$(BINDIR)/utfstrip \
+	$(BINDIR)/utfuncompress \
+	$(BINDIR)/utfunmip \
+	$(BINDIR)/utfunpip \
+	$(HGRELEASEDIR)/psdtoutf \
+	$(HGRELEASEDIR)/quantizer \
+	$(HGRELEASEDIR)/quanttopip \
+	$(HGRELEASEDIR)/sgitoutf \
+	$(HGRELEASEDIR)/utfaclean \
+	$(HGRELEASEDIR)/utfaddlod \
+	$(HGRELEASEDIR)/utfapip \
+	$(HGRELEASEDIR)/utfcompress \
+	$(HGRELEASEDIR)/utfinfo \
+	$(HGRELEASEDIR)/utffit \
+	$(HGRELEASEDIR)/utfflip \
+	$(HGRELEASEDIR)/utflitdown \
+	$(HGRELEASEDIR)/utfmakelod \
+	$(HGRELEASEDIR)/utfmakepip \
+	$(HGRELEASEDIR)/utfmakesame \
+	$(HGRELEASEDIR)/utfmerge \
+	$(HGRELEASEDIR)/utfmipcat \
+	$(HGRELEASEDIR)/utfmodpip \
+	$(HGRELEASEDIR)/utfpopfine \
+	$(HGRELEASEDIR)/utfresize \
+	$(HGRELEASEDIR)/utfstrip \
+	$(HGRELEASEDIR)/utfuncompress \
+	$(HGRELEASEDIR)/utfunmip \
+	$(HGRELEASEDIR)/utfunpip
+
+all: ${AUTOMAGIC_DIR} $(TOOLS) \
+	$(BINDIR)/utfatmod $(BINDIR)/ppmtoutf \
+	$(BINDIR)/utftoppm $(BINDIR)/tifftoutf \
+	$(HGRELEASEDIR)/utfatmod $(HGRELEASEDIR)/ppmtoutf \
+	$(HGRELEASEDIR)/utftoppm $(HGRELEASEDIR)/tifftoutf
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+$(BINDIR)/%: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(HGRELEASEDIR)/%: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(BINDIR)/ppmtoutf: ppmtoutf.c
+	$(CC) -o $@ ppmtoutf.c $(CCFLAGS) $(PPMINCLUDES) ${LIBS} $(PPMLIBS)
+
+$(BINDIR)/utftoppm: utftoppm.c
+	$(CC) -o $@ utftoppm.c $(CCFLAGS) $(PPMINCLUDES) ${LIBS} $(PPMLIBS)
+
+$(BINDIR)/tifftoutf: tifftoutf.c
+	$(CC) -o $@ tifftoutf.c $(CCFLAGS) ${LIBS} $(TIFFLIB)
+
+$(HGRELEASEDIR)/ppmtoutf: ppmtoutf.c
+	$(CC) -o $@ ppmtoutf.c $(CCFLAGS) $(PPMINCLUDES) ${LIBS} $(PPMLIBS)
+
+$(HGRELEASEDIR)/utftoppm: utftoppm.c
+	$(CC) -o $@ utftoppm.c $(CCFLAGS) $(PPMINCLUDES) ${LIBS} $(PPMLIBS)
+
+$(HGRELEASEDIR)/tifftoutf: tifftoutf.c
+	$(CC) -o $@ tifftoutf.c $(CCFLAGS) ${LIBS} $(TIFFLIB)
+
+ATMODOBJS = \
+	$(OBJDIR)/futil.o \
+	$(OBJDIR)/LWToken.o \
+	$(OBJDIR)/SDFTexBlend.o
+
+$(BINDIR)/utfatmod: $(ATMODOBJS) utfatmod.c
+	$(CC) $(CCFLAGS) -o $@ utfatmod.c $(ATMODOBJS) ${LIBS}
+
+$(HGRELEASEDIR)/utfatmod: $(ATMODOBJS) utfatmod.c
+	$(CC) $(CCFLAGS) -o $@ utfatmod.c $(ATMODOBJS) ${LIBS}
+
+depends:
+	makedepend -- $(INCLUDES)
+
+clean:
+
+clobber:
+	$(RM) $(TOOLS) \
+	$(BINDIR)/utfatmod $(BINDIR)/ppmtoutf \
+	$(BINDIR)/utftoppm \
+	$(HGRELEASEDIR)/utfatmod $(HGRELEASEDIR)/ppmtoutf \
+	$(HGRELEASEDIR)/utftoppm
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+
+
+
+
+
+
+

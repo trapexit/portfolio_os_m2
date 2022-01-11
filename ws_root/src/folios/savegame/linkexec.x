@@ -1,0 +1,10 @@
+! @(#) linkexec.x 96/05/28 1.2
+!
+MODULE 27
+EXPORTS 0=LoadGameData
+EXPORTS 1=SaveGameData
+EXPORTS 2=LoadGameDataVA
+EXPORTS 3=SaveGameDataVA
+
+IMPORT_ON_DEMAND icon
+REIMPORT_ALLOWED icon

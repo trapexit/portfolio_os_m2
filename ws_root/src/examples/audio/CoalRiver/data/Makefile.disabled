@@ -1,0 +1,15 @@
+# @(#) Makefile.disabled 96/09/06 1.5
+# CoalRiver demo data
+
+EXAMPLE_CLASS =		Audio/CoalRiver
+EXAMPLE_DATA_REV =	3Apr95
+
+EXTRA_SRC =		${SRC}/examples/audio/Songs/CoalRiver/CoalRiver.pimap
+
+# !!! takes advantage of a few things that perhaps it shouldn't:
+#       . rules/exampledata includes rules/extrasrc
+#       . .pimap support in rules/datafiles
+#       . EXTRA_SRC items are appended to TARGET_NAMES by variables/datafiles
+
+include ${CODEMGR_WS}/ws_root/variables/exampledata
+include ${CODEMGR_WS}/ws_root/rules/exampledata

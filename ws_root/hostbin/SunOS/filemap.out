@@ -1,0 +1,301 @@
+"System/Audio/aiff/sinewave.aiff" 5 272
+"System/Audio/dsp/add.dsp" 1 2
+"System/Audio/dsp/adpcmduck22s.dsp" 2 3
+"System/Audio/dsp/adpcmhalfmono.dsp" 1 5
+"System/Audio/dsp/adpcmmono.dsp" 1 20
+"System/Audio/dsp/adpcmvarmono.dsp" 1 21
+"System/Audio/dsp/benchmark.dsp" 1 22
+"System/Audio/dsp/dcsqxdhalfmono.dsp" 1 23
+"System/Audio/dsp/dcsqxdhalfstereo.dsp" 1 277
+"System/Audio/dsp/dcsqxdmono.dsp" 1 278
+"System/Audio/dsp/dcsqxdstereo.dsp" 1 279
+"System/Audio/dsp/dcsqxdvarmono.dsp" 1 280
+"System/Audio/dsp/decodeadpcm.dsp" 1 281
+"System/Audio/dsp/deemphcd.dsp" 1 282
+"System/Audio/dsp/delay1tap.dsp" 1 283
+"System/Audio/dsp/delaymono.dsp" 1 284
+"System/Audio/dsp/delaystereo.dsp" 1 285
+"System/Audio/dsp/directin.dsp" 1 286
+"System/Audio/dsp/directout.dsp" 1 287
+"System/Audio/dsp/envelope.dsp" 1 288
+"System/Audio/dsp/envfollower.dsp" 1 289
+"System/Audio/dsp/ezflix225.dsp" 1 290
+"System/Audio/dsp/filterednoise.dsp" 1 291
+"System/Audio/dsp/fixedmono8.dsp" 1 292
+"System/Audio/dsp/fixedmonosample.dsp" 1 293
+"System/Audio/dsp/fixedstereo16swap.dsp" 1 294
+"System/Audio/dsp/fixedstereo8.dsp" 1 295
+"System/Audio/dsp/fixedstereosample.dsp" 1 296
+"System/Audio/dsp/halfmono8.dsp" 1 297
+"System/Audio/dsp/halfmonosample.dsp" 1 298
+"System/Audio/dsp/halfstereo8.dsp" 1 299
+"System/Audio/dsp/halfstereosample.dsp" 1 300
+"System/Audio/dsp/head.dsp" 1 301
+"System/Audio/dsp/impulse.dsp" 1 302
+"System/Audio/dsp/maximum.dsp" 1 303
+"System/Audio/dsp/minimum.dsp" 1 304
+"System/Audio/dsp/mixer12x2.dsp" 2 305
+"System/Audio/dsp/mixer2x2.dsp" 1 307
+"System/Audio/dsp/mixer4x2.dsp" 1 308
+"System/Audio/dsp/mixer8x2.dsp" 2 309
+"System/Audio/dsp/mixer8x2amp.dsp" 2 311
+"System/Audio/dsp/monitor.dsp" 1 313
+"System/Audio/dsp/multiply.dsp" 1 314
+"System/Audio/dsp/noise.dsp" 1 315
+"System/Audio/dsp/oscupdownfp.dsp" 1 316
+"System/Audio/dsp/probe.dsp" 1 317
+"System/Audio/dsp/pulse.dsp" 1 318
+"System/Audio/dsp/pulse_lfo.dsp" 1 319
+"System/Audio/dsp/pulser.dsp" 1 320
+"System/Audio/dsp/randomhold.dsp" 1 321
+"System/Audio/dsp/rednoise.dsp" 1 322
+"System/Audio/dsp/romhead.dsp" 1 323
+"System/Audio/dsp/romtail.dsp" 1 324
+"System/Audio/dsp/sampler.dsp" 1 325
+"System/Audio/dsp/sampler3d.dsp" 2 326
+"System/Audio/dsp/samplerenv.dsp" 1 328
+"System/Audio/dsp/samplermod.dsp" 1 329
+"System/Audio/dsp/sawenv.dsp" 1 330
+"System/Audio/dsp/sawenvsvfenv.dsp" 2 331
+"System/Audio/dsp/sawfilterednoise.dsp" 1 333
+"System/Audio/dsp/sawfilteredsaw.dsp" 1 334
+"System/Audio/dsp/sawtooth.dsp" 1 335
+"System/Audio/dsp/splitexec.dsp" 1 336
+"System/Audio/dsp/square.dsp" 1 337
+"System/Audio/dsp/square_lfo.dsp" 1 338
+"System/Audio/dsp/submixer2x2.dsp" 1 339
+"System/Audio/dsp/submixer4x2.dsp" 1 340
+"System/Audio/dsp/submixer8x2.dsp" 2 341
+"System/Audio/dsp/subtract.dsp" 1 343
+"System/Audio/dsp/svfilter.dsp" 1 344
+"System/Audio/dsp/tail.dsp" 1 345
+"System/Audio/dsp/tapoutput.dsp" 1 346
+"System/Audio/dsp/timesplus.dsp" 1 347
+"System/Audio/dsp/triangle.dsp" 1 348
+"System/Audio/dsp/triangle_lfo.dsp" 1 349
+"System/Audio/dsp/varmono16.dsp" 1 350
+"System/Audio/dsp/varmono8.dsp" 1 351
+"System/Audio/dsp/varmono8_s.dsp" 1 352
+"System/Audio/aiff" 1 353 1365 2730
+"System/Audio/dsp" 3 354 1366 2731
+"System/Daemons/junk" 1 357
+"System/Devices/junk" 1 358
+"System/Drivers/Languages/junk" 1 359
+"System/Drivers/Tuners/access.tuner" 8 360
+"System/Drivers/Languages" 1 368 1369 2734
+"System/Drivers/Tuners" 1 369 1370 2735
+"System/Drivers/cport1.rom" 1 370
+"System/Drivers/cport41.rom" 1 371
+"System/Drivers/cport49.rom" 1 372
+"System/Drivers/cport4D.rom" 1 373
+"System/Folios/International/CountryDatabase" 4 374
+"System/Folios/International" 1 378 1371 2736
+"System/Folios/audio.privfolio" 20 379
+"System/Folios/compression.folio" 4 399
+"System/Folios/debugger.privfolio" 3 403
+"System/Folios/graphics.privfolio" 14 406
+"System/Folios/international.privfolio" 6 420
+"System/Folios/jstring.folio" 24 426
+"System/Folios/operamath.privfolio" 4 450
+"System/Graphics/Fonts/junk" 1 454
+"System/Graphics/Fonts" 1 455 1372 2737
+"System/Kernel/junk" 1 456
+"System/Programs/Walker" 2 457
+"System/Programs/copy" 3 459
+"System/Programs/delete" 2 462
+"System/Programs/dismount" 2 464
+"System/Programs/eeprom" 2 466
+"System/Programs/format" 3 468
+"System/Programs/fscheck" 1 471
+"System/Programs/gdbug" 2 472
+"System/Programs/lmadm" 12 474
+"System/Programs/lmdump" 3 486
+"System/Programs/mount" 2 489
+"System/Programs/type" 2 491
+"System/Programs/what" 2 493
+"System/Scripts/startopera" 1 495
+"System/Tasks/eventbroker" 8 496
+"System/Tasks/shell" 4 504
+"System/Audio" 1 508 1373 2738
+"System/Daemons" 1 509 1374 2739
+"System/Devices" 1 510 1375 2740
+"System/Drivers" 1 511 1376 2741
+"System/Folios" 1 512 1377 2742
+"System/Graphics" 1 513 1378 2743
+"System/Kernel" 1 514 1379 2744
+"System/Programs" 1 515 1380 2745
+"System/Scripts" 1 516 1381 2746
+"System/Tasks" 1 517 1382 2747
+"System.m2/Audio/aiff/sinewave.aiff" 5 518
+"System.m2/Audio/dsp/add.dsp" 1 523
+"System.m2/Audio/dsp/add_accum.dsp" 1 524
+"System.m2/Audio/dsp/basic.bm" 1 525
+"System.m2/Audio/dsp/benchmark.dsp" 1 526
+"System.m2/Audio/dsp/chaos_1d.dsp" 1 527
+"System.m2/Audio/dsp/cubic_amplifier.dsp" 1 528
+"System.m2/Audio/dsp/deemphcd.dsp" 1 529
+"System.m2/Audio/dsp/delay4.dsp" 1 530
+"System.m2/Audio/dsp/delay_f1.dsp" 1 531
+"System.m2/Audio/dsp/delay_f2.dsp" 1 532
+"System.m2/Audio/dsp/depopper.dsp" 1 533
+"System.m2/Audio/dsp/envelope.dsp" 1 534
+"System.m2/Audio/dsp/envfollower.dsp" 1 535
+"System.m2/Audio/dsp/expmod_unsigned.dsp" 1 536
+"System.m2/Audio/dsp/filter_1o1z.dsp" 1 537
+"System.m2/Audio/dsp/filter_3d.dsp" 1 538
+"System.m2/Audio/dsp/impulse.dsp" 1 539
+"System.m2/Audio/dsp/input_accum.dsp" 1 540
+"System.m2/Audio/dsp/integrator.dsp" 1 541
+"System.m2/Audio/dsp/latch.dsp" 1 542
+"System.m2/Audio/dsp/line_in.dsp" 1 543
+"System.m2/Audio/dsp/line_out.dsp" 1 544
+"System.m2/Audio/dsp/maximum.dsp" 1 545
+"System.m2/Audio/dsp/minimum.dsp" 1 546
+"System.m2/Audio/dsp/multiply.dsp" 1 547
+"System.m2/Audio/dsp/multiply_accum.dsp" 1 548
+"System.m2/Audio/dsp/multiply_unsigned.dsp" 1 549
+"System.m2/Audio/dsp/nanokernel.dsp" 1 550
+"System.m2/Audio/dsp/noise.dsp" 1 551
+"System.m2/Audio/dsp/output_accum.dsp" 1 552
+"System.m2/Audio/dsp/pulse.dsp" 1 553
+"System.m2/Audio/dsp/pulse_lfo.dsp" 1 554
+"System.m2/Audio/dsp/randomhold.dsp" 1 555
+"System.m2/Audio/dsp/rednoise.dsp" 1 556
+"System.m2/Audio/dsp/rednoise_lfo.dsp" 1 557
+"System.m2/Audio/dsp/sampler_16_f1.dsp" 1 558
+"System.m2/Audio/dsp/sampler_16_f2.dsp" 1 559
+"System.m2/Audio/dsp/sampler_16_v1.dsp" 1 560
+"System.m2/Audio/dsp/sampler_16_v2.dsp" 1 561
+"System.m2/Audio/dsp/sampler_8_f1.dsp" 1 562
+"System.m2/Audio/dsp/sampler_8_f2.dsp" 1 563
+"System.m2/Audio/dsp/sampler_8_v1.dsp" 1 564
+"System.m2/Audio/dsp/sampler_8_v2.dsp" 1 565
+"System.m2/Audio/dsp/sampler_adp4_v1.dsp" 1 566
+"System.m2/Audio/dsp/sampler_adp4_v2.dsp" 1 567
+"System.m2/Audio/dsp/sampler_cbd2_f1.dsp" 1 568
+"System.m2/Audio/dsp/sampler_cbd2_f2.dsp" 1 569
+"System.m2/Audio/dsp/sampler_cbd2_v1.dsp" 1 570
+"System.m2/Audio/dsp/sampler_cbd2_v2.dsp" 1 571
+"System.m2/Audio/dsp/sampler_cbd2_v4.dsp" 1 572
+"System.m2/Audio/dsp/sampler_drift_v1.dsp" 1 573
+"System.m2/Audio/dsp/sampler_raw_f1.dsp" 1 574
+"System.m2/Audio/dsp/sampler_sqs2_f1.dsp" 1 575
+"System.m2/Audio/dsp/sampler_sqs2_v1.dsp" 1 576
+"System.m2/Audio/dsp/sawtooth.dsp" 1 577
+"System.m2/Audio/dsp/sawtooth_lfo.dsp" 1 578
+"System.m2/Audio/dsp/schmidt_trigger.dsp" 1 579
+"System.m2/Audio/dsp/slew_rate_limiter.dsp" 1 580
+"System.m2/Audio/dsp/square.dsp" 1 581
+"System.m2/Audio/dsp/square_lfo.dsp" 1 582
+"System.m2/Audio/dsp/sub_decode_adp4.dsp" 1 583
+"System.m2/Audio/dsp/sub_envelope.dsp" 1 584
+"System.m2/Audio/dsp/sub_sampler_16_v1.dsp" 1 585
+"System.m2/Audio/dsp/sub_sampler_adp4_v1.dsp" 1 586
+"System.m2/Audio/dsp/subtract.dsp" 1 587
+"System.m2/Audio/dsp/subtract_accum.dsp" 1 588
+"System.m2/Audio/dsp/subtract_from_accum.dsp" 1 589
+"System.m2/Audio/dsp/svfilter.dsp" 1 590
+"System.m2/Audio/dsp/tapoutput.dsp" 1 591
+"System.m2/Audio/dsp/times_256.dsp" 1 592
+"System.m2/Audio/dsp/timesplus.dsp" 1 593
+"System.m2/Audio/dsp/timesplus_noclip.dsp" 1 594
+"System.m2/Audio/dsp/triangle.dsp" 1 595
+"System.m2/Audio/dsp/triangle_lfo.dsp" 1 596
+"System.m2/Audio/aiff" 1 597 1383 2748
+"System.m2/Audio/dsp" 3 598 1384 2749
+"System.m2/Boot/AppBanner" 151 29
+"System.m2/Boot/AppBanner.opera" 76 601
+"System.m2/Boot/cddipir.opera" 4 677
+"System.m2/Boot/dipir.cd.unenc" 5 24
+"System.m2/Boot/encoder.image" 12 6
+"System.m2/Boot/kernel.opera" 23 681
+"System.m2/Boot/misccode" 2 180
+"System.m2/Boot/misccode.opera" 2 704
+"System.m2/Boot/oscode" 90 182
+"System.m2/Boot/oscode.opera" 57 706
+"System.m2/Boot/rtt.image" 1 1
+"System.m2/Boot/rtt2.image" 1 19
+"System.m2/Drivers/Descriptions/bdavideo.ddf" 1 763
+"System.m2/Drivers/Descriptions/cdrom.ddf" 1 764
+"System.m2/Drivers/Descriptions/controlport.ddf" 1 765
+"System.m2/Drivers/Descriptions/eventport.ddf" 1 766
+"System.m2/Drivers/Descriptions/mp.ddf" 1 767
+"System.m2/Drivers/Descriptions/mpegvideo.ddf" 1 768
+"System.m2/Drivers/Descriptions/mpsim.ddf" 1 769
+"System.m2/Drivers/Descriptions/ns16550.ddf" 1 770
+"System.m2/Drivers/Descriptions/proxy.ddf" 1 771
+"System.m2/Drivers/Descriptions/storagecard.ddf" 1 772
+"System.m2/Drivers/Descriptions/triangleengine.ddf" 1 773
+"System.m2/Drivers/Descriptions" 1 774 1387 2752
+"System.m2/Drivers/bdavideo.driver" 6 775
+"System.m2/Drivers/cdrom.driver" 14 781
+"System.m2/Drivers/controlport.driver" 3 795
+"System.m2/Drivers/eventport.driver" 2 798
+"System.m2/Drivers/mp.driver" 2 800
+"System.m2/Drivers/mpegvideo.driver" 13 802
+"System.m2/Drivers/mpsim.driver" 2 815
+"System.m2/Drivers/ns16550.driver" 4 817
+"System.m2/Drivers/proxy.driver" 3 821
+"System.m2/Drivers/storagecard.driver" 2 824
+"System.m2/Drivers/triangleengine.driver" 4 826
+"System.m2/EventBroker/driverlet_1.eb" 1 830
+"System.m2/EventBroker/driverlet_41.eb" 1 831
+"System.m2/EventBroker/driverlet_49.eb" 1 832
+"System.m2/EventBroker/driverlet_4d.eb" 1 833
+"System.m2/EventBroker/driverlet_6.eb" 1 834
+"System.m2/FileSystems/acrobat.fs" 12 835
+"System.m2/FileSystems/host.fs" 2 847
+"System.m2/International/CountryDatabase" 4 849
+"System.m2/International/da.language" 2 853
+"System.m2/International/de.language" 1 855
+"System.m2/International/es.language" 2 856
+"System.m2/International/fr.language" 1 858
+"System.m2/International/it.language" 1 859
+"System.m2/International/ja.language" 2 860
+"System.m2/International/nl.language" 1 862
+"System.m2/International/pt.language" 1 863
+"System.m2/Modules/audio" 31 864
+"System.m2/Modules/audiopatch" 7 895
+"System.m2/Modules/audiopatchfile" 5 902
+"System.m2/Modules/batt" 2 907
+"System.m2/Modules/beep" 5 909
+"System.m2/Modules/blitter" 10 914
+"System.m2/Modules/compression" 3 924
+"System.m2/Modules/date" 1 927
+"System.m2/Modules/font" 9 928
+"System.m2/Modules/frame2d" 13 937
+"System.m2/Modules/fsutils" 4 950
+"System.m2/Modules/graphics" 6 954
+"System.m2/Modules/gstate" 4 960
+"System.m2/Modules/icon" 3 964
+"System.m2/Modules/iff" 4 967
+"System.m2/Modules/international" 6 971
+"System.m2/Modules/jstring" 24 977
+"System.m2/Modules/mpegaudiodecoder" 7 1001
+"System.m2/Modules/requester" 23 1008
+"System.m2/Modules/savegame" 2 1031
+"System.m2/Modules/script" 11 1033
+"System.m2/Requester/StorMgr.utf" 139 1044
+"System.m2/Requester/StorMgr_9.font" 6 1183
+"System.m2/Requester/TextEntry.utf" 46 1189
+"System.m2/Tasks/eventbroker" 9 1235
+"System.m2/Tasks/romapplauncher" 3 1244
+"System.m2/Tasks/shell" 3 1247
+"System.m2/Audio" 1 1250 1388 2753
+"System.m2/Boot" 1 1251 1389 2754
+"System.m2/Drivers" 1 1252 1390 2755
+"System.m2/EventBroker" 1 1253 1391 2756
+"System.m2/FileSystems" 1 1254 1392 2757
+"System.m2/International" 1 1255 1393 2758
+"System.m2/Modules" 1 1256 1394 2759
+"System.m2/Requester" 1 1257 1395 2760
+"System.m2/Tasks" 1 1258 1396 2761
+"LaunchMe" 4 1259
+"LaunchMe.m2" 6 1263
+"Message.cel" 3 1269
+"System" 1 1272 1397 2762
+"System.m2" 1 1273 1398 2763
+"cow.utf" 9 1274
+"Disc label" 1 0 18
+"Disc label" 1 0 18
+"Filesystem root" 1 1283 1284 1285 1756 2341 2926 3511

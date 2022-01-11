@@ -1,0 +1,73 @@
+\ @(#) sampler_16_v2.ins 96/03/11 1.15
+
+\ variable rate monophonic sample player
+\ based on M2 FIFO/OSC hardware
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992-1995
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_16_v2.dsp
+\\\	Variable-rate stereo 16-bit sample player.
+\\\
+\\\	  Description
+\\\
+\\\	    Variable-rate stereo 16-bit sample player.
+\\\
+\\\	    This instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up.
+\\\
+\\\	  Knobs
+\\\
+\\\	    SampleRate - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        SampleRate in Hertz. Range is 0.0 to 88200.0. Default is 44100.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 2 parts
+\\\	        Stereo output.
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 47
+\\\
+\\\	    Code: 46 words
+\\\
+\\\	    Data: 9 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_cbd2_v2.dsp(@), sampler_16_v1.dsp(@)
+
+include? DFID_SAMPLER_16_V2 function_ids.j
+
+anew task-sampler.ins
+
+dspp-echo off
+_BULLDOG
+
+dspp{
+ins{
+DFID_SAMPLER_16_V2 dspp-function-id !
+$" sampler_16_v2.dsp" ins-name !
+
+ALLOC.INFIFO  InFIFO
+
+	include sampler_16_v2.j
+
+}ins
+}dspp

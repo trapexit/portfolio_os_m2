@@ -1,0 +1,10 @@
+#!/bin/sh
+# @(#) %N% 95/08/29 1.1
+
+#echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/tools/mac/streamtools"
+find $CODEMGR_WS_ROOT/ws_root/src/tools/mac/streamtools -name 's.*.h' -print | grep '/SCCS/s\.'
+
+# Default action: everything beneath here.
+#
+find `pwd` -name 's.*' -print | grep '/SCCS/s\.'
+exit 0

@@ -1,0 +1,23 @@
+# @(#) Makefile 96/05/31 1.9
+
+TARGET_NAME =		${DIRNAME}.driver
+TARGET_DIRECTORY =	${REMOTE_DIR}/System.m2/Drivers
+DDF_DIRECTORY =		${REMOTE_DIR}/System.m2/Drivers/Descriptions
+LOADERTOOL_FLAGS =	-Htype=13
+PRIVILEGED_MODULE =	1
+NO_CHDIR_MODULE =	1
+SHOW_MODULE_INFO =	1
+
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/linkexec
+
+all.here: ${DDF_DIRECTORY} ${DDF_DIRECTORY}/storagecard.ddf
+
+${DDF_DIRECTORY}/storagecard.ddf: ${OBJDIR}/storagecard.ddf
+	${hardlinkme}
+
+${DDF_DIRECTORY}:
+	${MD} $@
+
+clean.here:
+	$(RM) $(TARGET_DIRECTORY)/storagecard.ddf

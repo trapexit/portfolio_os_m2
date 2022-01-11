@@ -1,0 +1,7 @@
+# @(#) version 96/12/09 1.27
+
+# WARNING: when changing OS_VERSION, also update the equivalent number in
+#          <kernel/types.h>
+
+OS_VERSION  = 33
+OS_REVISION = 9

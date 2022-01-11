@@ -1,0 +1,60 @@
+\ @(#) delaymono.ins 95/11/16 1.8
+\ $Id: delaymono.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ DelayMono - output mono samples to a delay line.
+\
+\ Copyright 1992 3DO
+\ Phil Burk
+\
+
+\\\	NOAUTODOC -private -class DSP -name delaymono.dsp
+\\\	OBSOLETE - Write input to an output FIFO.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument writes input to an output FIFO. It is used as a building
+\\\	    block for reverberation and echo effects when used in conjunction with a
+\\\	    sample player (e.g. fixedmonosample.dsp). It can only write to special
+\\\	    samples created using CreateDelayLine().
+\\\
+\\\	  Inputs -enumerated
+\\\
+\\\	    Input
+\\\
+\\\	  Output FIFOs -enumerated
+\\\
+\\\	    OutFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 8
+\\\
+\\\	    Code: 8 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    delay1tap.dsp, delaystereo.dsp, fixedmonosample.dsp, CreateDelayLine()
+\\\
+
+include? DFID_DELAYMONO function_ids.j
+
+anew task-delaymono.ins
+
+_RED
+dspp{
+ins{
+DFID_DELAYMONO dspp-function-id !
+$" delaymono.dsp" ins-name !
+
+ALLOC.OUTFIFO  OutFIFO
+ALLOC.IMEM     Input
+8 ALLOC.TICKS
+
+	OutFIFO FIFOSTATUS+ _A #$ 0008 _AND	\ check FIFO status
+	_BNE: FIFOFULL
+	OutFIFO _A   Input _A  _MOVE
+_LABEL: FIFOFULL
+}ins

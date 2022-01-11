@@ -1,0 +1,92 @@
+\ @(#) head.ins 95/11/16 1.8
+\ $Id: head.ins,v 1.13 1995/03/01 21:52:56 phil Exp $
+\ HEAD - starting code for run time execution
+\
+\ 940506 PLB Added Amplitude knob, removed AUDLOCK setting to make room.
+\ 950116 WJB Updated comment for initial _NOP.
+
+\\\	NOAUTODOC -private -class DSP -name head.dsp
+\\\	OBSOLETE - Opera DSP head instrument.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument writes to the DACs and generates interrupts for the audio
+\\\	    timer.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    CountDown
+\\\
+\\\	    Amplitude
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 29
+\\\
+\\\	    Code: 32 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    tail.dsp
+\\\
+
+\ NOTE - this instrument actually takes 34 ticks if the timer turns over.
+\    These lost ticks are safely absorbed by the tail.dsp instrument.
+
+include? I_MixLeft dspp_map.j
+include? DFID_HEAD function_ids.j
+
+anew task-head.ins
+
+$ 0EB constant AUDSTATUS
+$ 3EE constant ARM_Interrupt
+
+
+_RED
+dspp{
+ins{
+
+DFID_HEAD dspp-function-id !
+$" head.dsp" ins-name !
+
+ALLOC.IMEM Counter
+ALLOC.IMEM IntCount
+0 $ FFFF 44100 240 / ALLOC.KNOB CountDown
+0 $ 7FFF $ 7FFF  ALLOC.KNOB Amplitude
+29 ALLOC.TICKS   \ This is a guess.
+
+	_NOP  \ head instrument is disabled by overwriting this _NOP with a _SLEEP
+          \ (940812 - used to overwrite with a _JUMP)
+
+\ NEED TO SET WCLKRLD ON EVERY FRAME!!!!!!!! 941123
+\ These changes are needed to prevent WRDCLK from resetting the DSPP
+\ when running at above the normal 25MHz clock.
+\ Trade one move for another so that timing doesn't change.
+	WCLKRLD _A #$ 4000 _MOVE
+\ DISABLE CUZ DSPPCLK IS RESET !!!!	I_Bench _A DSPPCLK _A _MOVE
+
+	I_FrameCount _%A #$ 0001 _+
+\ 940506	OutputLeft _A I_MixLeft _A _MOVE       \ Output samples to DAC
+\ 940506	OutputRight _A I_MixRight _A _MOVE
+	OutputLeft _A _= I_MixLeft _A Amplitude _A _*     \ Output samples to DAC
+	OutputRight _A _= I_MixRight _A Amplitude _A _*
+	EO_FrameCount _A I_FrameCount _A _MOVE
+	I_MixLeft _A 0 _# _MOVE                \ Clear Mixer
+	I_MixRight _A 0 _# _MOVE
+\
+\ DSPP Interrupt for Audio Clock
+	Counter _%A _--
+	_BGT:  KeepGoing
+
+	IntCount _%A #$ 0001 _+             \ Keep Internal Count
+	Counter _A   CountDown _A  _MOVE    \ Get new duration
+	ARM_Interrupt _A IntCount _A _MOVE  \ Interrupt ARM and pass count
+
+_LABEL: KeepGoing
+
+}ins
+}dspp

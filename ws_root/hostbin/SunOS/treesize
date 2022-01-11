@@ -1,0 +1,70 @@
+#!/usr/local/bin/perl
+
+@sccsid = split(" ", "@(#) treesize 96/03/26 1.2");
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+
+print("\ntreesize\n");
+print("Version 2, revision $revision\n");
+print("By Drew Shell\n");
+print("The 3DO Company - 1996\n\n");
+
+$launchdir = `pwd`;
+chop($launchdir);
+print("Current directory = $launchdir\n\n");
+
+$depth = 0;
+$numentries = 0;
+$total = &GetListSize(sort(@ARGV));
+&PrintList();
+print("\nTotal is $total bytes\n\n");
+
+
+sub GetListSize {
+
+	local($name, $parent, $index, $listsize);
+	local(@dirlist);
+
+	$listsize = 0;
+	while ($name = shift) {
+		next if $name eq '.';
+		next if $name eq '..';
+		$numentries += 1;
+		$index = $numentries;
+		if (-l $name) {
+			$entryname[$index] = join("", $name, " -> ", readlink($name));
+		} else {
+			$entryname[$index] = $name;
+		}
+		$entrydepth[$index] = $depth;
+		if (-d $name) {
+			$depth += 1;
+			$parent = `pwd`;
+			chop($parent);
+			chdir($name);
+			opendir(dirhandle, '.');
+			@dirlist = readdir(dirhandle);
+			$entrysize[$index] = &GetListSize(sort(@dirlist));
+			chdir($parent);
+			$depth -= 1;
+		} else {
+			$entrysize[$index] = (-s $name);
+		}
+		$listsize += $entrysize[$index];
+	}
+	return($listsize);
+}
+
+sub PrintList {
+
+	local($index, $width);
+	local(@dirlist);
+
+	for ($index = 1; $index <= $numentries; $index++) {
+		$width = $entrydepth[$index] * 3 + 1;
+		printf("%8d%${width}s%s\n", $entrysize[$index], " ", $entryname[$index]);
+	}
+}
+

@@ -1,0 +1,45 @@
+; @(#) bee3d.mp 96/03/21 1.4
+;
+; Bee3D sound
+;
+; Author: rnm
+
+; Declare the resources
+Instrument sampler sampler_16_v1.dsp
+Sample vox BeeLoop.aiff
+Expose InFIFO sampler InFIFO
+Attach vox InFIFO
+
+Output Output 1 Signed
+Connect sampler Output 0 . Output 0
+
+Instrument lfo1 rednoise_lfo.dsp
+Instrument lfo2 rednoise_lfo.dsp
+Instrument mod1 timesplus.dsp
+Instrument mod2 timesplus.dsp
+Instrument gain multiply.dsp
+
+Connect lfo1    Output  0       mod1    InputA          0
+Connect mod1    Output  0       sampler SampleRate      0 ; modulation destination
+Connect lfo2    Output  0       mod2    InputA          0
+Connect mod2    Output  0       gain    InputA          0 ; modulation destination
+Connect gain    Output  0       sampler Amplitude       0
+
+Knob SampleRate 1 SampRate 73204.0
+Knob Amplitude 1 Signed 0.8	; overall gain
+
+; Connect . SampleRate 0 sampler SampleRate 0
+; Connect . Amplitude 0 sampler Amplitude 0
+Connect . SampleRate 0 mod1 InputC 0
+Connect . Amplitude 0 gain InputB 0
+
+Knob FreqModRate 1 LFOFreq 17.5
+Knob FreqModDepth 1 Signed 0.14
+Knob AmpModRate 1 LFOFreq 10.61
+Knob AmpModDepth 1 Signed 0.3
+
+Connect . FreqModRate 0 lfo1 Frequency 0
+Connect . FreqModDepth 0 mod1 InputB 0
+Connect . AmpModRate 0 lfo2 Frequency 0
+Connect . AmpModDepth 0 mod2 InputB 0
+Constant mod2 InputC 0 0.12

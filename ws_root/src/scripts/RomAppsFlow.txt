@@ -1,0 +1,10 @@
+# @(#) RomAppsFlow.txt 96/06/03 1.1
+# The RomApp.txt file that goes in the system ROM.
+# This lists all the RomApps which exist in the system ROM.
+
+audio.romapp		audio	1
+video.romapp		video	1
+opera.romapp		opera	1
+photo.romapp		photo	1
+"nodisc.romapp empty"	empty	1
+unknown.romapp		unknown	1

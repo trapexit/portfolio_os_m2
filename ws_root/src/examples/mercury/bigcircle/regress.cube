@@ -1,0 +1,48 @@
+fg
+bigcircle -c 400 -2 300 -ld -p
+bigcircle -c 400 -2 300 -ld -p -rnotex 
+bigcircle -c 400 -2 300 -lenv -p 
+bigcircle -c 400 -2 300 -ld -p -rtrans 
+bigcircle -c 400 -2 300 -ld -p -rtrans -rnotex 
+bigcircle -c 400 -2 300 -lenv -p -rtrans 
+bigcircle -c 400 -2 300 -ld -p -lf
+bigcircle -c 400 -2 300 -ld -p -lf -rnotex
+bigcircle -c 400 -2 300 -lenv -p -lf 
+bigcircle -c 400 -2 300 -ld -p -lf -rnotex -rtrans
+bigcircle -c 400 -2 300 -ldst -p 
+bigcircle -c 400 -2 300 -lds -p -rnotex
+bigcircle -c 400 -2 300 -lds -lenv -p 
+bigcircle -c 400 -2 300 -lds -p -rnotex -rtrans
+bigcircle -c 400 -2 300 -ld -p -lp -rpre
+bigcircle -c 400 -2 300 -ld -p -lp -rnotex -rpre
+bigcircle -c 400 -2 300 -ld -p -lp -rtrans -rpre
+bigcircle -c 400 -2 300 -ld -p -lp -rtrans -rnotex -rpre
+bigcircle -c 400 -2 300 -ld -p -lp -lf -rpre
+bigcircle -c 400 -2 300 -ld -p -lp -lf -rnotex -rpre
+bigcircle -c 400 -2 300 -ld -p -lp -lf -rnotex -rtrans -rpre
+
+
+fg
+bigcircle -c 400 -p -c 400 -2 300 -ld
+bigcircle -c 400 -p -c 400 -2 300 -ld -rnotex 
+bigcircle -c 400 -p -c 400 -2 300 -ld -renv
+bigcircle -c 400 -p -c 400 -2 300 -ld -rtrans 
+bigcircle -c 400 -p -c 400 -2 300 -ld -rtrans -rnotex 
+bigcircle -c 400 -p -c 400 -2 300 -ld -rtrans -renv
+bigcircle -c 400 -p -c 400 -2 300 -ld -lf
+bigcircle -c 400 -p -c 400 -2 300 -ld -lf -rnotex
+bigcircle -c 400 -p -c 400 -2 300 -ld -lf -renv
+bigcircle -c 400 -p -c 400 -2 300 -ld -lf -rnotex -rtrans
+bigcircle -c 400 -p -c 400 -2 300 -ldst
+bigcircle -c 400 -p -c 400 -2 300 -lds -rnotex
+bigcircle -c 400 -p -c 400 -2 300 -lds -renv
+bigcircle -c 400 -p -c 400 -2 300 -lds -rnotex -rtrans
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -rpre
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -rnotex -rpre
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -rtrans -rpre
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -rtrans -rnotex -rpre
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -lf -rpre
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -lf -rnotex -rpre
+bigcircle -c 400 -p -c 400 -2 300 -ld -lp -lf -rnotex -rtrans -rpre
+
+

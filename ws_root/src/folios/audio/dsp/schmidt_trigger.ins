@@ -1,0 +1,112 @@
+\ @(#) schmidt_trigger.ins 96/05/09 1.22
+\ $Id: schmidt_trigger.ins,v 1.12 1995/01/20 20:20:23 peabody Exp $
+
+\\\	AUTODOC -class DSP -group Arithmetic -name schmidt_trigger.dsp
+\\\	Comparator with hysteresis and trigger.
+\\\
+\\\	  Description
+\\\
+\\\	    Comparator with hysteresis. Outputs boolean value: TRUE when Input rises
+\\\	    above SetLevel, FALSE when Input equals or falls below ResetLevel. When
+\\\	    input value goes below ResetLevel and then back above SetLevel, it will
+\\\	    trigger a CPU interrupt if ArmTrigger() has been called.
+\\\
+\\\	  Knobs
+\\\
+\\\	    SetLevel - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Set Output to TRUE when Input rises ABOVE SetLevel. -1.0 to 1.0,
+\\\	        defaults to 0.
+\\\
+\\\	    ResetLevel - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Set Output to FALSE when Input EQUALS or goes BELOW ResetLevel.
+\\\	        -1.0 to 1.0, defaults to 0.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signal to compare against set and reset levels.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output (Boolean)
+\\\	        TRUE (>0) or FALSE (0). Output is reset to FALSE whenever the instrument
+\\\	        is started.
+\\\
+\\\	  Triggers
+\\\
+\\\	    Trigger
+\\\	        Sent when instrument's Output goes from FALSE to TRUE.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 19
+\\\
+\\\	    Code: 20 words
+\\\
+\\\	    Data: 3 words
+\\\
+\\\	    Triggers: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  Caveats
+\\\
+\\\	    Starting this instrument with Input > SetLevel causes the Output to go
+\\\	    TRUE as soon as the instrument runs. Because the Output is first reset to
+\\\	    FALSE when started, this FALSE->TRUE transisition causes the trigger
+\\\	    to be sent (just as any other FALSE->TRUE transition of the Output)
+\\\	    as soon as the instrument runs. This happens regardless of whether Input
+\\\	    ever went <= ResetLevel.
+\\\
+\\\	  See Also
+\\\
+\\\	    ArmTrigger(), DisarmTrigger()
+
+\ 960131 Reset output when restarted. CR5700
+
+include? DFID_schmidt_trigger function_ids.j
+
+anew task-schmidt_trigger.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_schmidt_trigger dspp-function-id !
+$" schmidt_trigger.dsp" ins-name !
+
+\ !!! move to .j file
+$ 7FF0 constant DSPP_TRUE
+$ 0000 constant DSPP_FALSE
+
+dspp-echo off
+ALLOC.TRIGGER      Trigger
+ALLOC.INPUT         Input
+DRSC_TYPE_HW_INT_CPU CONNECT.HARDWARE  InterruptCPU
+0 DRSC_AT_START  ALLOC.OUTPUT.DEFAULT  Output
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 SetLevel
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 ResetLevel
+19 ALLOC.TICKS
+
+	Output _A _TRA               \ what state are we in now?
+	_BLE:  @StateReset           \ if positive, process set state
+
+\ SET state -------------------------------------------
+	Input _A ResetLevel _A _-    \ have we gone <= ResetLevel?
+	_BGT:  @Done                 \ if not, do nothing
+	OutPut _A DSPP_FALSE _# _MOVE \ change state to FALSE
+	_JUMP: @Done
+
+\ RESET state -------------------------------------------
+_LABEL: @StateReset
+	Input _A SetLevel _A _-       \ have we gone > SetLevel?
+	_BLE:  @Done                  \ if not, do nothing
+	OutPut _A DSPP_TRUE _# _MOVE  \ change state to TRUE
+	InterruptCPU _A  Trigger _# _MOVE \ trigger CPU interrupt
+
+_LABEL: @Done
+
+}ins
+}dspp

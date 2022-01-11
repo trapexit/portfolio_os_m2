@@ -1,0 +1,92 @@
+\ @(#) sampler_drift_v1.ins 96/03/11 1.11
+
+\ variable rate monophonic sample player, with precise phase output
+\ based on M2 FIFO/OSC hardware
+\
+\ By: Phil Burk
+\ Mods: Robert Marsanyi
+\ Copyright 3DO 1992-1996
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_drift_v1.dsp
+\\\	Variable-rate mono 16-bit sample player with drift output (suitable for
+\\\	flanging).
+\\\
+\\\	  Description
+\\\
+\\\	    Variable-rate mono 16-bit sample player with drift tracking. This instrument
+\\\	    is normally used to implement variable-rate delays used for flange, chorus,
+\\\	    and spatialization effects.
+\\\
+\\\	    The Drift output can be fed back to the SampleRate knob as negative feedback
+\\\	    which forces the delay to a given offset.
+\\\
+\\\	    SampleRate = 44100.0 - FeedbackScalar*(Drift - DesiredOffset)
+\\\
+\\\	    This instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up.
+\\\
+\\\	  Knobs
+\\\
+\\\	    SampleRate - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        SampleRate in Hertz. Range is 0.0 to 88200.0. Default is 44100.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	    Drift
+\\\	        When interpreted as AUDIO_SIGNAL_TYPE_WHOLE_NUMBER, this is the number
+\\\	        of samples consumed minus the number of frames. If played at a
+\\\	        SampleRate of 44100.0, the drift should stay 0. Drift is reset to 0
+\\\	        whenever the instrument is restarted. Signed value in the range of
+\\\	        -32768.0 to 32767.0 when interpreted as AUDIO_SIGNAL_TYPE_WHOLE_NUMBER.
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 28
+\\\
+\\\	    Code: 9 words per instrument + 15 words shared overhead
+\\\
+\\\	    Data: 5 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_v1.dsp(@), delay_f1.dsp(@), timesplus_noclip.dsp(@)
+
+include? DFID_SAMPLER_DRIFT_V1 function_ids.j
+
+anew task-sampler_drift_v1.ins
+
+dspp-echo off
+_BULLDOG
+
+dspp{
+ins{
+DFID_SAMPLER_DRIFT_V1 dspp-function-id !
+$" sampler_drift_v1.dsp" ins-name !
+
+0 DRSC_AT_START  ALLOC.OUTPUT.DEFAULT  Drift   \ reset when restarted
+ALLOC.INFIFO  InFIFO
+28 ALLOC.TICKS
+
+	include sampler_16_v1.j
+	SM16_BASE_FIFO_REG FIFO_FREQ  + _reg  _--   \ #samples - 1
+	Drift _%A ACCUME _+                     \ add to excursion
+
+}ins
+}dspp

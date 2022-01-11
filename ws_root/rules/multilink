@@ -1,0 +1,100 @@
+# @(#) multilink 96/07/16 1.57
+
+default.multilink: default.generic
+
+ifndef	LINK_LIBS
+LINK_LIBS =		c
+endif
+
+ifndef  NO_STD_MODULES
+ifndef	STD_MODULES
+STD_MODULES =		filesystem kernel
+endif
+endif
+
+MODULES += ${STD_MODULES}
+
+THDOFLAGS := 0
+ifdef NO_CHDIR_MODULE
+THDOFLAGS := ${THDOFLAGS} + 1
+endif
+
+ifdef PRIVILEGED_MODULE
+THDOFLAGS := ${THDOFLAGS} + 2
+SIGNED_MODULE = 1
+endif
+
+ifdef NOSIG_PRIVED_MODULE
+THDOFLAGS := ${THDOFLAGS} + 2
+endif
+
+ifdef SIGNED_MODULE
+THDOFLAGS := ${THDOFLAGS} + 64
+endif
+
+ifdef MODULE_CALLBACKS
+THDOFLAGS := ${THDOFLAGS} + 32
+endif
+
+ifdef SHOW_MODULE_INFO
+THDOFLAGS := ${THDOFLAGS} + 8
+endif
+
+PRIVFLAGS := -Hflags=`${EXPR} ${THDOFLAGS}`
+
+
+ifndef TARGET_DIRECTORY
+BUILD_INTO =		${OBJDIR}
+else
+BUILD_INTO =		${TARGET_DIRECTORY}
+FTP_TRANSFER =		${TARGET_NAMES:%=${BUILD_INTO}/%}
+endif
+
+REFERENCE_LINK_LIB_DIR := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${LINK_LIB_DIR})
+TEMP_LINK_LIBS := ${LINK_LIBS:%=lib%.a}
+ALL_LINK_LIBS  := $(foreach lib, ${TEMP_LINK_LIBS}, $(firstword $(wildcard ${LINK_LIB_DIR}/${lib}) ${REFERENCE_LINK_LIB_DIR}/${lib}))
+
+REFERENCE_MODULE_DIR := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${MODULE_DIR})
+REFERENCE_VECTOR_DIR := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${VECTOR_DIR})
+REFERENCE_BOOT_DIR   := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${BOOT_DIR})
+
+ALL_MODULES  := $(foreach lib, ${MODULES}, $(firstword	$(wildcard ${VECTOR_DIR}/${lib})\
+							$(wildcard ${REFERENCE_VECTOR_DIR}/${lib})))
+
+${BUILD_INTO}/%: ${OBJDIR}/%.co ${WHATCSRC} ${ALL_LINK_LIBS} ${LD}  ${ALL_MODULES}
+	${BUILD_WHATMOBJ}
+	${LD} ${LFLAGS} ${LDFLAGS} -o$@ $(foreach lf,$(wildcard $*.x),-x$(lf))\
+		${LOADERTOOL_STDFLAGS} \
+		${LOADERTOOL_FLAGS} \
+		${PRIVFLAGS} \
+		$< ${WHATMOBJ} \
+	        ${ALL_MODULES} \
+		${ALL_LINK_LIBS:%=-l%}
+	@${CAT} ${SRC}/docs/copyright.txt >>$@
+ifdef SIGNED_MODULE
+	${RSASIGN} $@
+endif
+
+FILTERED_TARGETS =	${filter-out ${DO_NOT_BUILD},${TARGET_NAMES}}
+
+TARGETS =		${FILTERED_TARGETS:%=${BUILD_INTO}/%}
+
+all.post: ${TARGETS}
+
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+
+ifndef IGNORE_AUTODEPENDS
+dotMLdepends=	${wildcard ${OBJDIR}/.MLdepends}
+ifneq (0, ${words ${dotMLdepends}})
+include ${dotMLdepends}
+endif
+endif
+
+clean: clean.multilink
+clean.multilink:
+	${RM} ${TARGETS} ${dotMLdepends}
+
+unlink: unlink.multilink
+unlink.multilink:
+	-@${RM} ${TARGETS}

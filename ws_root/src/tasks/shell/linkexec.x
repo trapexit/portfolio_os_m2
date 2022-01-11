@@ -1,0 +1,7 @@
+! @(#) linkexec.x 96/09/10 1.3
+
+IMPORT_ON_DEMAND script
+IMPORT_ON_DEMAND batt
+IMPORT_ON_DEMAND date
+
+REIMPORT_ALLOWED script

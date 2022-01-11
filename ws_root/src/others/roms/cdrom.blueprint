@@ -1,0 +1,77 @@
+// @(#) cdrom.blueprint 96/09/30 1.10
+//
+// Blueprint file for CD-ROM image.
+
+#include	"generic.defines"
+
+TAKEME {
+	LaunchMe.m2 -> RELEASE_DIR/remote/Examples/Graphics/CLT/GSquare/gsquare
+	cow.utf -> RELEASE_DIR/remote/Examples/Graphics/CLT/GSquare/cow.utf
+	System.m2 {
+		Audio -> RELEASE_DIR/remote/System.m2/Audio
+		Drivers {
+			Descriptions {
+				bdavideo.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/bdavideo.ddf
+				cdrom.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/cdrom.ddf
+				controlport.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/controlport.ddf
+				eventport.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/eventport.ddf
+				mp.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/mp.ddf
+				mpegvideo.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/mpegvideo.ddf
+				mpsim.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/mpsim.ddf
+				ns16550.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/ns16550.ddf
+				proxy.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/proxy.ddf
+				storagecard.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/storagecard.ddf
+				triangleengine.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/triangleengine.ddf
+
+#ifdef BUILD_DEBUGGER
+				host.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/host.ddf
+				null.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/null.ddf
+				ram.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/ram.ddf
+				ramdisk.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/ramdisk.ddf
+				stackedhost.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/stackedhost.ddf
+#endif
+			}
+			bdavideo.driver -> RELEASE_DIR/remote/System.m2/Drivers/bdavideo.driver
+			cdrom.driver -> RELEASE_DIR/remote/System.m2/Drivers/cdrom.driver
+			controlport.driver -> RELEASE_DIR/remote/System.m2/Drivers/controlport.driver
+			eventport.driver -> RELEASE_DIR/remote/System.m2/Drivers/eventport.driver
+			mp.driver -> RELEASE_DIR/remote/System.m2/Drivers/mp.driver
+			mpegvideo.driver -> RELEASE_DIR/remote/System.m2/Drivers/mpegvideo.driver
+			mpsim.driver -> RELEASE_DIR/remote/System.m2/Drivers/mpsim.driver
+			ns16550.driver -> RELEASE_DIR/remote/System.m2/Drivers/ns16550.driver
+			proxy.driver -> RELEASE_DIR/remote/System.m2/Drivers/proxy.driver
+			storagecard.driver -> RELEASE_DIR/remote/System.m2/Drivers/storagecard.driver
+			triangleengine.driver -> RELEASE_DIR/remote/System.m2/Drivers/triangleengine.driver
+
+#ifdef BUILD_DEBUGGER
+			host.driver -> RELEASE_DIR/remote/System.m2/Drivers/host.driver
+			null.driver -> RELEASE_DIR/remote/System.m2/Drivers/null.driver
+			ram.driver -> RELEASE_DIR/remote/System.m2/Drivers/ram.driver
+			ramdisk.driver -> RELEASE_DIR/remote/System.m2/Drivers/ramdisk.driver
+			stackedhost.driver -> RELEASE_DIR/remote/System.m2/Drivers/stackedhost.driver
+#endif
+		}
+#ifdef BUILD_STRINGS
+		Errors -> RELEASE_DIR/remote/System.m2/Errors
+#endif
+		EventBroker -> RELEASE_DIR/remote/System.m2/EventBroker
+		FileSystems -> RELEASE_DIR/remote/System.m2/FileSystems
+		International -> RELEASE_DIR/remote/System.m2/International
+		Modules -> RELEASE_DIR/remote/System.m2/Modules
+		Requester -> RELEASE_DIR/remote/System.m2/Requester
+		Boot {
+			dipir.cd.unenc -> DIPIRDIR/dipir.cd.unenc
+			AppBanner  STUFF/AppBanner.m2
+			misccode  STUFF/m2misccode
+			oscode.opera -> STUFF/oscode.opera
+			kernel.opera -> STUFF/kernel.opera
+			misccode.opera -> STUFF/misccode.opera
+			cddipir.opera -> STUFF/cddipir.opera
+			AppBanner.opera -> STUFF/AppBanner.opera
+		}
+		Tasks -> RELEASE_DIR/remote/System.m2/Tasks
+	}
+	System -> STUFF/System.opera
+	LaunchMe -> STUFF/launchme.opera.96.05.30
+	Message.cel -> STUFF/Message.cel.96.05.30
+}

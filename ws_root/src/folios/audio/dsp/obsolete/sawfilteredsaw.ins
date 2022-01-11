@@ -1,0 +1,109 @@
+\ @(#) sawfilteredsaw.ins 95/11/16 1.8
+\ $Id: sawfilteredsaw.ins,v 1.9 1995/01/20 20:20:23 peabody Exp $
+\ Sawtooth through Modulated State Variable Filter
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	NOAUTODOC -private -class DSP -name sawfilteredsaw.dsp
+\\\	OBSOLETE - Filtered sawtooth with sawtooth modulation.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument passes a sawtooth wave through the state variable filter.
+\\\	    The filter cutoff frequency is modulated with another sawtooth instrument.
+\\\	    Try setting the Resonance to 0-10, SawAmpl = 0-40.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - 0  =>  $7FFF, final amplitude of voice
+\\\
+\\\	    Frequency - 0 => $2000, default $100. Non-linear cutoff
+\\\	    frequency of filter.
+\\\
+\\\	    Resonance - 1 / Q, 0 => $6000, default $1000 = filter will ring
+\\\	    at low values.
+\\\
+\\\	    LFORate - 0  =>  $0100, default $0020, rate of sawtooth
+\\\	    modulating filter
+\\\
+\\\	    LFODepth - 0  =>  $2000, default $0100, Amplitude of sawtooth
+\\\	    modulating filter. Actual cutoff is = Frequency +
+\\\	    SawtoothOutput*LFODepth.
+\\\
+\\\	    Sawtooth - 0 => $0400, default = $0100 = frequency of primary
+\\\	    sawtooth.
+\\\
+\\\	    SawAmplitude  - 0 => $7FFF, default = $7FFF = amplitude of
+\\\	    primary sawtooth.
+\\\
+\\\	  Inputs
+\\\
+\\\	    None
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resource
+\\\
+\\\	    Ticks = 35
+\\\
+\\\	    N memory = 35 words
+\\\
+
+include? DFID_SAWFILTEREDSAW function_ids.j
+
+anew task-sawfilteredsaw.ins
+
+_RED
+dspp{
+ins{
+
+DFID_SAWFILTEREDSAW dspp-function-id !
+$" sawfilteredsaw.dsp" ins-name !
+
+\ ************************************************************************************
+
+ALLOC.IMEM  LowPass
+ALLOC.IMEM  BandPass
+ALLOC.IMEM  HighPass
+ALLOC.IMEM  CalcFreq
+ALLOC.IMEM  CalcSignal
+ALLOC.IMEM  LFOPhase
+ALLOC.IMEM  SawPhase
+ALLOC.OUTPUT Output
+0 $ 4000 $ 2000 ALLOC.KNOB Frequency
+CALC_DIVIDE_SR 0 0 Frequency set.knob.calc
+0 $ 6000 $ 1000 ALLOC.KNOB Resonance
+0 $ 0100 $ 0020 ALLOC.KNOB LFORate
+0 $ 2000 $ 0100 ALLOC.KNOB LFODepth
+0 $ 0400 $ 0100 ALLOC.KNOB SawFreq
+0 $ 7FFF $ 3000 ALLOC.KNOB SawAmpl
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+35 ALLOC.TICKS
+
+	LFOPhase _%A LFORate _A _+
+	CalcFreq _A _= ACCUME LFODepth _A  Frequency _A _*+
+	SawPhase _%A SawFreq _A _+
+	CalcSignal _A _= ACCUME SawAmpl _A  _*
+	_NOP
+	CalcFreq _A BandPass _A LowPass _%A _CLIP _*+   \ LowPass=SVFFreq*BandPass+LowPass
+	Resonance _A BandPass _A ACCUME _CLIP _*+		\ SVFQ*BandPass+A
+	_NOP
+	HighPass _A _= CalcSignal _A ACCUME _CLIP _-	\ HighPass=Noise-A
+	CalcFreq _A ACCUME BandPass _%A _CLIP _*+	    \ BandPass=SVFFreq*A+BandPass
+	Output _A _= LowPass _A Amplitude _A _*
+	_NOP
+}ins
+}dspp

@@ -1,0 +1,72 @@
+\ @(#) multiply_unsigned.ins 96/03/11 1.9
+\ A*B
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Arithmetic -name multiply_unsigned.dsp
+\\\	Multiplies two unsigned signals.
+\\\
+\\\	  Description
+\\\
+\\\	    This is a 1-quadrant multiplier.
+\\\
+\\\	  Knobs
+\\\
+\\\	    InputA, InputB - AUDIO_SIGNAL_TYPE_GENERIC_UNSIGNED
+\\\	        Unsigned inputs in the range of 0.0 to 2.0. Defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - AUDIO_SIGNAL_TYPE_GENERIC_UNSIGNED
+\\\	        Unsigned result of InputA * InputB in the range of 0.0 to 2.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 13
+\\\
+\\\	    Code: 12 words
+\\\
+\\\	    Data: 3 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V28
+\\\
+\\\	  Caveats
+\\\
+\\\	    Multiplication can result in a value greater than 2.0 which will be clipped
+\\\	    to 2.0.
+\\\
+\\\	  See Also
+\\\
+\\\	    multiply.dsp(@), timesplus.dsp(@)
+
+\ 960104 PLB fixed ticks, CR5550
+include? DFID_MULTIPLY_UNSIGNED function_ids.j
+
+anew task-multiply_unsigned.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_MULTIPLY_UNSIGNED dspp-function-id !
+$" multiply_unsigned.dsp" ins-name !
+
+ALLOC.UNSIGNED.OUTPUT Output
+$ 8000 KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 InputA
+$ 8000 KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 InputB
+_IMPORT ALLOC.VARIABLE  gScratch1
+13 ALLOC.TICKS
+
+	gScratch1 _A _=  InputA _A  1 _>>' _TRL  \ unsigned divide by 2
+	InputB _A  1 _>>' _TRL   \ unsigned divide by 2
+	gScratch1 _A ACCUME _*   \ value between 0 and 1, 0.0 to 0.5 is valid
+	ACCUME ACCUME _CLIP _+            \ double with clipping to 1.0
+	Output _A _= ACCUME 1 _<<' _TRA   \ double to 2.0 without clipping
+
+}ins
+}dspp

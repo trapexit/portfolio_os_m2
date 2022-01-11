@@ -1,0 +1,44 @@
+#
+#
+#
+SHELL = /bin/sh
+
+CP = cp
+RM = /bin/rm -f
+AR = ar cur
+IFFLIB = IFFlib.a
+INCLUDES = -I. 
+CC = cc
+CFLAGS = -g -DIFF_NO_64_BIT -D_M2TXMAC68K -O -ansi $(INCLUDES)
+OBJDIR = objects/Sun/
+
+LIBSRCS = \
+        iff.c \
+        unix.c
+
+LIBOBJS = \
+        iff.o \
+        unix.o
+     
+
+all: $(IFFLIB)
+
+
+depend:
+	makedepend -- $(INCLUDES) -- $(LIBSRCS)
+
+
+$(IFFLIB): $(LIBOBJS) 
+	$(AR) $(IFFLIB) $(LIBOBJS)
+#	$(CP) $(IFFLIB) ../lib
+
+
+clean:
+	$(RM) $(LIBOBJS)
+
+clobber: clean
+	$(RM) $(IFFLIB)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+

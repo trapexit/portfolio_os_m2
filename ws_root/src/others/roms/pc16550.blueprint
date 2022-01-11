@@ -1,0 +1,13 @@
+// @(#) pc16550.blueprint 96/01/04 1.1
+//
+// Blueprint file for the prototype PC16550 image.
+
+#include	"generic.defines"
+
+TAKEME {
+	System.m2 {
+		Boot {
+			dipir.pc16550 -> DIPIRDIR/dipir.pc16550
+		}
+	}
+}

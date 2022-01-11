@@ -1,0 +1,131 @@
+#
+#       @(#) BuildEZFlixChunkifier 96/03/04 1.14
+#
+#	File:		BuildEZFlixChunkifier
+#
+#	Contains:	MPW Script file to Rebuild EZFlixChunkifier
+#
+#	Written by:	Donn Denman
+#
+
+#  MPW Script file to Rebuild the EZFlixChunkifier Tool
+#  Does clean build of the EZFlix Encoder and EZFlixChunkifier 
+# 	unless you say "BuildEZFlixChunkifier update" in which
+#	case it does an incremental build.
+
+# Preserve {echo}, `directory`
+set previousDirectory `directory`
+set oldEcho {echo}
+set DoFatBuild 1 # Switch to 0 to build 68K only.
+
+# Set up {ezflixrootdir} in a user startup, or from
+#	the command line.  Or just make sure the directory is set.
+
+If ("{ezflixrootdir}" == "" )
+	set ezflixrootdir `directory`
+	export ezflixrootdir
+End If
+
+# Make sure we are on a reasonable portfolio release
+if (!`evaluate "{3DORelease}" =~ /ÅM2Å/`) && ("{3DORelease}" != "default")
+	Echo "###Error -- You must build on an M2 Portfolio Version!"
+	Exit 1
+end
+
+# Clean build?
+set cleanMake "-e"
+if "{#}" == 1 && "{1}" == "update"
+	set cleanMake ""
+end
+
+# Build the encoder if it's there
+if `exists "{ezflixrootdir}"__EZFlixEncoder:`
+echo '	Building Encoding Lib: EZFlixEncoder.libÉ'
+directory "{ezflixrootdir}"__EZFlixEncoder:
+
+# Make sure a Libs folder exists for the result
+if !`exists ::Libs:`
+	NewFolder ::Libs:
+end
+
+# 68K Make
+if !`exists :Objects:`
+	NewFolder :Objects:
+end
+make {cleanMake} -f EZFlixEncoder.lib.make > makeout68K.tmp
+# Don't build yet, that will dirty the result causing the next make to be wrong!
+
+# PPC Make
+if {DoFatBuild}
+	if !`exists :PPCObjects:`
+		NewFolder :PPCObjects:
+	end
+	make {cleanMake} -f EZFlixEncoderLib.xcoff.Make > makeout.tmp
+end
+
+# Do both builds, one after another.
+if {DoFatBuild}
+	makeout.tmp; delete makeout.tmp
+end
+makeout68K.tmp; delete makeout68K.tmp
+echo '	DoneÉ'
+end if #Exists Encoder
+
+# Build EZFlixChunkifier
+echo '	Building EZFlixChunkifierÉ'
+directory "{ezflixrootdir}"
+
+# 68K Make
+if !`exists :Objects:`
+	NewFolder :Objects:
+end
+make {cleanMake} -f EZFlixChunkifier.68K.make > makeout68K.tmp
+# Don't build yet, that will dirty the result causing the next make to be wrong!
+
+# PPC Make
+if {DoFatBuild}
+	if !`exists :PPCObjects:`
+		NewFolder :PPCObjects:
+	end
+	make {cleanMake} -f EZFlixChunkifier.xcoff.make > makeout.tmp
+end
+
+# Do both builds, one after another.
+if {DoFatBuild}
+	echo '	Building EZFlixChunkifier PowerMac'
+	makeout.tmp; delete makeout.tmp
+end
+echo '	Building EZFlixChunkifier 68K'
+makeout68K.tmp; delete makeout68K.tmp
+
+# Disable the QT Build for now
+if {DO_QT_BUILD}
+	# Checkout the EZFlix QuickTime Component
+	if not `exists "RenProjects2:"`
+		choose -askpw "Tools:Ren:RenProjects2"
+	end
+	MountProject "RenProjects2:EZFlixM2:EZFlix:__QTComponent"
+	if not `exists "{ezflixrootdir}"__QTComponent:`
+		NewFolder "{ezflixrootdir}"__QTComponent:
+	end
+	directory "{ezflixrootdir}"__QTComponent:
+	CheckoutDir -r -project EZFlixº__QTComponentº `directory`
+	checkout -r -project EZFlixº__QTComponentº 'Latest IR Build'
+	
+	# Now build the QuickTime Component
+	directory "{ezflixrootdir}"__QTComponent:
+	1Build_QTComponent.app # Launch an AppleScript to drive MetroWerks
+
+	# Wait for the MetroWerks builds to terminate
+	# Echo ¶# Waiting for EZFlix QT Component build....
+	#loop
+	#	if `exists :Release:EZFlix` 
+	#		break # exit when the component is built
+	#	end
+	#end
+end
+
+echo '	All Done'
+
+directory "{previousDirectory}"
+set echo {oldEcho}

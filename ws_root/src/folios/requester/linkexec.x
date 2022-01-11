@@ -1,0 +1,28 @@
+! @(#) linkexec.x 96/09/12 1.5
+!
+MODULE 15
+EXPORTS 0=CreateStorageReq
+EXPORTS 1=DeleteStorageReq
+EXPORTS 2=ModifyStorageReq
+EXPORTS 3=QueryStorageReq
+EXPORTS 4=DisplayStorageReq
+
+IMPORT_ON_DEMAND font
+IMPORT_ON_DEMAND iff
+IMPORT_ON_DEMAND fsutils
+IMPORT_ON_DEMAND graphics
+IMPORT_ON_DEMAND audio
+IMPORT_ON_DEMAND international
+IMPORT_ON_DEMAND audiopatchfile
+IMPORT_ON_DEMAND date
+IMPORT_ON_DEMAND savegame
+
+REIMPORT_ALLOWED font
+REIMPORT_ALLOWED iff
+REIMPORT_ALLOWED fsutils
+REIMPORT_ALLOWED graphics
+REIMPORT_ALLOWED audio
+REIMPORT_ALLOWED international
+REIMPORT_ALLOWED audiopatchfile
+REIMPORT_ALLOWED date
+REIMPORT_ALLOWED savegame

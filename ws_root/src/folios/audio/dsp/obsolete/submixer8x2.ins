@@ -1,0 +1,142 @@
+\ @(#) submixer8x2.ins 95/11/16 1.7
+\ $Id: submixer8x2.ins,v 1.7 1995/01/20 20:20:23 peabody Exp $
+\ 8x2 subMixer
+\
+\ Copyright 1993 3DO
+
+\\\	NOAUTODOC -private -class DSP -name submixer8x2.dsp
+\\\	OBSOLETE - Eight-channel stereo submixer.
+\\\
+\\\	  Function
+\\\
+\\\	    This is an eight-channel stereo mixer. The total gain on a side should
+\\\	    not exceed $7FFF. Output is available directly and can be used as an
+\\\	    input to other instruments. It could be used to mix signals before being
+\\\	    passed to an effects processor.
+\\\
+\\\	  Knobs
+\\\
+\\\	    LeftGain0 - 0  ->  $7FFF
+\\\
+\\\	    LeftGain1 - 0  ->  $7FFF
+\\\
+\\\	    ...and so on up to...
+\\\
+\\\	    LeftGain6 - 0  ->  $7FFF
+\\\
+\\\	    LeftGain7 - 0  ->  $7FFF
+\\\
+\\\	    RightGain0 - 0  ->  $7FFF
+\\\
+\\\	    RightGain1 - 0  ->  $7FFF
+\\\
+\\\	    ...and so on up to...
+\\\
+\\\	    RightGain6 - 0  ->  $7FFF
+\\\
+\\\	    RightGain7 - 0  ->  $7FFF
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input0
+\\\
+\\\	    Input1
+\\\
+\\\	    ...and so on up to...
+\\\
+\\\	    Input6
+\\\
+\\\	    Input7
+\\\
+\\\	  Outputs
+\\\
+\\\	    LeftOutput
+\\\
+\\\	    RightOutput
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks =  56
+\\\
+\\\	    N memory = 56 words
+\\\
+
+decimal
+include? DFID_SUBMIXER8X2 function_ids.j
+
+anew task-submixer8x2.f
+
+_RED
+dspp{
+ins{
+
+DFID_SUBMIXER8X2 dspp-function-id !
+$" submixer8x2.dsp" ins-name !
+
+
+
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain0
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain1
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain2
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain3
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain4
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain5
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain6
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain7
+
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain0
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain1
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain2
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain3
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain4
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain5
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain6
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain7
+
+
+ALLOC.IMEM Input0
+ALLOC.IMEM Input1
+ALLOC.IMEM Input2
+ALLOC.IMEM Input3
+ALLOC.IMEM Input4
+ALLOC.IMEM Input5
+ALLOC.IMEM Input6
+ALLOC.IMEM Input7
+
+ALLOC.OUTPUT LeftOutput
+ALLOC.OUTPUT RightOutput
+56 ALLOC.TICKS
+\ left side
+	LeftGain0 _A  Input0 _A  _*
+	LeftGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	LeftGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	LeftGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	LeftGain4 _A  Input4 _A  ACCUME _CLIP _*+
+	LeftGain5 _A  Input5 _A  ACCUME _CLIP _*+
+	LeftGain6 _A  Input6 _A  ACCUME _CLIP _*+
+	LeftGain7 _A  Input7 _A  ACCUME _CLIP _*+
+	_NOP
+	LeftOutput _A _=A
+
+\ right side
+	RightGain0 _A  Input0 _A  _*
+	RightGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	RightGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	RightGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	RightGain4 _A  Input4 _A  ACCUME _CLIP _*+
+	RightGain5 _A  Input5 _A  ACCUME _CLIP _*+
+	RightGain6 _A  Input6 _A  ACCUME _CLIP _*+
+	RightGain7 _A  Input7 _A  ACCUME _CLIP _*+
+	_NOP
+	RightOutput _A _=A
+}ins
+}dspp
+

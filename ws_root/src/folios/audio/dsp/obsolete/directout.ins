@@ -1,0 +1,64 @@
+\ @(#) directout.ins 95/11/16 1.8
+\ $Id: directout.ins,v 1.6 1994/08/18 20:01:44 peabody Exp $
+\ directout to dac via MixLeft/Right
+\
+\ Author: Phil Burk
+\ Copyright 1992 3DO
+\ All Rights Reserved
+\
+\ 931104 PLB Added _CLIP
+
+\\\	NOAUTODOC -private -class DSP -name directout.dsp
+\\\	OBSOLETE - Mix stereo pair with DAC output.
+\\\
+\\\	  Function
+\\\
+\\\	    Mixes stereo pair with the output of other directout or mixer instruments.
+\\\	    The result is sent to the DAC.
+\\\
+\\\	  Inputs -enumerated
+\\\
+\\\	    InputLeft
+\\\
+\\\	    InputRight
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 8
+\\\
+\\\	    Code: 8 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V21
+\\\
+\\\	  See Also
+\\\
+\\\	    mixer8x2.dsp, directin.dsp
+\\\
+
+decimal
+
+$ 106 constant MixLeft   \ see dspp.h
+$ 107 constant MixRight
+
+include? DFID_DIRECTOUT function_ids.j
+
+anew task-directout.f
+
+_RED
+dspp{
+ins{
+
+DFID_DIRECTOUT dspp-function-id !
+$" directout.dsp" ins-name !
+
+ALLOC.IMEM InputLeft
+ALLOC.IMEM InputRight
+8 ALLOC.TICKS
+
+	MixLeft _%A InputLeft _A _CLIP _+
+	MixRight _%A InputRight _A _CLIP _+
+}ins
+}dspp
+

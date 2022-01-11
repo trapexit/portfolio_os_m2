@@ -1,0 +1,169 @@
+3D Studio to SDF converter
+--------------------------
+
+This program converts 3D Studio ".3DS" to M2 "SDF format". 
+The data that is supported at this point is geometry 
+(triangle data), key frame, hierarchy, materials and  textures.
+
+Entities it can Read :
+
+1.	Geometry ( TriMesh Objects )
+	Geometry data for individual objects
+	Material groups in an object
+	Smoothing groups in an object
+	Transformation matrices
+	Object name
+	Lights ( Point, Spot, Soft Spot )
+
+2.	Textures
+	Texture vertices data for individual objects
+	Texture map name
+	
+3.	Material
+	. Ambient
+	. Diffuse
+	. Specular
+	. Transparency
+	. Shading type
+	. Material name
+
+4.	Hierarchy
+	Hierarchy information in key frame section
+	Relative transformation matrices of these key frame objects
+	Object sharing information from mesh section
+	Hierarchy node names
+
+5.	Data sharing information
+	Converter also writes out necessary sharing information
+	for models,  material and textures.
+	
+6.	Key Frame
+	Each key frame node data
+	. Instance name
+	. Node id
+	. Pivot data
+	. Position track
+	. Rotation track
+	. Scale track
+	. Morph track
+	. Duration in seconds
+	
+
+Key Frame Animation data is written out as user defined SDF class 
+so that you can make use of automated parsing of this data. 
+3DS  converter  writes out the following :
+
+define class KF_Object from Engine {
+	character	Target
+	point		ObjPivot
+	point		PrntPivot
+
+	floatarray	PosFrames
+	floatarray	PosData
+	floatarray	PosSplData
+
+	floatarray	RotFrames
+	floatarray	RotData
+	floatarray	RotSplData
+
+	floatarray	SclFrames
+	floatarray	SclData
+	floatarray	SclSplData
+}
+
+Target		SDF character name on which this animation is applied
+
+ObjPivot	object pivot point for rotation
+
+PrntPivot	objects parent pivot point
+
+PosFrames,	Time keys for position, rotation and scaling data
+RotFrames,
+SclFrames	
+
+PosSplData,	Spline parameters for position, rotation and scaling data.
+RotSplData,	For each key there are 5 values ( Tension, Bias, Continuity
+SclSplData	Ease_In and Ease_Out )
+
+PosData		For each key there are 3 values (x, y, z )
+
+RotData		For each key there are 4 values ( x, y, z, angle )
+			this is the rotation about an arbitrary axis
+
+SclData	For each key there are 3 values (x_scale, y_scale, z_scale )
+
+Duration	Duration of the animation in seconds
+
+example data from 3DS :
+
+Define objarray kfengines {
+	KF_Object {
+		Target use Grp_PELVIS.1
+		ObjPivot { -0.084409 2.279045 0.000000 }
+		PrntPivot { 0.000000 0.000000 0.000000 }
+		PosFrames { 
+			 0.000000
+		}
+		PosData { 
+			0.069970 -0.246090 40.866760 
+		}
+		RotFrames { 
+			 0.000000 10.000000 45.000000 59.000000 60.000000
+		}
+		RotData { 
+			1.000000 0.000000 0.000000 1.570796
+			0.999924 -0.008726 0.008726 1.570872
+			0.999805 0.013948 -0.013948 1.570991
+			0.999999 0.001198 -0.001198 1.570798
+			0.999695 -0.017450 0.017450 1.571101
+		}
+		SclFrames { 
+			 0.000000
+		}
+		SclData { 
+			1.000000 1.000000 1.000000 
+		}
+		Control cycle
+		Duration 2
+	}
+}
+
+Usage: 3dstosdf [-a -t -m -sn/sa <script_file> -p prefix -o <sdf_outfile>] <3ds_infile>
+Description:
+  Version 1.0 a8
+  This program creates a SDF data out of a 3DS file
+  -a                  write out keyframe animation file
+  -t                  do not write texture references
+  -l                  do not write light references
+  -c                  disable texture seam stitching
+  -g                  enable geometry splitting based on smoothing groups
+  -m                  write texture and material data into separate files
+                      writes "sdf_outfile.tex" and "sdf_outfile.mat" files
+  -sn <script_file>   write texture references into a new script file
+  -sa <script_file>   append texture references into an existing script file
+  -p prefix           add a prefix string to all the object names
+  -o <sdf_outfile>    write out SDF file with given name
+                      default SDF file name is 3ds_infile.sdf
+  <3ds_infile>        3DS file for input
+
+eg : 3dstosdf -a -o skeleton.sdf skeleton.3ds
+
+Animation file will be written out to "skeleton.anim". 
+There is an example code ( anim program ) to play these 
+animation files. This code makes use of the framework 
+extensions to parse the user defined data. This code has 
+a spline based keyframe interpolator for positional,
+rotational ( quaternions based ) and scaling data. 
+
+
+Texture names  are converted to lowercase, path names stripped away and given 
+a .utf extension. Using the -t option will suppress the output of texture when 
+the geometry is being written out to the ASCII SDF file. Output file name (
+path name and extension is stripped ) is pre-concatenated to generate unique 
+names for materials ( <output file>_materials ), textures ( <output file>_textures )
+, top-level hierarchy node ( <output file>_world ) and animation data array
+( <output file>_kfengines ).
+
+At the end of the object processing, a list of textures and their new names is 
+output to a script file. This list can be output to a file (using the -sa or the 
+-sn options) use as a batch processing script for the model's textures.

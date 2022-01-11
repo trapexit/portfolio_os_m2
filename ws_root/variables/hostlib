@@ -1,0 +1,9 @@
+# @(#)hostlib 95/02/25 1.6
+
+ifndef BUILD_TYPE
+BUILD_TYPE =		${HOSTOS}
+endif
+
+HOSTLIB_NAME =		${DIRNAME:%=lib%.a}
+
+include ${CODEMGR_WS}/ws_root/variables/generic

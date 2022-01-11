@@ -1,0 +1,101 @@
+\ @(#) depopper.ins 96/03/13 1.2
+
+\\\	AUTODOC -public -class DSP -group Effects -name depopper.dsp
+\\\	Helps eliminate pops when switching sounds.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument can be used to reduce pops that can occur when stopping one
+\\\	    sound and starting another. The sequence is as follows:
+\\\
+\\\	    Connect instrument A to input of depopper.
+\\\
+\\\	    Start A and depopper.
+\\\
+\\\	    Before you want to stop A, set Gate on depopper to 0.0. This will latch the
+\\\	    output of instrument A inside the depopper.
+\\\
+\\\	    Stop A.
+\\\
+\\\	    At this point you can switch to another instrument B and connect it to the
+\\\	    depopper while holding A's old output.
+\\\
+\\\	    Start B then set Gate on depopper to 1.0. The depopper will now smoothly
+\\\	    crossfade from the held value from A to the current output of B.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Gate - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        If greater than zero, signal passes, otherwise held.
+\\\
+\\\	    Rate - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Amount to increment internal phase per execution frame. A higher number
+\\\	        means it will crossfade from the held signal to the input signal more
+\\\	        quickly. Range is 0.0 to 1.0. Defaults to 0.027, which results in a
+\\\	        crossfade time of approximately 20ms.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Input signal or crossfaded output.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 18
+\\\
+\\\	    Code: 20 words
+\\\
+\\\	    Data: 5 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    envelope.dsp(@) latch.dsp(@)
+
+include? DFID_DEPOPPER function_ids.j
+
+anew task-depopper.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_DEPOPPER dspp-function-id !
+$" depopper.dsp" ins-name !
+
+
+ALLOC.INPUT  Input
+ALLOC.OUTPUT Output
+0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT Saved
+0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT Phase
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Gate
+$ 7FFF 44100 1000 / 20 * / KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Rate  \ 20ms ramp time default
+18 ALLOC.TICKS
+
+	Gate _A _TRA   \ is control know high
+	_BGT: @Crossfade
+
+\ Hold Mode
+	Saved _A Output _A _MOVE
+	Phase _A 0 _# _MOVE
+	_JUMP: @Done
+
+_LABEL: @Crossfade
+
+\ Crossfade Mode
+	Phase _%A Rate _A _CLIP _+          \ do a step of the ramp up to 1.0 (result also in ACCUME)
+	Saved _A ACCUME Saved _A _*-        \ crossfade between Saved and Input using current Phase
+	Output _A _= Input _A Phase _A ACCUME _*-
+
+_LABEL: @Done
+
+}ins
+}dspp
+

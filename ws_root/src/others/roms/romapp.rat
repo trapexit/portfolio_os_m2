@@ -1,0 +1,8 @@
+# @(#) romapp.rat 96/03/27 1.1
+# RomApps.txt file for a romapp cartridge.
+# The apps here with priority 2 override the
+# apps in the system ROM with priority 1.
+
+"CardAudio audio" audio 2
+"CardVideo video" video 2
+"CardPhoto photo" photo 2

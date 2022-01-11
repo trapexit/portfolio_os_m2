@@ -1,0 +1,63 @@
+\ @(#) tail.ins 95/11/16 1.8
+\ $Id: tail.ins,v 1.14 1995/03/01 21:52:56 phil Exp $
+\ TAIL - ending code for run time execution
+
+\\\	NOAUTODOC -private -class DSP -name tail.dsp
+\\\	OBSOLETE - Opera DSP microkernel tail instrument.
+\\\
+\\\	  Function
+\\\
+\\\	    This is an internal routine used to read the DSP clock and report the DSP
+\\\	    time spent.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 16
+\\\
+\\\	    Code: 16 words
+\\\
+
+\ NOTE about timing:
+\   When the semaphore is set, this instrument actually takes
+\   19 ticks!  That means that for one frame, we may not have
+\   enough ticks to set the EO_BenchMark.  No problem.
+\   If another instrument takes a branch which delays the
+\   setting of the SEMAPHORE by one frame, also no problem.
+\   The host will wait 100 frames before timing out.
+
+include? EO_BenchMark dspp_map.j
+include? DFID_TAIL function_ids.j
+
+anew task-tail.ins
+
+$ 0EC constant SEMAPHORE_STATUS
+$ 0ED constant SEMAPHORE_DATA_READ
+$ 3EC constant SEMAPHORE_ACK
+$ 3ED constant SEMAPHORE_DATA_WRITE
+
+dspp{
+ins{
+
+DFID_TAIL dspp-function-id !
+$" tail.dsp" ins-name !
+
+
+0 $ FFFF 0 ALLOC.KNOB IMemWriteAddr \ address to write to in I Memory
+0 $ FFFF 0 ALLOC.KNOB IMemReadAddr \ address to read from Memory
+16 ALLOC.TICKS \ guess %Q
+
+\ write a single I memory location, and read from another
+	SEMAPHORE_STATUS _A #$ 0008 _AND  \ check ARM write bit
+	_BEQ: @NeverMind
+	IMemWriteAddr _[A]  SEMAPHORE_DATA_READ _A  _MOVE
+	SEMAPHORE_DATA_WRITE _A  IMemReadAddr _[A] _MOVE
+_LABEL: @NeverMind
+
+\ Clock is reset to $ 4000 after every reset so we don't need I_Bench
+\ EO_BenchMark _A _= I_Bench _A DSPPCLK _A  _-
+	EO_BenchMark _A _= #$ 4000 DSPPCLK _A  _-
+
+	_SLEEP
+	_NOP
+}ins
+}dspp

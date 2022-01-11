@@ -1,0 +1,247 @@
+\ @(#) nanokernel.ins 96/05/13 1.34
+\ $Id: m2_head.ins,v 1.2 1995/03/14 07:10:01 phil Exp $
+\\\	AUTODOC -private -class DSP -group System -name nanokernel.dsp
+\\\	M2 DSP nano-kernel instrument.
+\\\
+\\\	  Description
+\\\
+\\\	    DSP kernel instrument for M2. This instrument does a number of things:
+\\\
+\\\	    - Busy waits until there is space in the DAC FIFO.
+\\\
+\\\	    - Initializes Benchmark register for benchmark.dsp(@) to use later in the
+\\\	    frame.
+\\\
+\\\	    - Transfers mixer output accumulator to DAC FIFO.
+\\\
+\\\	    - Advance frame counter.
+\\\
+\\\	    - Execute Full, Half and Eighth rate instruments at proper time.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Master gain control for DSPP. Controlled by the privileged function
+\\\	        SetAudioFolioInfo().
+\\\
+\\\	  Global Symbols Exported
+\\\
+\\\	    CallConnectionMoves (code)
+\\\	        Patch with JSR for calling MOVES to registers.
+\\\
+\\\	    FullRateJump (code)
+\\\	        Patch with JUMP to full rate instruments.
+\\\
+\\\	    FullRateReturn (code)
+\\\	        Patch last full rate instruments to JUMP back here.
+\\\
+\\\	    HalfRateJump (code)
+\\\	        Patch with JUMP to half rate instruments.
+\\\
+\\\	    HalfRateReturn (code)
+\\\	        Patch last half rate instruments to JUMP back here.
+\\\
+\\\	    EighthRateJump (code)
+\\\	        Patch with JUMP to eighth rate instruments.
+\\\
+\\\	    EighthRateReturn (code)
+\\\	        Patch last eighth rate instruments to JUMP back here.
+\\\
+\\\	    gBenchStart (data)
+\\\	        This variable is initialized to the DSPI_CLOCK value at the start
+\\\	        of each frame. benchmark.dsp(@) uses this value as a base in order to
+\\\	        determine how many DSP ticks have occured since the beginning of the
+\\\	        frame.
+\\\
+\\\	    FrameCountLow, FrameCountHigh (data)
+\\\	        Current frame count. Incremented once at start of each frame. Used
+\\\	        to schedule 1/2 and 1/8th rate instruments. Also used to determine
+\\\	        whether DSP has processed N frames. Low and High are used for forming
+\\\	        32 bit count.
+\\\
+\\\	    gMixer (data) - 2 parts
+\\\	        Left and right channel mixer accumulators. These locations are transfered
+\\\	        to the DAC FIFO and then cleared. Output instruments (e.g., line_out.dsp(@),
+\\\	        Mixer(@)s with AF_F_MIXER_WITH_LINE_OUT, etc.) accumulate their results
+\\\	        into these variables.
+\\\
+\\\	    gScratch1, gScratch2, gScratch3 (data)
+\\\	        These variables are provided for handy temporary storage locations for
+\\\	        many instruments. nanokernel.dsp(@) doesn't actually use them. Their
+\\\	        values can only be relied upon for execution of an instrument in a given
+\\\	        frame. Once execution passes to another instrument, their values may be
+\\\	        changed by another instrument.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 80
+\\\
+\\\	    Code: 94 words
+\\\
+\\\	    Data: 17 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+include? DFID_NANOKERNEL function_ids.j
+
+anew task-nanokernel.ins
+
+0 constant IF_DUMMY_VERSION    \ build dummy version for tick analysis
+
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_NANOKERNEL dspp-function-id !
+IF_DUMMY_VERSION [if]
+	." WARNING - nanokernel.dsp dummy mode turned on. For testing only!" cr
+	: _EXPORT ( -- , eliminate conflict with real nanokernel ) ;
+[else]
+	DHDR_F_PRIVILEGED dspp-header-flags !
+[then]
+$" nanokernel.dsp" ins-name !
+
+dspp-echo off
+
+_EXPORT  2 ALLOC.VARIABLE.ARRAY gMixer     \ left and right output accumulators (written to by things like line_tout.dsp)
+ALLOC.VARIABLE FrameCountLow   \ frame number, low half
+ALLOC.VARIABLE FrameCountHigh  \ frame number, high half
+
+IF_DUMMY_VERSION not [if]
+_EXPORT  ALLOC.VARIABLE gScratch1    \ used by various other instruments
+_EXPORT  ALLOC.VARIABLE gScratch2    \ used by various other instruments
+_EXPORT  ALLOC.VARIABLE gScratch3    \ used by various other instruments
+_EXPORT  ALLOC.VARIABLE gReserved1   \ reserved for future use
+_EXPORT  ALLOC.VARIABLE gReserved2   \ reserved for future use
+_EXPORT  ALLOC.VARIABLE gReserved3   \ reserved for future use
+_EXPORT  ALLOC.VARIABLE gReserved4   \ reserved for future use
+[then]
+_EXPORT  ALLOC.VARIABLE gBenchStart  \ used by benchmark.dsp
+
+2 ALLOC.VARIABLE.ARRAY MixerHalf \ Result of Half Rate for interpolating half rate output
+2 ALLOC.VARIABLE.ARRAY MixerFull \ Saved Full Result
+
+DRSC_TYPE_HW_CLOCK          CONNECT.HARDWARE  DownCounter
+
+IF_DUMMY_VERSION [if]
+	2 DRSC_AT_START ALLOC.VARIABLE.DEFAULT  InputStatus
+	0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT  InputControl
+	6 DRSC_AT_START ALLOC.VARIABLE.DEFAULT  OutputStatus
+	0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT  OutputControl
+	2 ALLOC.VARIABLE.ARRAY  OutputToDAC
+[else]
+	DRSC_TYPE_HW_INPUT_STATUS   CONNECT.HARDWARE  InputStatus
+	DRSC_TYPE_HW_INPUT_CONTROL  CONNECT.HARDWARE  InputControl
+	DRSC_TYPE_HW_OUTPUT_STATUS  CONNECT.HARDWARE  OutputStatus
+	DRSC_TYPE_HW_OUTPUT_CONTROL CONNECT.HARDWARE  OutputControl
+	DRSC_TYPE_HW_DAC_OUTPUT   2 CONNECT.HARDWARE.ARRAY  OutputToDAC
+[then]
+
+$ 7FFF  KNOB_TYPE_RAW_SIGNED  ALLOC.KNOB.M2 Amplitude
+637 7 + 8 /  ALLOC.TICKS \ measure in dummy mode
+
+	_NOP  \ head instrument is disabled by overwriting this _NOP with a _SLEEP
+          \ (940812 - used to overwrite with a _JUMP)
+
+_LABEL: HeadMainLoop            \ jumped to from tail
+
+\ Begin audio rate loop ----------------------------
+_LABEL: HeadSubLoop             \ jumped to from splitexec
+
+\ Wait for room in buffer
+_LABEL: WaitForData
+        InputStatus _A _TRA        \ is data available
+        _BEQ: WaitForData          \ if no data, stall
+        InputControl _A 1 _# _MOVE \ grab this frame
+
+\ Wait for room in buffer
+_LABEL: WaitForRoom
+        OutputStatus _A 7 _# _-   \ is buffer full?
+        _BGE: WaitForRoom        \ if no room, stall
+
+\ record tick counter
+        gBenchStart _A DownCounter _A _MOVE      \ store this for benchmark.dsp to read
+
+\ Write accumulated output to OutPut FIFO
+        OutputToDAC 0 PART+ _A _= gMixer 0 PART+ _A Amplitude _A _*
+        OutputToDAC 1 PART+ _A _= gMixer 1 PART+ _A Amplitude _A _*
+
+\ Advance DAC FIFO Pointer
+        OutputControl _A 1 _# _MOVE \ send this frame
+
+\ Waste some time and code so we have stuff to recover later when we need to add more.
+	8 0 do _NOP loop  \ !!! grab cycles from here as needed
+
+\ Advance Frame Count which is used for synching 1x1/2x1/8 rate code.
+        FrameCountLow _%A #$ 0001 _+
+        FrameCountHigh _%A _+C
+
+\ label the next JSR so we can patch it from AudioFolio
+\ label name must match name used in folio
+_EXPORT _LABEL:  CallConnectionMoves
+	_JUMP: @NowhereForNow    \ we'll change it later
+_LABEL: @NowhereForNow
+
+\ clear signal accumulators
+	gMixer 0 PART+ _A 0 _# _MOVE                \ Clear Mixer
+	gMixer 1 PART+ _A 0 _# _MOVE
+
+_EXPORT _LABEL: FullRateJump
+	_JUMP:  FullRateReturn
+	_NOP  \ !!! maybe get rid of this
+_EXPORT _LABEL: FullRateReturn
+
+
+\ ------------------ 1/2 Rate ----------------------------------------
+\ On EVEN frames we call the half rate code.
+\ The output is the average of the old and new half rate results,
+\ plus the full rate.
+\ On ODD frames we skip the half rate code.
+\ The output is the previous half rate results,
+\ plus the full rate.
+	FrameCountLow _A $ 0001 _# _AND   \ execute half rate code if FrameCountLow even
+	_BNE: OddFrameMixResults
+\ save results of Full Rate, clear Mixer to measure half rate
+	2 0
+	DO
+		MixerFull i PART+ _A   gMixer i PART+ _A _MOVE
+		gMixer i PART+ _A 0 _# _MOVE                \ Clear Mixer
+	LOOP
+_EXPORT _LABEL: HalfRateJump
+	_JUMP:  HalfRateReturn
+	_NOP  \ !!! maybe get rid of this
+_EXPORT _LABEL: HalfRateReturn
+	2 0
+	DO
+		MixerHalf i PART+ _A   1 _>>' _TRA   \ load accumulator with old half*0.5
+		MixerHalf i PART+ _A   gMixer i PART+ _A _MOVE  \ save output from half rate code for next frame
+		gMixer i PART+ _A   $ 4000 _#  ACCUME _CLIP _*+
+		gMixer i PART+ _A _= MixerFull i PART+ _A  ACCUME _CLIP _+
+	LOOP
+	_JUMP: MaybeEighthRate
+
+_LABEL: OddFrameMixResults
+	2 0
+	DO
+		gMixer i PART+ _%A MixerHalf i PART+ _A  _CLIP _+
+	LOOP
+	_JUMP: HeadSubLoop
+
+\ ------------------ 1/8 Rate ----------------------------------------
+_LABEL: MaybeEighthRate
+	FrameCountLow _A $ 0007 _# _AND   \ execute eighth rate code if FrameCountLow%7==0
+	_BNE: HeadSubLoop
+	_NOP  \ !!! maybe get rid of this
+_EXPORT _LABEL: EighthRateJump
+	_JUMP:  EighthRateReturn
+	_NOP  \ !!! maybe get rid of this
+_EXPORT _LABEL: EighthRateReturn
+
+IF_DUMMY_VERSION not [if]
+	_JUMP: HeadMainLoop
+[then]
+}ins
+}dspp

@@ -1,0 +1,58 @@
+\ @(#) add.ins 96/03/11 1.15
+\ $Id: add.ins,v 1.2 1994/10/11 20:16:52 peabody Exp $
+\ A+B
+
+\\\	AUTODOC -class DSP -group Arithmetic -name add.dsp
+\\\	Adds two signed signals.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument performs a signed addition between its two inputs. The
+\\\	    result is clipped into range.
+\\\
+\\\	  Knobs
+\\\
+\\\	    InputA, InputB - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed input values. -1.0 to 1.0. Defaults to 0.0
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Signed, clipped sum of InputA and InputB. -1.0 to 1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 3 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  See Also
+\\\
+\\\	    multiply.dsp(@), subtract.dsp(@), timesplus.dsp(@), add_accum.dsp(@)
+
+include? DFID_ADD function_ids.j
+
+anew task-add.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_ADD dspp-function-id !
+$" add.dsp" ins-name !
+
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputA
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputB
+ALLOC.OUTPUT Output
+6 ALLOC.TICKS
+
+	Output _A _= InputA _A InputB _A   _CLIP _+
+}ins
+}dspp

@@ -1,0 +1,269 @@
+/* @(#) syscall_glue.s 96/11/19 1.86 */
+
+#include <hardware/PPCMacroequ.i>
+
+
+/*****************************************************************************/
+
+
+/* Calls the system call handler, the correct arguments are already in
+ * the registers (r3 = folio/selector code, r4-r10 has the arguments)
+ * We just do an sc and a return.
+ */
+	.macro
+	SYSTEMCALL	&number
+
+#ifdef BUILD_DEBUGGER
+	mflr		r10
+	stw		r10,4(r1)
+#endif
+
+	lis		r0,(((&number)>>16) & 0xFFFF)
+	ori		r0,r0,((&number) & 0xFFFF)
+	sc
+	.endm
+
+KERNELSWI	.equ 0x010000
+
+
+/*****************************************************************************/
+
+
+	DECFN	WaitSignal
+	SYSTEMCALL	KERNELSWI+0
+
+	DECFN	SendSignal
+	SYSTEMCALL	KERNELSWI+1
+
+	DECFN	LockSemaphore
+	SYSTEMCALL	KERNELSWI+2
+
+	DECFN	UnlockSemaphore
+	SYSTEMCALL	KERNELSWI+3
+
+	DECFN	SendMsg
+	SYSTEMCALL	KERNELSWI+4
+
+	DECFN	SendSmallMsg
+	SYSTEMCALL	KERNELSWI+4
+
+	DECFN	ReplyMsg
+	SYSTEMCALL	KERNELSWI+5
+
+	DECFN	ReplySmallMsg
+	SYSTEMCALL	KERNELSWI+5
+
+	DECFN	GetMsg
+	SYSTEMCALL	KERNELSWI+6
+
+	DECFN	GetThisMsg
+	SYSTEMCALL	KERNELSWI+7
+
+	DECFN	WaitPort
+	SYSTEMCALL	KERNELSWI+8
+
+	DECFN	AbortIO
+	SYSTEMCALL	KERNELSWI+9
+
+	DECFN	SendIO
+	SYSTEMCALL	KERNELSWI+10
+
+	DECFN	CompleteIO
+	SYSTEMCALL	KERNELSWI+11
+
+	DECFN	DoIO
+	SYSTEMCALL	KERNELSWI+12
+
+	DECFN	WaitIO
+	SYSTEMCALL	KERNELSWI+13
+
+	DECFN	CreateItem
+	SYSTEMCALL	KERNELSWI+14
+
+	DECFN	CreateSizedItem
+	SYSTEMCALL	KERNELSWI+15
+
+	DECFN	DeleteItem
+	SYSTEMCALL	KERNELSWI+16
+
+	DECFN	FindItem
+	SYSTEMCALL	KERNELSWI+17
+
+	DECFN	OpenItem
+	SYSTEMCALL	KERNELSWI+18
+
+	DECFN	FindAndOpenItem
+	SYSTEMCALL	KERNELSWI+19
+
+	DECFN	CloseItem
+	SYSTEMCALL	KERNELSWI+20
+
+	DECFN	SetItemPri
+	SYSTEMCALL	KERNELSWI+21
+
+	DECFN	SetItemOwner
+	SYSTEMCALL	KERNELSWI+22
+
+	DECFN	OpenItemAsTask
+	SYSTEMCALL	KERNELSWI+23
+
+	DECFN	CloseItemAsTask
+	SYSTEMCALL	KERNELSWI+24
+
+	DECFN	ControlMem
+	SYSTEMCALL	KERNELSWI+25
+
+	DECFN	AllocMemPages
+	SYSTEMCALL	KERNELSWI+26
+
+	DECFN	FreeMemPages
+	SYSTEMCALL	KERNELSWI+27
+
+	DECFN	AllocSignal
+	SYSTEMCALL	KERNELSWI+28
+
+	DECFN	FreeSignal
+	SYSTEMCALL	KERNELSWI+29
+
+	DECFN	CallBackSuper
+	SYSTEMCALL	KERNELSWI+30
+
+	DECFN	OpenModule
+	SYSTEMCALL	KERNELSWI+31
+
+	DECFN	CloseModule
+	SYSTEMCALL	KERNELSWI+32
+
+	DECFN	ImportByName
+	SYSTEMCALL	KERNELSWI+33
+
+	DECFN	UnimportByName
+	SYSTEMCALL	KERNELSWI+34
+
+	DECFN	DebugPutChar
+	SYSTEMCALL	KERNELSWI+35
+
+	DECFN	DebugPutStr
+	SYSTEMCALL	KERNELSWI+36
+
+	DECFN	kprintf
+	SYSTEMCALL	KERNELSWI+37
+
+	DECFN	MayGetChar
+	SYSTEMCALL	KERNELSWI+38
+
+	DECFN	ControlUserExceptions
+	SYSTEMCALL	KERNELSWI+39
+
+	DECFN	RegisterUserExceptionHandler
+	SYSTEMCALL	KERNELSWI+40
+
+	DECFN	CompleteUserException
+	SYSTEMCALL	KERNELSWI+41
+
+	DECFN	OpenRomAppMedia
+	SYSTEMCALL	KERNELSWI+42
+
+	DECFN	FreeInitModules
+	SYSTEMCALL	KERNELSWI+43
+
+	DECFN	RegisterOperator
+	SYSTEMCALL	KERNELSWI+44
+
+	DECFN	BeginNoReboot
+	li	r3,1
+	SYSTEMCALL	KERNELSWI+45
+
+	DECFN	EndNoReboot
+	li	r3,-1
+	SYSTEMCALL	KERNELSWI+45
+
+	DECFN	ExpectDataDisc
+	li	r3,1
+	SYSTEMCALL	KERNELSWI+46
+
+	DECFN	NoExpectDataDisc
+	li	r3,-1
+	SYSTEMCALL	KERNELSWI+46
+
+	DECFN	ReadHardwareRandomNumber
+	SYSTEMCALL	KERNELSWI+47
+
+	DECFN	NullSysCall
+	SYSTEMCALL	KERNELSWI+48
+
+	DECFN	SetExitStatus
+	SYSTEMCALL	KERNELSWI+49
+
+	DECFN	Yield
+	SYSTEMCALL	KERNELSWI+50
+
+	DECFN	InvalidateFPState
+	SYSTEMCALL	KERNELSWI+51
+
+	DECFN	GetPersistentMem
+	SYSTEMCALL	KERNELSWI+52
+
+	DECFN	Print3DOHeader
+	SYSTEMCALL	KERNELSWI+53
+
+	DECFN	ControlCaches
+	SYSTEMCALL	KERNELSWI+54
+
+	DECFN	CreateMemDebug
+	SYSTEMCALL	KERNELSWI+55
+
+	DECFN	DeleteMemDebug
+	SYSTEMCALL	KERNELSWI+56
+
+	DECFN	ControlMemDebug
+	SYSTEMCALL	KERNELSWI+57
+
+	DECFN	AddAllocation
+	SYSTEMCALL	KERNELSWI+58
+
+	DECFN	RemAllocation
+	SYSTEMCALL	KERNELSWI+59
+
+	DECFN	AllocMemPagesDebug
+	SYSTEMCALL	KERNELSWI+60
+
+	DECFN	FreeMemPagesDebug
+	SYSTEMCALL	KERNELSWI+61
+
+	DECFN	RationMemDebug
+	SYSTEMCALL	KERNELSWI+62
+
+	DECFN	DoMemRation
+	SYSTEMCALL	KERNELSWI+63
+
+	DECFN	CreateLumberjack
+	SYSTEMCALL	KERNELSWI+64
+
+	DECFN	DeleteLumberjack
+	SYSTEMCALL	KERNELSWI+65
+
+	DECFN	LogEvent
+	SYSTEMCALL	KERNELSWI+66
+
+	DECFN	ObtainLumberjackBuffer
+	SYSTEMCALL	KERNELSWI+67
+
+	DECFN	ReleaseLumberjackBuffer
+	SYSTEMCALL	KERNELSWI+68
+
+	DECFN	WaitLumberjackBuffer
+	SYSTEMCALL	KERNELSWI+69
+
+	DECFN	ControlLumberjack
+	SYSTEMCALL	KERNELSWI+70
+
+	DECFN	IncreaseResourceTable
+	SYSTEMCALL	KERNELSWI+71
+
+
+/*****************************************************************************/
+
+
+	DECFN	SlaveExit
+	SYSTEMCALL	0

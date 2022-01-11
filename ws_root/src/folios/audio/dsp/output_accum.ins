@@ -1,0 +1,53 @@
+\ @(#) output_accum.ins 96/03/26 1.10
+
+\\\	AUTODOC -class DSP -group Accumulator -name output_accum.dsp
+\\\	Stores accumulator to an output.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument passes the accumulator value to the output: Output = Accum.
+\\\
+\\\	    This instrument can only be used within a patch.
+\\\	    It may not be used as a stand-alone instrument.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Signed output value. -1.0 to 1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 4
+\\\
+\\\	    Code: 4 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    input_accum.dsp(@), add_accum.dsp(@), multiply_accum.dsp(@),
+\\\	    subtract_accum.dsp(@)
+
+include? DFID_OUTPUT_ACCUM function_ids.j
+
+anew task-output_accum.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PATCHES_ONLY dspp-header-flags !
+
+DFID_ADD dspp-function-id !
+$" output_accum.dsp" ins-name !
+
+ALLOC.OUTPUT Output
+4 ALLOC.TICKS
+
+	Output _A _= ACCUME _TRL
+}ins
+}dspp

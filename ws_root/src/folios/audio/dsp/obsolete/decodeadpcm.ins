@@ -1,0 +1,143 @@
+\ @(#) decodeadpcm.ins 95/11/16 1.10
+\ $Id: decodeadpcm.ins,v 1.6 1995/01/20 21:27:52 peabody Exp $
+\ ADPCM NIbble decoder based on 4:1 Intel/DVI format
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	NOAUTODOC -private -class DSP -name decodeadpcm.dsp
+\\\	OBSOLETE - Decompress a 4-bit Intel/DVI format sample.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is the adaptive delta pulse code modulation library
+\\\	    routine. It is used internally when it is called by other adpcm routines to
+\\\	    implement the decompression of 4-bit samples. Load this instrument using
+\\\	    LoadInstrument() before loading other ADPCM instruments.
+\\\
+\\\	    Sound samples are compressed from 16-bit samples to 4-bit samples using the
+\\\	    SoundHack program. These 4-bit samples are in the standard Intel/DVI
+\\\	    format. This library routine decompresses the 4-bit samples so that they
+\\\	    can be played by other ADPCM instruments.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 0 *
+\\\
+\\\	    Code: 51 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Notes
+\\\
+\\\	    This is a shared subroutine used by other ADPCM instruments (e.g.
+\\\	    adpcmhalfmono.dsp). It must be loaded before the others can be loaded. If
+\\\	    it is not preloaded, the other ADPCM instruments will return an error when
+\\\	    loaded.
+\\\
+\\\	    * Of course this code does take some number of ticks to execute, but this
+\\\	    is taken into account in each of the clients to this shared code.
+\\\
+\\\	  See Also
+\\\
+\\\	    adpcmhalfmono.dsp, adpcmmono.dsp, adpcmvarmono.dsp adpcmvarstereo.dsp
+\\\
+
+include? DFID_DECODEADPCM function_ids.j
+
+anew task-decodeadpcm.ins
+
+create StepSizeInitData here
+    7  , 8 ,   9 ,  10 ,  11 ,  12 ,  13 ,  14 ,  16 ,   17 ,  19 ,
+   21 ,  23 ,  25 ,  28 ,  31 ,  34 ,  37 ,  41 ,  45 ,   50 ,  55 ,
+   60 ,  66 ,  73 ,  80 ,  88 ,  97 , 107 , 118 , 130 ,  143 , 157 ,
+  173 , 190 , 209 , 230 , 253 , 279 , 307 , 337 , 371 ,  408 , 449 ,
+  494 , 544 , 598 , 658 , 724 , 796 , 876 , 963 , 1060 , 1166 , 1282 ,
+ 1411 , 1552 , 1707 , 1878 , 2066 , 2272 , 2499 , 2749 , 3024 ,  3327 , 3660 ,
+ 4026 , 4428 , 4871 , 5358 , 5894 , 6484 , 7132 ,  7845 , 8630 ,  9493 , 10442 ,
+11487 , 12635 , 13899 , 15289 , 16818 , 18500 , 20350 , 22385 , 24623 , 27086 , 29794 ,
+32767 ,
+here swap - cell / constant StepSizeInitDataMany
+
+create IndexDeltaInitData here
+    -1 , -1 , -1 , -1 , 2 , 4 , 6 , 8 ,
+here swap - cell / constant IndexDeltaInitDataMany
+
+dspp-echo off
+
+_RED
+dspp{
+ins{
+DFID_DECODEADPCM dspp-function-id !
+$" decodeadpcm.dsp" ins-name !
+
+\ ADPCM decoding variables
+89 constant STEPTABLESIZE
+8 constant INDEXDELTASIZE
+\ register assignments
+4 constant  StepSize        \ initialize to 7
+6 constant  StepIndex       \ static
+7 constant  OutputSample    \ static
+8 constant  dviTemp         \ scratch
+9 constant  Delta           \ scratch
+10 constant  EncodedSample  \ scratch, data in high nibble
+
+STEPTABLESIZE ALLOC.IMEM.ARRAY  StepSizes
+INDEXDELTASIZE ALLOC.IMEM.ARRAY  IndexDeltas
+
+StepSizes DINI_AT_ALLOC StepSizeInitData StepSizeInitDataMany INIT.RESOURCE.ARRAY StepSizesInit
+IndexDeltas DINI_AT_ALLOC IndexDeltaInitData IndexDeltaInitDataMany INIT.RESOURCE.ARRAY IndexDeltaInit
+
+_EXPORT _LABEL: DecodeADPCM
+\ $ 309 _A SampleHolder _A _MOVE  \ debug
+	EncodedSample _reg _= ACCUME #$ F000 _AND
+
+\ delta = (EncodedSample + 1/2) * StepSize/4
+	ACCUME #$ 7000 _AND
+	ACCUME #$ 0800 _OR   \ for the +1/2
+	Delta _reg _= StepSize _reg  ACCUME   1 _<<' _*
+
+\ $ 30A _A EncodedSample _reg _MOVE  \ debug
+\ apply sign bit, encoded sample is not two's complement
+	EncodedSample _reg _TRA
+	_BPL: @DontNegate
+	Delta _%reg _NEG
+	_NOP
+_LABEL:  @DontNegate
+
+\ $ 30B _A Delta _reg _MOVE  \ debug
+	OutputSample _%reg Delta _reg _CLIP _+
+
+\ StepSize adaptation
+	EncodedSample _reg 8 _>>' _TRL   \ shift right by 12, AND with 0007,
+\ $ 30C _A OutputSample _reg _MOVE  \ debug
+	ACCUME #$ 0070 4 _>>' _AND
+	dviTemp _reg _= IndexDeltas _# ACCUME _+       \ index into IndexDeltas
+	_NOP   \ 2 NOPs required for pipeline
+	_NOP
+	StepIndex _%reg dviTemp _[reg] _CLIP _+
+	_NOP  \ required for CC to be set
+	_BGT: @PositiveIndex             \ clip between 0 and 88
+	StepIndex _reg #$ 0000 _MOVE
+	_JUMP: @LookupStepSize
+
+_LABEL: @PositiveIndex
+	StepIndex _reg STEPTABLESIZE _# _-
+	_BLT: @LookupStepSize
+	StepIndex _reg  STEPTABLESIZE 1- _# _MOVE
+
+_LABEL: @LookupStepSize
+\ $ 30D _A StepIndex _reg _MOVE  \ debug
+	dviTemp _reg _= StepSizes _# StepIndex _reg _+
+	_NOP  \ required for pipeline
+	OutputSample _reg _TRA
+	StepSize _reg dviTemp _[reg] _MOVE
+\ $ 30E _A StepSize _reg _MOVE  \ debug
+	_RTS
+
+}ins
+}dspp

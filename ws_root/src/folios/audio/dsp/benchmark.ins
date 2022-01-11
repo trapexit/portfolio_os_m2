@@ -1,0 +1,56 @@
+\ @(#) benchmark.ins 96/03/11 1.13
+\ $Id: benchmark.ins,v 1.5 1995/01/20 21:27:52 peabody Exp $
+\ Benchmark.ins  - more accurate benchmark tool.
+
+\\\	AUTODOC -class DSP -group Diagnostic -name benchmark.dsp
+\\\	Outputs current DSPP tick count.
+\\\
+\\\	  Description
+\\\
+\\\	    Output current DSPP tick count. Used by dspfaders for accurate benchmarking
+\\\	    of DSP instruments. Do not use in a title.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Number of elapsed ticks since head instrument sampled tick clock divided
+\\\	        by 32768.0. Value in the range of 0.0 to 32767.0 / 32768.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  Caveats
+\\\
+\\\	    This is a diagnostic instrument. Do not use in a title.
+\\\
+\\\	    The Output has signal type AUDIO_SIGNAL_TYPE_GENERIC_SIGNED instead of
+\\\	    AUDIO_SIGNAL_TYPE_WHOLE_NUMBER, which would return ticks as integer values.
+\\\	    If you Probe(@) this output, create the Probe with
+\\\	    { AF_TAG_TYPE, AUDIO_SIGNAL_TYPE_WHOLE_NUMBER }.
+
+include? DFID_BENCHMARK function_ids.j
+
+anew task-benchmark.ins
+
+dspp{
+ins{
+
+DFID_BENCHMARK dspp-function-id !
+$" benchmark.dsp" ins-name !
+
+DRSC_TYPE_HW_CLOCK CONNECT.HARDWARE  DownCounter
+_IMPORT  ALLOC.VARIABLE gBenchStart
+ALLOC.OUTPUT Output
+6 ALLOC.TICKS
+	Output _A _= gBenchStart _A DownCounter _A  _- \ measure ticks
+}ins
+}dspp

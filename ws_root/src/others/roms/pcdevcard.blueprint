@@ -1,0 +1,15 @@
+// @(#) pcdevcard.blueprint 96/08/23 1.1
+//
+// Blueprint file for the PC developer card ROM image.
+
+#include	"generic.defines"
+
+TAKEME {
+	System.m2 {
+		Boot {
+			dipir.pcdevcard -> DIPIRDIR/dipir.pcdevcard
+			dev.pchost DRIVERDIR/dev.pchost
+			pcdevcard.icon STUFF/pcdevcard.icon
+		}
+	}
+}

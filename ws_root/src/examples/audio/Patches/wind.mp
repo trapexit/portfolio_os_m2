@@ -1,0 +1,43 @@
+
+;******************************************************************************
+;*
+;*  @(#) wind.mp 96/01/08 1.2
+;*
+;*  Tutorial 7: Wind Sound
+;*
+;*  Randomly modulate a filter with noise input
+;*  The whistling is from the low resonance value on the filter.
+;*
+;******************************************************************************
+
+Instrument svf svfilter.dsp
+Instrument lfo1 rednoise_lfo.dsp
+Instrument lfo2 rednoise_lfo.dsp
+Instrument noise noise.dsp
+Instrument mod1 timesplus.dsp
+Instrument mod2 timesplus.dsp
+Output Output 2 Signed
+
+Connect noise   Output  0       svf     Input           0
+Connect lfo1    Output  0       mod1    InputA          0
+Connect mod1    Output  0       svf     Frequency       0 ; modulation destination
+Connect lfo2    Output  0       mod2    InputA          0
+Connect mod2    Output  0       svf     Resonance       0 ; modulation destination
+Connect svf     Output  0       .       Output          0
+Connect svf     Output  0       .       Output          1
+
+Knob Amplitude 1 Signed 0.3 ; try not to overdrive filter
+Knob FiltFreq 1 Signed 0.08 ; modulation bias
+Knob FiltFreqRate 1 LFOFreq 2.5; modulation rate
+Knob FiltFreqDepth 1 Signed 0.04 ; modulation amount
+Knob Resonance 1 Signed 0.09; modulation bias
+Knob FiltResDepth 1 Signed 0.08 ; modulation amount
+Knob FiltResRate 1 LFOFreq 10; modulation rate
+
+Connect .       Amplitude       0       noise   Amplitude       0
+Connect .       FiltFreqRate    0       lfo1    Frequency       0
+Connect .       FiltResRate     0       lfo2    Frequency       0
+Connect .       FiltFreqDepth   0       mod1    InputB          0
+Connect .       FiltFreq        0       mod1    InputC          0
+Connect .       FiltResDepth    0       mod2    InputB          0
+Connect .       Resonance       0       mod2    InputC          0

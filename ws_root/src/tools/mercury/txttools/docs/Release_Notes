@@ -1,0 +1,162 @@
+Texture Tools Release Notes
+
+M2 Texture Tools Version 1.0a1
+
+To help developers get started, several basic conversion and manipulation tools have 
+been included along with their source code.  Binaries for these tools will be provided 
+in the form of Mac MPW tools and as SGI command-line tools.  Below is a list of the 
+tools and a brief description.
+ 
+Command-line tools:
+*psdtoutf    - Convert a Photoshop 2.5 or 3.0 file to a UTF file.
+*quantizer   - Color quantizes UTF imagery using the M2 Texture Library.
+*quanttopip  - Color quantizes UTF imagery using an existing color palette.
+*sgitoutf    - Convert a SGI image file to a UTF file.
+*utfaddlod   - Concatenate the levels of detail of one UTF file onto the end of another.
+*utfcompress - Compress a UTF file using run-length encoding and/or multi-texel compression.**
+*utffit      - Resize a UTF file so that all the texture's levels of detail fit into TRAM(or a specified amount of TRAM).
+*utfflip     - Vertically flip a UTF image.
+*utfinfo     - Returns the header information of a UTF file.
+*utflitdown  - Reduce the bit-depth of a literal channel (alpha or color).
+*utfmakelod  - Create (or delete) levels of detail in a UTF file.
+*utfmakepip  - Try to convert a literal to an indexed UTF image. (No color reduction done.)
+*utfmakesame - Compress one image using another as a template.  Also does palette re-mapping.
+*utfmerge    - Merge a channel (color, alpha, or SSB) from one UTF file into another UTF file.
+*utfmipcat   - Concatenates the levels of detail into a single image for processing.
+*utfmodpip   - Query and manipulate individual values in a UTF PIP (palette) chunk.
+*utfpopfine  - Discards a specified number of the finest levels of detail.
+*utfresize   - Resize the finest level of detail to a specified size.
+*utfstrip    - Remove a PIP, DCI, TAB, DAB, Load Rects, or LODs from a UTF file.
+*utfuncompress - Uncompress a compressed UTF file.**
+*utfunmip    - Extracts levels of detail from a single image.  The reverse of utfmipcat.
+
+*utftoppm    - Convert a UTF file to ppm files (All channels and levels of detail).
+*ppmtoutf    - Convert a ppm image to a UTF file
+
+**Rev E (or earlier) development hardware does not support compressed textures.
+You should only compress textures to get an idea of their size on the final hardware.  
+Using a compressed texture with Rev E (or earlier) hardware will lead to unpredictable 
+results.  
+Rev G hardware does have support for compressed textures.
+
+An example batch conversion script, mippify, is included as an example of how to create M2-ready textures in a single pass.
+
+For more information about the M2 Texture Library, tools, and the UTF format, see the 
+M2 Graphics Tools Documentation.
+
+Version 1.0a3 
+8/7/95
+===============================
+*A new tool called utflitdown has been added to reduce the bit-depth of literal channels.
+*utfstrip has been given some new options to strip out the DCI, TAB, DAB, and Load 
+Rectangles chunks.
+*ppmtoutf has had its parameters changed to make them more intuitive. -rgb has been
+replaced by -24 and -16 which allow the user to specify what type of literal color 
+channel to use.
+
+
+Version 1.0a5 
+10/14/95
+===============================
+*sgitoutf has been added to convert SGI image files to UTF files.  It replaces the old 
+tool readRGB, which had a user interface inconsistent with the other tools.  It converts
+both alpha and color channels.
+*utfinfo now will report the TAB settings of a UTF file.  Useful for checking the 
+defaults of a texture.
+*utffit has two new options -ypow and -xpow.  These will lock the a given dimension to 
+a power of two.  This is useful for batch processing images that need to be tiled.
+*utfmakesame would crash if an index image was the source image and the reference file 
+was a literal image.  This was caused by the above bug in the M2 Texture Library
+*quantizer would crash if out of range colors were (not in the range 1-256).  It now 
+checks for valid values.
+*quantizer would crash if it was told to quantize a channel that did not exists.  It now
+writes out the input file unchanged.
+*All the tools now print out a description and a version number when no arguments are 
+given.  The tools currently report their version number as being 1.1.
+*All tools that do re-sampling (utffit, utfresize, utfmakelod) now will only except 
+filter values in the proper range (1-6).  Previous version improperly said that 0 was a
+valid filter type.
+*All tools will set proper file type and creator when run on the Mac.  The file type 
+will be set to "3DOt" (for a UTF texture) and the creator will be "Rean" which is Post
+Pro.
+
+Version 1.0a6
+12/18/95
+===============================
+*A new tool, quanttopip, has been added.  This tool takes in an input image, a reference
+image with a PIP and will generate an output image that is a quantized version of the 
+input image using the PIP of the reference image.  This is useful for batch processing
+large numbers of images to make them share the same PIP.
+*Due to a bug in the library, all previous versions of tools would deal with 
+"transparent" formats (formats with the IsTrans flag set) incorrectly.  This means that
+all compressed data should be regenerated with new versions of these tools or custom
+tools compiled with this release of the M2 Texture Library.  As always, compressed 
+textures will only work with BDA 2.0.
+*Due to a bug in the library, Mac versions of the tools in the previous release could
+not overwrite existing files.  This has been fixed.
+*Due to a bug in the library, utfmakesame would generate bad data in the case someone
+wanted to convert and indexed image to a literal image.  This has been fixed.  Also,
+error checking has been relaxed to allow the decomposition of indexed images into literal components so that a person could extract an alpha or SSB channel that has been
+"folded" into the PIP.
+*The previous version of utffit had a bug that caused it to miscalculate the size that
+an image should be to fit into TRAM in some cases.  Also, utffit would re-sample an 
+image even if it was already at the correct size to fit into TRAM.  This could 
+effectively cause an image to be re-sampled as many as three times in a batch processing
+script like mippify.  This caused the images to become excessively blurry, leading to 
+poor looking MIP-maps.  utffit now only re-samples an image if it is absolutely
+necessary.
+*utfinfo now gives the number of colors present in the PIP.
+
+Version 1.0a7
+1/18/96
+===============================
+*utfinfo now reports the Maximum texture size as well as the Minimum.
+*quantizer previously would not work on indexed images (only literal images).  It will
+now work with indexed images and the resulting file will also be an indexed image.  The
+output image's color depth will be the same as the input image.  Use utfmakepip to
+reduce the color depth of the resulting image if necessary.
+
+Version 1.0a8
+2/29/96
+===============================
+*Due to a few bugs in the M2 Texture Library, compressed images with alpha and SSB could
+get incorrect values under multi-texel compression.  All images compressed with
+utfcompress should be re-compressed if they contain alpha and SSB data.
+*utfinfo now reports DAB settings.
+
+Version 1.0a9
+3/8/96
+===============================
+The M2 Texture Tools are now built with 3DO's MPW 3.0 environment (SC and MrC).
+
+*quantizer has been changed so that it will quantize all the levels of detail in an
+image instead of only the first level of detail.  This makes using utfmipcat and 
+utfunmip for color quantization unnecessary.
+*utfmakepip has been modified to work on all the levels of detail on an image instead
+of just the first LOD.
+*utffit has a new option, -p, which allows the user to specify a percentage of TRAM to
+use.  This is useful for creating multiple textures to fit into a single TRAM load.
+*Copyright notices were updated to 1996 in the Mac resource fork.
+
+Version 1.0a9m2
+4/5/96
+===============================
+*psdtoutf in the previous version didn't properly set the number of colors in a PIP
+image, causing indexed images to crash on the Mac 68K version during file output.  This
+has been fixed for this release.
+
+Version 2.0d3
+5/10/96
+===============================
+
+The Release Notes for the M2 Texture Library and the Texture Tools have been separated.
+From now on, the version numbers will reflect those of the Tools and not the Library.
+
+M2 Texture Tools Version 3.0
+8/10/96
+=============================
+
+*utfinfo will now report sub-texture information in a UTF (Mercury) texture page.  It will also work on concatenated UTF files and report information on each valid UTF texture it finds instead of just the first one. It also will work with compressed texture pages.
+*utffit now has better bounds checking so that 0x0 textures (when utffit is given an impossible task) don't result.
+*tifftoutf has been added to allow the conversion of TIFF images to UTF.  Color (Literal and indexed) as well as alpha channels are supported.
+*utfstrip can now strip out the color, alpha, and SSB channels from a UTF image. Be careful, do such things can result in illegal UTF textures (which utfstrip will warn about).

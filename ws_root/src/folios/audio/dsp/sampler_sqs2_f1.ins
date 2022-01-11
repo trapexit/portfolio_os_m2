@@ -1,0 +1,72 @@
+\ @(#) sampler_sqs2_f1.ins 96/03/11 1.10
+\ $Id: sampler_16_f1.ins,v 1.9 1995/01/20 21:27:52 peabody Exp $
+\ sampler_16_f1 - Instrument Template for Sample Player without rate conversion
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_sqs2_f1.dsp
+\\\	Fixed-rate mono sample player with SQS2 2:1 decompression.
+\\\
+\\\	  Description
+\\\
+\\\	    Fixed-rate SQS2-format sample player.
+\\\
+\\\	    This instrument plays a monophonic SQS2 compressed sample at the system
+\\\	    sample rate, normally 44100 Hz. The sample can be compressed using the
+\\\	    SquashSnd tool.
+\\\
+\\\	    The M2 system does this decompression in hardware, so it has very little DSP
+\\\	    overhead.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0. Defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_f1.dsp(@), sampler_adp4_v1.dsp(@), sampler_cbd2_f1.dsp(@)
+
+include? DFID_SAMPLER_SQS2_F1 function_ids.j
+
+anew task-sampler_sqs2_f1.ins
+
+
+_BULLDOG
+dspp{
+ins{
+DFID_SAMPLER_SQS2_F1 dspp-function-id !
+$" sampler_sqs2_f1.dsp" ins-name !
+dspp-echo off
+
+DRSC_INFIFO_SUBTYPE_SQS2 ALLOC.INFIFO.SUBTYPE  InFIFO
+
+	include sampler_16_f1.j
+
+}ins
+}dspp

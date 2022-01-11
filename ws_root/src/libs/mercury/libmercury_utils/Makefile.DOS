@@ -1,0 +1,146 @@
+# Makefile
+#
+# 19 Apr 96
+# The 3DO Company
+
+TARGET = libmercury_utils.a
+
+OS = nick_4_18
+3DO = /3do
+
+INCDIR = $(3DO)/includes/$(OS)
+MODDIR = $(3DO)/modules/$(OS)
+LIBDIR = $(3DO)/libs/$(OS)
+
+CSOURCES = \
+	MatrixData.c \
+	Matrix_BillboardX.c \
+	Matrix_BillboardY.c \
+	Matrix_BillboardZ.c \
+	Matrix_Construct.c \
+	Matrix_Copy.c \
+	Matrix_CopyOrientation.c \
+	Matrix_CopyPosition.c \
+	Matrix_Destruct.c \
+	Matrix_FullInvert.c \
+	Matrix_GetTranslation.c \
+	Matrix_Identity.c \
+	Matrix_Invert.c \
+	Matrix_LookAt.c \
+	Matrix_Move.c \
+	Matrix_MoveByVector.c \
+	Matrix_Mult.c \
+	Matrix_MultiplyTop.c \
+	Matrix_MultTop.c \
+	Matrix_Normalize.c \
+	Matrix_Perspective.c \
+	Matrix_Print.c \
+	Matrix_Rotate.c \
+	Matrix_RotateX.c \
+	Matrix_RotateY.c \
+	Matrix_RotateZ.c \
+	Matrix_Scale.c \
+	Matrix_ScaleByVector.c \
+	Matrix_ScaleLocal.c \
+	Matrix_ScaleLocalByVector.c \
+	Matrix_SetTranslation.c \
+	Matrix_SetTranslationByVector.c \
+	Matrix_Translate.c \
+	Matrix_TranslateByVector.c \
+	Matrix_Turn.c \
+	Matrix_TurnLocal.c \
+	Matrix_TurnX.c \
+	Matrix_TurnXLocal.c \
+	Matrix_TurnY.c \
+	Matrix_TurnYLocal.c \
+	Matrix_TurnZ.c \
+	Matrix_TurnZLocal.c \
+	Matrix_Zero.c \
+	Vector2D_Set.c \
+	Vector3D_Add.c \
+	Vector3D_Average.c \
+	Vector3D_Compare.c \
+	Vector3D_Copy.c \
+	Vector3D_Cross.c \
+	Vector3D_Dot.c \
+	Vector3D_Length.c \
+	Vector3D_Maximum.c \
+	Vector3D_Minimum.c \
+	Vector3D_Multiply.c \
+	Vector3D_MultiplyMatrix.c \
+	Vector3D_Negate.c \
+	Vector3D_NegateCopy.c \
+	Vector3D_Normalize.c \
+	Vector3D_Print.c \
+	Vector3D_Scale.c \
+	Vector3D_Set.c \
+	Vector3D_Subtract.c \
+	Vector3D_Zero.c
+
+SSOURCES = \
+
+OBJECTS	:= ${CSOURCES:%.c=%.o} ${SSOURCES:%.s=%.o} \
+
+CC = dcc
+AS = ppcas
+AR = dar
+AROPTS = cq
+LINK = link3do
+FTP = /bin/cuteftp/cutftp32
+
+DEFINES = -DNUPUPSIM -D__3DO__ -DOS_3DO=2
+
+CFLAGS = $(DEFINES) \
+        -I../include \
+        -I../../include \
+	-I$(INCDIR) \
+        -DGSTATE_PRIVATE
+        -Xstring-align=1 \
+        -Ximport \
+        -Xforce-declarations \
+        -Xforce-prototypes
+
+ifdef DEBUG
+	CCOPTS = -g
+else
+	CCOPTS = -XO -Xinline=5 -Xtest-at-bottom -Xunroll=1
+	STRIP = -s
+endif
+
+CFLAGS += $(CCOPTS)
+
+LINKOPTS = -D -r $(STRIP) \
+	-Htime=now \
+	-Hsubsys=1 \
+	-Hversion=30 \
+	-Hrevision=0 \
+	-Hosversion=30 \
+	-Hosrevision=0 \
+	-Hname=game \
+	-Hstack=32768 \
+	-Htype=5 \
+	-Hflags=0
+
+ASFLAGS = -I../include \
+          -I$(INCDIR) \
+          -I../../include
+
+$(TARGET):      ${OBJECTS}
+	-rm $@
+	$(AR) $(AROPTS) $@ $(OBJECTS)
+	@echo "... Finished ..."
+	@echo ""
+	@echo ""
+
+all:	$(TARGET)
+	@echo "... Finished ..."
+	@echo ""
+	@echo ""
+
+clean:
+	-rm *.o
+	@echo "... Finished ..."
+	@echo ""
+	@echo ""
+
+# End of File

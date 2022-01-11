@@ -1,0 +1,7 @@
+@(#) archive.txt 96/02/14 1.1
+
+libmusic.a archive
+
+The files in this directory are here only for archival purposes. They are no
+longer intended to be part of the music library.
+

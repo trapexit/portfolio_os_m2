@@ -1,0 +1,15 @@
+How to build Gcomp for Mercury
+
+1. Copy ( Check out ) the source code into gmerc directory
+
+For MPW
+
+2. Set gmerc folder as the directory.
+3. Type the command "makeit clean"
+4. Type the command "makeit gmerc"
+
+For SGI
+
+2. Go to gmerc directory
+3. Type command "gmake clean"
+4. Type command "gmake gmerc"

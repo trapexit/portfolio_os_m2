@@ -1,0 +1,12 @@
+! @(#) linkexec.x 96/05/28 1.3
+!
+MODULE 7
+EXPORTS 0=LoadIcon
+EXPORTS 1=LoadIconVA
+EXPORTS 2=UnloadIcon
+EXPORTS 3=SaveIcon
+EXPORTS 4=SaveIconVA
+EXPORTS 5=GetHWIcon
+
+IMPORT_ON_DEMAND iff
+REIMPORT_ALLOWED iff

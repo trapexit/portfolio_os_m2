@@ -1,0 +1,69 @@
+\ @(#) timesplus_noclip.ins 96/03/11 1.8
+\ A*B+C
+
+\\\	AUTODOC -class DSP -group Arithmetic -name timesplus_noclip.dsp
+\\\	Single-operation, unclipped multiply and accumulate (A*B+C).
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument returns the result of InputA * InputB + InputC. This is
+\\\	    useful for mixing control signals. The signed result is not clipped.
+\\\
+\\\	  Knobs
+\\\
+\\\	    InputA, InputB - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed factors. -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	    InputC - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed offset. -1.0 to 1.0, defaults to 0.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Signed result of InputA * InputB + InputC. -1.0 to 1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 7
+\\\
+\\\	    Code: 7 words
+\\\
+\\\	    Data: 4 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V29
+\\\
+\\\	  Caveats
+\\\
+\\\	    Multiplying -1.0 by -1.0 causes an overflow yielding a result of -1.0.
+\\\	    Thus, if you multiply a signal by -1.0, it will pop if the signal also
+\\\	    contains -1.0.
+\\\
+\\\	  See Also
+\\\
+\\\	    add.dsp(@), multiply.dsp(@), timesplus.dsp(@), multiply_unsigned.dsp(@),
+\\\	    expmod_unsigned.dsp(@)
+
+include? DFID_TIMESPLUS function_ids.j
+
+anew task-timesplus.ins
+
+_RED
+dspp{
+ins{
+
+DFID_TIMESPLUS dspp-function-id !
+$" timesplus.dsp" ins-name !
+
+
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputA
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputB
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputC
+ALLOC.OUTPUT Output
+7 ALLOC.TICKS
+
+	Output _A _= InputA _A InputB _A  InputC _A  _*+
+
+}ins
+}dspp

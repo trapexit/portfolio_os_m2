@@ -1,0 +1,105 @@
+\ @(#) halfstereo8.ins 95/11/16 1.8
+\ $Id: halfstereo8.ins,v 1.6 1994/08/18 20:01:44 peabody Exp $
+\ half sample rate, 8 bit stereo sample player
+\
+\ 2 States
+\    0  => get new 16 bit word, interpolated both
+\    1  => play low and high byte
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+
+\\\	NOAUTODOC -private -class DSP -name halfstereo8.dsp
+\\\	OBSOLETE - Play a stereo 8-bit sample at 22,050 hertz.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a stereo 8-bit sample recorded at 22,050 hertz.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    LeftOutput
+\\\
+\\\	    RightOutput
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 37
+\\\
+\\\	    Code: 45 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    fixedstereo8.dsp, halfstereosample.dsp
+\\\
+
+include? DFID_HALFSTEREO8 function_ids.j
+
+anew task-halfstereo8.ins
+dspp-echo off
+_RED
+dspp{
+ins{
+
+DFID_HALFSTEREO8 dspp-function-id !
+$" halfstereo8.dsp" ins-name !
+
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    Toggle     \ are we on or between samples
+ALLOC.IMEM    PrevLeft   \ previous for interpolation, expanded to 16 bits
+ALLOC.IMEM    PrevRight   \ previous for interpolation, expanded to 16 bits
+ALLOC.IMEM    SampleHold   \ hold sample from FIFO
+ALLOC.OUTPUT LeftOutput
+ALLOC.OUTPUT RightOutput
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+37 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A #$ 0000 _+	\ address of FIFO status
+	_BEQ: @Done
+
+\ -------------------------------------------
+	Toggle _%A #$ 8000 _+   \ alternate between neg and pos
+	_BMI: @GetNewSamp
+
+\ play left byte
+	PrevLeft _A _= SampleHold _A #$ FF00 _AND         \ mask off high byte
+	LeftOutput _A _= ACCUME Amplitude _A _*
+
+\ play right byte
+	PrevRight _A _= SampleHold _A 8 _<<' _TRL  \ shift right byte into high position
+	RightOutput _A _= ACCUME Amplitude _A _*
+	_JUMP: @Done
+
+_LABEL: @GetNewSamp
+\ get new stereo 8 bit sample
+	SampleHold _A  _= InFIFO _A _TRL    \ get 16 bits from FIFO \ 930420
+
+\ interpolate left byte
+	ACCUME #$ FF00 _AND             \ mask off high byte
+	ACCUME 1 _>>>' _TRA             \ arithmetic shift right
+	PrevLeft _A #$ 4000 ACCUME _*+      \ p/2 + h/2
+	LeftOutput _A _= ACCUME Amplitude _A _*
+
+\ interpolate right byte
+	SampleHold _A 8 _<<' _TRL  \ shift right byte into high position
+	ACCUME 1 _>>>' _TRA
+	PrevRight _A #$ 4000 ACCUME _*+      \ p/2 + lo/2
+	RightOutput _A _= ACCUME Amplitude _A _*
+
+_LABEL: @Done
+
+}ins
+}dspp

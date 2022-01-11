@@ -1,0 +1,41 @@
+\ $Id: adpcmduck22s.ins,v 1.3 1994/12/15 00:35:23 phil Exp $
+\
+\ 3DO DSPP code
+\
+\ DSPP stuff proprietary property of 3DO -- DO NOT DISTRIBUTE!!!!!
+\
+\ (c) Copyright 1993, 1994 by The Duck Corporation, written by Dan Miller
+\ sections (c) Copyright 1993 by 3DO
+\
+\	adpcmduck.ins35	--	Fixes for release (sugg. by Phil Burk)
+\	         0xF77F indicates next word = indexes; hi byte=L, lo byte=R
+\	         No count, no tag -- still inits old way, though
+\
+\
+\ This can be re-written with proper allocation and optimized DSPP
+\ code.  If Duck's audio init routine fails on GrabKnob("PlayControl"),
+\ it will skip initialization. In this case, no calls will be made to
+\ TweakKnob(); this should allow functional replacement of this code.
+\
+\ 940325 PLB Modified by Phil Burk to conform with 3DO standard practice
+\     Problem areas are marked with a %B
+
+
+include? I_FrameCount dspp_map.j
+include? DFID_ADPCMDUCK22S function_ids.j
+
+anew task-adpcmduck22s.ins
+
+_RED
+dspp{
+ins{
+dspp-echo off
+DFID_ADPCMDUCK22S dspp-function-id !
+$" adpcmduck22s.dsp" ins-name !				    \ initialize instrument
+
+22050 constant ADPCM_DUCK_RATE
+
+\ 203 ALLOC.TICKS 
+0 ALLOC.TICKS 
+
+include adpcmduck.j

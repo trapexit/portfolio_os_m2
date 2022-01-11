@@ -1,0 +1,10 @@
+# @(#) Makefile.disabled 96/09/09 1.2
+# Generic demo song Makefile.
+
+EXAMPLE_CLASS =		Audio/Songs/${DIRNAME}
+TARGET_DIRECTORY =	${REMOTE_DIR}/Examples/${EXAMPLE_CLASS}
+TARGET_NAMES =		${R64FILES:%.R64=%} ${wildcard *.pimap}
+
+include ${CODEMGR_WS}/ws_root/variables/datafiles
+include ${CODEMGR_WS}/ws_root/rules/datafiles
+

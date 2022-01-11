@@ -1,0 +1,26 @@
+# build pForth release directory
+    echo "rm -rf $1"
+    rm -rf $1
+
+    mkdir $1
+    echo "copy forth source"
+    cp *.fth $1
+    cp -r pforth/tests/*.fth $1
+    cp pforth/other/rlsMakefile $1/Makefile
+
+    echo "make objects and csrc directories"
+    mkdir $1/objects
+    mkdir $1/csrc
+    cp pforth/*.[ch] $1/csrc
+    echo "uudecode pforth/other/pforth.make.uu"
+    uudecode pforth/other/pforth.make.uu
+    mv pforth.make $1/pforth.make
+
+    mkdir $1/docs
+    cp pforth/docs/README.txt $1
+    cp pforth/docs/pfmanual.txt $1/docs
+
+    mkdir $1/utils
+    cp pforth/utils/*.fth $1/utils
+
+    echo "pforth all put into $1"

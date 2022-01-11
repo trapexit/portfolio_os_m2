@@ -1,0 +1,59 @@
+# @(#) makeexamples 96/08/23 1.5
+# Variables used for building and installing example programs (executable,
+# source, and docs). May be used in conjunction with multilink, linkexec, and
+# the like.
+#
+# Input variables supplied by Makefile
+#	EXAMPLE_CLASS		Where to put example relative to
+#				${REMOTE_DIR}/Examples (executable) and
+#				${PLATFORM_DIR}/examples (source and docs).
+#				Defaults to 'Misc'. Used to construct
+#				DELIVER_FILES_TO and TARGET_DIRECTORY.
+#
+#	DELIVER_THESE_FILES	Defaults to everything that looks like source
+#				and documentation.
+#
+#	DELIVER_FILES_TO,
+#	TARGET_DIRECTORY	If not specified a default is constructed based
+#				on EXAMPLE_CLASS.
+#
+# Output variables
+#	DELIVER_THESE_FILES	Value from Makefile or default of anything that
+#				looks like source or documentation.
+#
+#	CDEFINES		Value from Makefile with -DEXTERNAL_RELEASE
+#				appended to it.
+#
+#	REQUIRE_HIERARCHICAL_INCLUDES
+#				Set to 1.
+#
+#	DELIVER_FILES_TO,
+#	TARGET_DIRECTORY	Delivery locations for source and
+#				executable, respectively. Either is the value set in
+#				client's Makefile or the default value of
+#				${PLATFORM_DIR}/examples/${EXAMPLE_CLASS} and
+#				${REMOTE_DIR}/Examples/${EXAMPLE_CLASS}, respectively.
+#
+#	EXTRA_AUTOMAGIC_DIRS	Set to ${DELIVER_FILES_TO}/Objects in order to create
+#				an Objects directory under the source directory.
+
+ifndef EXAMPLE_CLASS
+EXAMPLE_CLASS = 	Misc
+endif
+
+# Source and documentation delivery
+ifndef DELIVER_THESE_FILES
+DELIVER_THESE_FILES =	${CSRC} ${CPPSRC} ${CXXSRC} ${SSSRC} ${SSRC} ${filter %.h %.i %.txt %.make,${ALLFILES}}
+endif
+ifndef DELIVER_FILES_TO
+DELIVER_FILES_TO =	${PLATFORM_DIR}/Examples/${EXAMPLE_CLASS}
+endif
+EXTRA_AUTOMAGIC_DIRS +=	${DELIVER_FILES_TO}/Objects
+
+# Executable delivery
+ifndef TARGET_DIRECTORY
+TARGET_DIRECTORY =	${REMOTE_DIR}/Examples/${EXAMPLE_CLASS}
+endif
+
+# Compilation control
+CDEFINES +=		-DEXTERNAL_RELEASE

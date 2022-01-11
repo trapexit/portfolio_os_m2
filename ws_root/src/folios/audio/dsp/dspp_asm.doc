@@ -1,0 +1,483 @@
+\ @(#) dspp_asm.doc 96/01/17 1.8
+
+DSPP_ASM by Phil Burk
+
+Copyright 3DO 1993-1996 - Proprietary and Confidential
+
+==================== IMPORTANT ================================
+
+Please do NOT give this document to ANYONE without explicit permission
+from Phil Burk. This includes 3DO employees. The reason is because .dsp
+instruments have to be supported as if they were hardware features. If
+someone uses a custom instrument in a title that we cannot support on
+future hardware then that title will break, or we may be prevented from
+improving the hardware. If you write a custom instrument that you would
+like to have used in a 3DO title, then you must have it approved by Phil
+Burk, and have it registered as an officially supported DSPP instrument.
+
+================================================================
+
+DSPP_ASM is a Forth based RPN assembler for the Opera DSP.
+It provides:
+
+	DSPP code generation
+	.DSP and .3INS file generation for the audio folio
+
+You can also create other forms of output including 'C' source data using
+the dspp.dump.c command. [See below.]
+
+If the Forth is run interactively on the PPC, one can assemble
+code and run it directly.   Forth and DSPP code can be intermixed
+so that symbol names and values are auomatically consistent.
+This provides a convenient test environment for the DSPP.
+
+[Please note that this Forth is NOT case sensitive!]
+
+Also note that very few people have programmed the DSPP.  If you
+are reading this document, then you are a pioneer.  Please help
+us by letting us know how we can improve this document.
+
+===========================================================
+The Forth
+
+We use a Forth written in 'C' by Phil Burk called pForth.
+
+See the Makefiles in $ROOT/src/tools/pforth_all and in
+$ROOT/src/folios/audio/dsp for information on how to run pForth.
+
+For more Forth information, including the latest ANS document,
+look on the Web at:
+	http://www.taygeta.com/forth.html
+
+General Forth syntax.
+
+	Forth code consists of words with spaces between them.
+
+	Words are parsed in left to right order and interpreted.
+	Interpretation consists of looking up the word in the dictionary
+	and executing its associated code if found.  If it is not found,
+	it is treated as a number which is placed on the stack.  If it is
+	an invalid number, an abort occurs.
+
+	Hexadecimal numbers are preceded with an unattached dollar sign,
+	eg.  $ F3D7
+
+	\ A backslash turns the rest of the line into a comment.
+
+	( Comments can also be in parentheses. )
+
+===========================================================
+Tutorial
+
+
+Operands are placed before the opcode because this is Reverse Polish
+Notation. The advantage of RPN is that it is very easy to build macros and
+pass operands as parameters. The disadvantage is that it is verbose and
+does not look like typical assembly language.
+
+Lets look at a simple DSP instrument that plays a SawTooth wave.
+
+First we include the file that defines the registered DSP instrument IDs.
+This file is currently maintained by 3DO.
+
+	include? DFID_SAWTOOTH function_ids.j
+
+Then we use ANEW to mark the beginning of a new file.
+If you reload this file during the same Forth session,
+then ANEW will cause the old definitions to be forgotten
+and replaced the new ones.
+
+	anew task-sawtooth.ins
+
+Declare the ASIC version and initialize the assembler and
+instrument writing code.
+
+	_BULLDOG
+	dspp{
+	ins{
+
+Specify the registered ID for this instrument.
+
+	DFID_SAWTOOTH dspp-function-id !
+
+Specify the name for this instrument.
+
+	$" sawtooth.dsp" ins-name !
+
+Allocate memory for a knob that can be used to control Frequency.
+We set the default frequency to 440 Hertz.
+
+	$ 8000 440 22050 */ KNOB_TYPE_OSC_FREQ ALLOC.KNOB.M2 Frequency
+
+Allocate an Amplitude knob with default set to maximum volume.
+
+	$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+
+Allocate an internal variable.
+
+	ALLOC.VARIABLE  SawPhase
+
+Allocate a variable that can be read by others as output.
+
+	ALLOC.OUTPUT Output
+
+Allocate the number of ticks required for this instrument
+as measured by the shell program "dspfaders".
+
+	8 ALLOC.TICKS
+
+To play a sawtooth all we need is a value that increases from -1 to +1
+then wraps around.  The easiest way to do this is simply to add a value
+to a variable then output the result.  The 16 bit value will wrap around
+from +1 to -1 as long as clipping is not turned on.
+
+Add Frequency to SawPhase and write the result back to SawPhase
+using the WriteBack addressing mode.
+
+		SawPhase _%A Frequency _A _+
+
+Multiply result left in accumulator by the Amplitude knob and write
+to the Output variable.
+
+		Output _A _= ACCUME Amplitude _A _*
+
+Terminate the instrument and DSPP assembler.
+
+	}ins
+	}dspp
+
+This file is call "sawtooth.ins".  By doing a build in the
+$ROOT/src/folios/audio/dsp directory, the "sawtooth.dsp" instrument
+will be created and written to the release directory.
+
+We use underscores in _= _# _A and _+ to distinguish them from their
+Forth equivalents.  Noteice that the opcode _+ came at the end of the line.
+At that point all the operands are on the stack, ready to be assembled.
+Operands generally consist of a value and a type.  Here are some operands
+and their meaning:
+
+	17 _#    \ immediate decimal 17
+	$ 1E _#  \ immediate hex 1E
+	17 _A    \ address 17
+	#$ 1E    \ immediate hex 1E, shorthand form
+	A$ 1E    \ address hex 1E, shorthand form
+	17 _%A    \ address 17 with writeback
+
+===========================================================
+
+Reference
+
+-----------------------------------------------------------
+Operands
+-----------------------------------------------------------
+
+These are used to specify a register type operand:
+
+	7 _REG   2 _%REG   _+
+
+_REG    ( -- type , normal )
+_[REG]  ( -- type , indirect )
+_%REG   ( -- type , writeback )
+_[%REG] ( -- type , writeback indirect )
+
+As an short alternative we have also defined the 16 registers
+as single words.
+
+R0 ( -- 0 reg_type )
+	R0  R7  _+
+is the same as
+	0 _REG  7 _REG  _+
+
+R1 ( -- 1 reg_type )
+and so on up to
+R15 ( -- 15 reg_type )
+
+Likewise for
+%R0
+[R0]
+[%R0]
+..........................................................
+These are used to specify an address type operand:
+
+	$ 100 _A   $ 120 _%A   _+
+
+_A     ( -- type , normal )
+_[A]   ( -- type , indirect )
+_%A    ( -- type , writeback )
+_[%A]  ( -- type , writeback indirect )
+
+..........................................................
+Shorthand operands:
+
+A$    ( <num> -- num type )
+	A$ 110   A$ 120  _+
+is the same as
+	$ 110 _A   $ 120 _A  _+
+
+%A$   ( <num> -- num type )
+[A]$  ( <num> -- num type )
+[%A]$ ( <num> -- num type )
+
+: #$ ( <num> -- num type )
+
+Register shorthand:
+
+
+..........................................................
+Other operands:
+
+_#     ( -- type , immediate )
+	$ 123 _#   $ 100 _A   _*
+
+_'  ( -- type , instant barrel shift )
+
+ACCUME ( -- 0 ACCUME_TYPE , use accumulator as operand )
+	$ 100 _A   ACCUME   _+
+
+..........................................................
+
+: FIFOSTATUS+ ( -- , modify previous FIFO address to address STATUS reg )
+: FIFOREAD+ ( -- , modify previous FIFO address to address CURRENT reg )
+
+..........................................................
+Result:
+You can specify a result to be written to memory:
+
+	R9 _=   A$ 140   #$ 0079   _+  \ R9 equals $140 plus #$79
+
+_= ( num type -- )
+
+_=A  ( -- , convenience to get the contents of the accumulator )
+
+	\ These two instructions are the same
+	Result _A _=A
+	Result _A _= ACCUME _TRL
+
+-----------------------------------------------------------
+Barrel Shifter - free with ALU operations
+-----------------------------------------------------------
+
+_<<   (  num type -- )
+_>>   (  num type -- )
+_>>>  (  num type -- )
+
+	A$ 100  R8  $ 130 _A  _>>  _+ \   add R8 to A:100, shift by contents of A:130
+
+_<<'  ( num -- , literal )
+_>>'  ( num -- , literal )
+_>>>' ( num -- , literal )
+
+
+	A$ 100  R8  4  _>>'  _+ \   add R8 to A:100, shift by 4
+
+_CLIP ( -- , turn on saturation arithmetic )
+
+	R7 R9 _CLIP _+
+
+-----------------------------------------------------------
+OpCodes
+-----------------------------------------------------------
+Unary
+
+_TRA  ( num type -- )
+_NEG
+_++
+_--
+_TRL
+_NOT
+
+...........................................................
+Binary
+
+_+   ( numA typeA numB typeB -- )
+_+C
+_-
+_-B
+_AND
+_NAND
+_OR
+_NOR
+_XOR
+_XNOR
+_*
+_*NEG
+_*NOT
+
+...........................................................
+Trinary
+
+_*+      ( numA typeA numB typeB numC typeC -- , A*B+C )
+_*+C
+_*-
+_*-B
+_*AND
+_*NAND
+_*OR
+_*NOR
+_*XOR
+_*XNOR
+
+...........................................................
+Memory Move for registers or addresses
+
+_MOVE  ( numDst typeDst numSrc typeSrc  -- , make move opcode )
+Caution: make sure you wait for the source to make it out of the pipeline.
+
+	Dest _A   Source _REG  _MOVE
+
+-----------------------------------------------------------
+Special Instructions
+-----------------------------------------------------------
+
+_ORG ( address -- , sets N address (directive: not an instruction) )
+_NOP ( -- , do nothing )
+_BAC ( -- , branch to value in accumulator )
+_RTS ( -- return from subroutine )
+_SLEEP ( -- , go to sleep )
+_OP_MASK ( xx -- )
+_RBASE# ( rb regnum -- , set M2 RBase using regnum to figure out which RBase instruction to use)
+_RBASE0 ( r  -- , set M2 RBase0 )
+_RBASE4 ( rb -- , set M2 RBase4 )
+_RBASE8 ( rb -- , set M2 RBase8 )
+_RBASE12 ( rb -- , set M2 RBase12 )
+
+-----------------------------------------------------------
+Branches and Labels
+-----------------------------------------------------------
+
+_LABEL: ( <name> -- , set a label (directive: not an instruction) )
+
+_JUMP: ( <label> -- , jump to the label )
+_JSR: ( <label> -- , subroutine call to the label )
+_BVS: ( <label> -- )
+_BMI: ( <label> -- )
+_BRB: ( <label> -- )
+_BEQ: ( <label> -- )
+_BCS: ( <label> -- )
+_BHS: ( <label> -- )
+_BOP: ( <label> -- )
+_BVC: ( <label> -- )
+_BPL: ( <label> -- )
+_BRP: ( <label> -- )
+_BNE: ( <label> -- )
+_BCC: ( <label> -- )
+_BLO: ( <label> -- )
+_B??: ( <label> -- )
+_BLT: ( <label> -- )
+_BLE: ( <label> -- )
+_BGE: ( <label> -- )
+_BGT: ( <label> -- )
+_BHI: ( <label> -- )
+_BLS: ( <label> -- )
+_BXS: ( <label> -- )
+_BXC: ( <label> -- )
+_BAZ: ( <label> -- )
+_BNZ: ( <label> -- )
+
+	_LABEL:  LoopHere
+		R7  R9  _-
+		_BGE:  LoopHere  \ branch back if >= 0
+
+Labels preceded with a @ are considered local to a routine.
+
+	_LABEL  GlobalFoo
+		_NOP
+	_LABEL: @DoItAgain
+		_JSR:  GlobalMoo
+		FlagVar _A _TRL   \ pass though ALU to set CC
+		_BNE:  @DoItAgain
+		_SLEEP
+
+	_LABEL  GlobalMoo     \ non local label clears local label table
+		_NOP
+	_LABEL: @DoItAgain    \ we can use the same name as above cuz @ makes it local
+		R7  R9  _-
+		_BGT:  @DoItAgain  \ branch back if >= 0
+		FlagVar _A _=A    \ write zero or a negative number to flagvar
+		_RTS
+
+-----------------------------------------------------------
+Assembler Control
+-----------------------------------------------------------
+
+dspp{ ( -- reset dspp assembler )
+}dspp
+
+ins{  ( -- , start assembling an instrument file )
+}ins  ( -- , writes instrument to "output.ofx" )
+
+dspp.dump.symbols  ( -- , debugging info )
+
+dspp.dump.c      ( dump DSPP code in 'C' source form. )
+
+dspp-echo ( -- addr , variable used to turn on hex dump during assembly )
+	dspp-echo on
+
+-----------------------------------------------------------
+Other
+-----------------------------------------------------------
+
+\\\<tab>
+	Autodoc introducer. The rest of the line is ignored by the assembler.
+
+===========================================================
+Appendix A - Creating instrument template files, xxx.dsp
+===========================================================
+
+Resource Declarations:
+
+	KNOBS and other things that require DSP resources are declared
+	immediately after the ins{ instruction.
+
+	The declarations are followed by a name.
+
+	Some declarations are preceded by numeric parameters.
+
+The declarations available are:
+
+ALLOC.DYNAMIC.LINKS ( $dlinks -- , name[s] of shared routines separated by commas )
+Example from sampler_16_v1.j:
+	$" sub_sampler_16_v1.dsp" ALLOC.DYNAMIC.LINKS  \ declare subroutine needed
+
+ALLOC.INPUT.ARRAY { many -- }
+
+ALLOC.INPUT ( -- , make allocation node for INPUT )
+
+ALLOC.KNOB.ARRAY { defaultValue calcType many -- }
+
+ALLOC.KNOB.M2 ( defaultValue calcType -- )
+
+ALLOC.OUTPUT ( -- , make allocation node for OUTPUT )
+
+ALLOC.OUTPUT.ARRAY { many -- }
+
+ALLOC.OUTPUT.DEFAULT ( defaultVal AT_Flags -- )
+Example from maximum.ins:
+	$ -8000 DRSC_AT_START  ALLOC.OUTPUT.DEFAULT Output
+
+ALLOC.RBASE# { baseReg numRegs | drs -- }
+Example from sampler_16_v1.j. Allocate registers for variables and FIFO hardware.
+	SM16_BASE_DATA_REG SM16_NUM_DATA_REGS ALLOC.RBASE#  DataRBase
+	SM16_BASE_FIFO_REG SM16_NUM_FIFO_REGS ALLOC.RBASE#  FIFORBase
+
+ALLOC.TICKS  ( N -- , allocate ticks, does not require a name or dic entry )
+
+ALLOC.TRIGGER ( <name> -- )
+
+ALLOC.UNSIGNED.OUTPUT ( <name>  -- )
+
+ALLOC.VARIABLE ( -- , make allocation node for VARIABLE )
+
+ALLOC.VARIABLE.ARRAY { many -- }
+Example from sub_decode_adp4.ins:
+	StepSizeInitDataMany   ALLOC.VARIABLE.ARRAY  StepSizes
+
+ALLOC.VARIABLE.DEFAULT ( defaultVal AT_Flags -- )
+
+CONNECT.HARDWARE ( RsrcType -- )
+Example from randomhold.ins:
+	DRSC_TYPE_HW_NOISE CONNECT.HARDWARE  HardNoise
+
+The name can then be used in the following DSP code.  If it used as an
+address it is followed by _A or _%A.  If it is used as an immediate, it is
+followed by a _#.

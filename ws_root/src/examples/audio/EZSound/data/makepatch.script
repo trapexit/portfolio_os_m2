@@ -1,0 +1,7 @@
+# @(#) makepatch.script 96/09/06 1.4
+#
+# Script to make patches for EZSound example.
+
+makepatch ez_squiggle.mp    ez_squiggle.patch    -check #
+makepatch idling_engine.mp  idling_engine.patch  -check #
+makepatch reverb.mp         reverb.patch         -check #

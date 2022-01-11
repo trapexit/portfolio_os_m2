@@ -1,0 +1,22 @@
+# @(#)hostlib 95/03/14 1.9
+#
+
+ifndef TARGET_DIRECTORY
+TARGET_DIRECTORY =	${HOSTOSLIB}
+endif
+
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+TARGET =		${TARGET_DIRECTORY}/${HOSTLIB_NAME}
+
+all: all.post
+all.post: ${TARGET}
+
+${TARGET}: ${HOSTOBJS}
+	${HOSTAR} cq $@ ${HOSTOBJS}
+	${HOSTRANLIB} $@
+
+clean: clean.hostlib
+clean.hostlib:
+	${RM} ${TARGET}
+

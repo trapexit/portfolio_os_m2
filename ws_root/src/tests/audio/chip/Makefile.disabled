@@ -1,0 +1,9 @@
+# @(#) Makefile.disabled 96/03/27 1.7
+# BDA chip tests
+
+TARGET_DIRECTORY =	${REMOTE_DIR}/Tests/Audio
+LINK_LIBS =		dspptouch c
+CDEFINES =		-DTARGET_3DO
+
+include ${CODEMGR_WS}/ws_root/variables/multilink
+include ${CODEMGR_WS}/ws_root/rules/multilink

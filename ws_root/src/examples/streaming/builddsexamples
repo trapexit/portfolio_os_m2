@@ -1,0 +1,95 @@
+#####################################
+##
+##      @(#) builddsexamples 95/09/24 1.5
+##
+#####################################
+#
+#   File:       BuildDSExamples
+#
+#	Contains:	Script to build all of the data stream test programs:
+#
+#	Usage:		BuildDSExamples { clean | "" } { root folder | "" }
+#
+#					"clean"		deletes all object files before
+#								building everything
+#
+#####################################
+
+#
+#	Determine the root folder name. May be specified as
+#	arg 2 on the command line, or will be prompted for if omitted.
+#
+	set currentDirectory "`directory`"
+
+	If "{2}" == ""
+		Set DSExRoot  `getfilename -d -m "Select Streaming Examples directory"`
+	Else
+		Set DSExRoot "{2}"
+	End
+		
+	directory "{DSExRoot}"
+#
+#	Delete all object files for a "clean" build completely from source
+#
+	If "{1}" == "clean"
+		Begin
+			# Save state of {Exit}
+			Set saveExit {Exit}
+			Set Exit 0
+
+			For ExampleDir in `Files -d`
+				Delete -i "{ExampleDir}Objects:"Å.o
+			End
+		
+			# Restore the state of {Exit}
+			Set Exit {saveExit}
+			Unset saveExit
+	
+		End ·· Dev:Null
+	End
+#
+#	Build the example found in each of the folders
+#
+
+	directory "{DSExRoot}"
+	
+	For ExampleDir in `Files -d`
+
+		# Get the example name with version number
+
+		(Evaluate "{ExampleDir}" =~ /Å:(Å)¨1:/ ) ·· Dev:Null
+		Set ExampleName "{¨1}"
+
+		# Get the example name without version number
+
+		(Evaluate "{ExampleDir}" =~ /Å:(Å)¨1_Å:/ ) ·· Dev:Null
+		Set ExampleRootName "{¨1}"
+
+		# Build the example
+
+		Directory "{ExampleDir}"
+
+		if `exists "{ExampleRootName}".make` AND ("{ExampleRootName}" != "DSExampleslib")
+			Echo "Building {ExampleName} ..."
+	
+			# Create the Object Directories if they don't exist
+			if !(`Exists -d -q ":Objects:"`)
+				newfolder ":Objects:"
+			End
+
+			Make -f "{ExampleRootName}".make "{ExampleRootName}" > "{ExampleRootName}".makeout
+			"{ExampleRootName}".makeout
+			Delete -i "{ExampleRootName}".makeout
+		end
+		Directory ::
+	End
+
+#	Restore directory
+#
+	directory "{currentDirectory}"
+#
+#	Say we're finished
+#
+	Echo
+	Echo "...BuildDSExamples finished."
+	Beep

@@ -1,0 +1,309 @@
+#include "bsdf_iff.h"
+#include "writeiff.h"
+
+#include "gp.i"
+#include "tmutils.h"
+#include "bsdf_proto.h"
+#include "bsdf_write.h"
+#include "kf_path.h"
+#include "bsdf_anim.h"
+#include "texpage.h"
+
+#define INTERFACE_CODE	1
+#ifdef INTERFACE_CODE
+extern int mercid;
+extern Endianness gEndian;
+#endif
+
+#define GENERAL_ANIM 1
+
+Err
+ANIM_WriteData(
+	       IFFParser *iff, 
+	       float *data_ptr, 
+	       uint32 numSegs, 
+	       uint32 seg_size
+	       )
+{
+  uint32 size;
+  Err result = GFX_OK;
+
+  if( PutUInt32( iff, 0, gEndian ) == -1 ) /* Anim Flags, Nothing Now */
+    {
+      result = -1;
+      goto err;
+    }	
+  
+  if( PutUInt32( iff, numSegs, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+  if( PutUInt32( iff, 0, gEndian ) == -1 ) /* Reserved=0 */
+    {
+      result = -1;
+      goto err;
+    }	
+  
+  size = numSegs*seg_size*sizeof(float);
+  
+  if(numSegs!=0) 
+    size += (numSegs+1)*sizeof(float);
+  
+  if( PutFloats( iff, data_ptr, size / 4, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+err:    
+  return result;
+
+}
+	
+/*
+**	Write animation data
+*/
+Err
+ANIM_WriteChunk(
+		SDFBObject* pData, 
+		GfxObj* pObj
+		)
+{
+  Err result = GFX_OK;
+  uint32 objID;
+  EngineData *eng = (EngineData *)pObj;
+  KfEngine *kf_eng = ( KfEngine *)pObj;
+  int16 data1[2];
+  float data2[3];
+  uint32 size[2], seg_size, numSegs;
+  uint32 anim_type = 0;
+  float *data_ptr;
+  int32 i, offset;
+  
+  if ( ( pObj == NULL ) || (( pObj ) == NULL) )  goto err;
+  
+  /* save the animation node for later processing */
+  if( pData->numAnimNodes == MAX_ANIM_NODES )
+    {
+      fprintf( stderr, "ERROR: Animation node stack over-flow\n" );
+      result = -1;
+      goto err;
+    }
+#ifndef INTERFACE_CODE
+  pData->animNodes[pData->numAnimNodes++] = kf_eng;
+#endif
+#ifdef INTERFACE_CODE
+  ((GfxObj *)((KfEngine *)kf_eng->mObj))->m_Ref = pObj;
+  if ((GetAnimFlag() & GEOM_FLAG) && (!(GetAnimFlag() & ANIM_FLAG)))
+    return result;
+  pObj->m_Objid = mercid++;
+#endif
+    
+  /* write chunk data */
+#ifdef INTERFACE_CODE
+  objID = pObj->m_Objid;
+#endif
+  
+  /* start writing the chunk data */
+  
+#ifdef GENERAL_ANIM
+  result = PushChunk( pData->iff, 0L, ID_GANM, IFF_SIZE_UNKNOWN_32 );
+#else
+  result = PushChunk( pData->iff, 0L, ID_ANIM, IFF_SIZE_UNKNOWN_32 );
+#endif
+  if( result < 0 ) goto err;
+    
+  data1[0] = eng->m_Status;
+  data1[1] = eng->m_Control;
+  
+#ifdef GENERAL_ANIM
+  if( PutUInt32( pData->iff, 0, gEndian ) == -1 )  /* Version */
+    {
+      result = -1;
+      goto err;
+    }	
+#endif
+  if( PutUInt32( pData->iff, objID, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+  /* Create splines out of key data */
+  Kf_CreatePath( kf_eng );
+  
+#ifdef GENERAL_ANIM
+  /* For now all animations have two channels, rotation and position even they are null */
+  /* This is just emulating the behavior of the old ANIM chunk */
+  if( PutUInt32( pData->iff, 2, gEndian ) == -1 )  /* Number of Channels */
+    {
+      result = -1;
+      goto err;
+    }
+  if( PutUInt32( pData->iff, 0, gEndian ) == -1 )  /* Position Type*/
+    {
+      result = -1;
+      goto err;
+    }	
+  if( PutUInt32( pData->iff, 1, gEndian ) == -1 )  /* Rotation Type*/
+    {
+      result = -1;
+      goto err;
+    }
+  offset = 12+2*8;
+  if( PutUInt32( pData->iff, offset, gEndian ) == -1 )  /* Position Data Offset*/
+    {
+      result = -1;
+      goto err;
+    }
+  offset +=  3*sizeof( UInt32 );   /* Anim Data flags, etc */
+  seg_size = kf_eng->mSplPos->mNumAttribs * 4; /* 12 coefficients */
+  numSegs = kf_eng->mSplPos->mNumSegs;
+  if (numSegs == 0)
+    offset += seg_size*sizeof(float);
+  else
+    offset += ((numSegs+1)+numSegs*seg_size)*sizeof(float);
+  if( PutUInt32( pData->iff, offset, gEndian ) == -1 )  /* Rotation Data Offset*/
+    {
+      result = -1;
+      goto err;
+    }
+
+#ifndef INTERFACE_CODE
+  if( numSegs==0 ) 
+    data_ptr = GetAttData( kf_eng->mSplPos );
+  else 
+    data_ptr = &kf_eng->mSplPos->mNumSegs;
+#endif
+#ifdef INTERFACE_CODE
+  if( numSegs==0 ) 
+    data_ptr = GetAttData( kf_eng->mSplPos );
+  else 
+    data_ptr = (float *)&kf_eng->mSplPos->mNumSegs;
+#endif
+  
+  ANIM_WriteData(pData->iff, data_ptr, numSegs, seg_size);
+  seg_size = kf_eng->mSplRot->mNumAttribs * 4; /* 16 coefficients */
+  numSegs = kf_eng->mSplRot->mNumSegs;
+
+#ifndef INTERFACE_CODE
+  if( numSegs==0 ) 
+    data_ptr = GetAttData( kf_eng->mSplRot );
+  else 
+    data_ptr = &kf_eng->mSplRot->mNumSegs;
+#endif
+#ifdef INTERFACE_CODE
+  if( numSegs==0 ) 
+    data_ptr = GetAttData( kf_eng->mSplRot );
+  else 
+    data_ptr = (float *)&kf_eng->mSplRot->mNumSegs;
+#endif
+  
+  ANIM_WriteData(pData->iff, data_ptr, numSegs, seg_size);  
+  
+#else
+  
+  /* animation type flags */
+  if( kf_eng->mSplPos->mNumSegs == 0 ) anim_type |= TRANS_CONST;	
+  else anim_type |= TRANS_CUBIC;
+  if( kf_eng->mSplRot->mNumSegs == 0 ) anim_type |= ROT_CONST;	
+  else anim_type |= ROT_CUBIC;
+  
+  if( PutUInt32( pData->iff, anim_type, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+  
+    /* calculate the sizes of the trans and rotational data */
+  if( kf_eng->mSplPos->mNumSegs == 0 ) /* constant key */
+    size[0] = sizeof(float) * 3;
+  else {
+    seg_size = kf_eng->mSplPos->mNumAttribs * 4; /* 12 coefficients */
+    size[0] = sizeof(KfSpline) - 3 * sizeof( UInt32 ) +
+      ( ( kf_eng->mSplPos->mNumSegs+1 ) + kf_eng->mSplPos->mNumSegs * seg_size ) *
+      sizeof(float);
+  }
+  
+  if( kf_eng->mSplRot->mNumSegs == 0 ) /* constant key */
+    size[1] = sizeof(float) * 4;
+  else 
+    {
+      seg_size = kf_eng->mSplRot->mNumAttribs * 4; /* 16 coefficients */
+      size[1] = sizeof(KfSpline)- 3*sizeof(UInt32) + 
+	((kf_eng->mSplRot->mNumSegs+1) + kf_eng->mSplRot->mNumSegs * seg_size )*
+	sizeof(float);
+    }
+  
+  if( PutUInt32s( pData->iff, size, 2, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+  
+  /* write translational spline data */
+#ifndef INTERFACE_CODE
+  if( anim_type & TRANS_CONST ) data_ptr = GetAttData( kf_eng->mSplPos );
+  else data_ptr = &kf_eng->mSplPos->mNumSegs;
+#endif
+#ifdef INTERFACE_CODE
+  if( anim_type & TRANS_CONST ) data_ptr = GetAttData( kf_eng->mSplPos );
+  else data_ptr = (float *)&kf_eng->mSplPos->mNumSegs;
+#endif
+  
+#if 0
+  printf("size[0]/4 = %d\n", size[0]/4);
+  for (i = 0; i < size[0] / 4; i++)
+    printf("i = %d, data = %f\n", i, *(data_ptr+i));
+#endif
+  
+  if( PutFloats( pData->iff, data_ptr, size[0] / 4, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+  
+  /* write rotational spline data */
+#ifndef INTERFACE_CODE
+  if( anim_type & ROT_CONST ) data_ptr = GetAttData( kf_eng->mSplRot );
+  else data_ptr = &kf_eng->mSplRot->mNumSegs;
+#endif
+#ifdef INTERFACE_CODE
+  if( anim_type & ROT_CONST ) data_ptr = GetAttData( kf_eng->mSplRot );
+  else data_ptr = (float *)&kf_eng->mSplRot->mNumSegs;
+#endif
+  
+  /*
+    printf("size[1]/4 = %d\n", size[1]/4);
+    for (i = 0; i < size[1] / 4; i++)
+    printf("i = %d, data = %f\n", i, *(data_ptr+i));
+    */
+    
+  if( PutFloats( pData->iff, data_ptr, size[1] / 4, gEndian ) == -1 )
+    {
+      result = -1;
+      goto err;
+    }	
+  
+#endif
+
+#if 0
+  printf( "------Positional Spline\n" );
+  Spl_Print( kf_eng->mSplPos, 3 );
+  printf( "------Rotational Spline\n" );
+  Spl_Print( kf_eng->mSplRot, 4 );
+#endif
+  
+  /* clean the spline data after it is written */
+  Spl_Delete(kf_eng->mSplPos);
+  Spl_Delete(kf_eng->mSplRot);
+  Spl_Delete(kf_eng->mSplScl);
+  
+  result = PopChunk( pData->iff );
+  if( result < 0 ) goto err;
+    
+err:    
+  return result;
+}
+
+  
+

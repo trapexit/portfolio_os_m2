@@ -1,0 +1,119 @@
+#
+#  @(#) subscribertrace.dict 96/06/05 1.1
+#
+# This canon dictionary is used to translate subscriber trace event codes
+# back into mnemonic trace event names.
+#
+#
+# The following MPW Find & Replace string converts the enum in
+# subscribertraceutils.h to these Canon definitions.
+#	Find:		/¥([A-z]*)¨1	*'= '([0-9]*)¨2','/
+#	Replace:	tc¨2		¨1
+#
+#
+
+# Generic subscriber Trace Event IDs
+tc1000		kTraceInitSubscriber
+tc1001		kTraceCloseSubscriber
+tc1002		kTraceNewSubscriber
+tc1003		kTraceDisposeSubscriber
+tc1004		kTraceWaitingOnSignal
+tc1005		kTraceGotSignal
+tc1006		kTraceDataMsg
+tc1007		kTraceGetChanMsg
+tc1008		kTraceSetChanMsg
+tc1009		kTraceControlMsg
+tc1010		kTraceSyncMsg
+tc1011		kTraceOpeningMsg
+tc1012		kTraceClosingMsg
+tc1013		kTraceStopMsg
+tc1014		kTraceStartMsg
+tc1015		kTraceEOFMsg
+tc1016		kTraceAbortMsg
+tc1017		kTraceDataSubmitted
+tc1018		kTraceDataCompleted
+
+# Generic subscriber channel Trace Event IDs
+tc1019		kTraceChannelInit
+tc1020		kTraceChannelClose
+tc1021		kTraceChannelStart
+tc1022		kTraceChannelStop
+tc1023		kTraceChannelFlush
+tc1024		kTraceChannelNewDataArrived
+
+# Additional generic subscriber Trace Event IDs
+tc1025		kFlushedDataMsg
+tc1026		kNewHeaderMsgArrived
+tc1027		kNewDataMsgArrived
+tc1028		kHaltChunkArrived
+tc1029		kRepliedToHaltChunk
+tc1030		kFlushedBuffer
+tc1031		kMovedBuffer
+tc1032		kBufferCompleted
+tc1033		kFoundBuffer
+tc1034		kFoundWrongBuffer
+tc1035		kTraceBranchMsg
+tc1036		kTraceChannelBranchMsg
+tc1037		kTraceDecodeBufferRcvd
+tc1038		kTraceDecodeBufferSent
+
+tc1039		kTracePreBranchTime
+tc1040		kTracePreBranchTimeRunning
+tc1041		kTraceCurrentBranchTime
+tc1042		kTraceCurrentBranchTimeRunning
+tc1043		kTracePostBranchTime
+tc1044		kTracePostBranchTimeRunning
+
+tc1045		kFreedBuffer
+
+# SAudio Subscriber Trace Event IDs
+tc2000		kFreedBufferFromFolio
+tc2001		kNewDataMsgArrived
+tc2002		kMaskedSignalBits
+tc2003		kNewHeaderMsgArrived
+tc2004		kBeginSetChannelAmp
+tc2005		kBeginSetChannelPan
+tc2006		kEndSetChannelAmp
+tc2007		kEndSetChannelPan
+tc2008		kCurrentBufferOnStop
+tc2009		kBufferOrphaned
+tc2010		kLoadedTemplates
+tc2011		kChannelMuted
+tc2012		kChannelUnMuted
+tc2013		kTraceInternalChannelPause
+tc2014		kTraceInternalChannelStop
+tc2015		kBeginPlayback
+tc2016		kStartAttachment
+tc2017		kResumeInstrument
+tc2018		kStartWFlushWhilePaused
+tc2019		kStopWFlushWhilePaused
+tc2020		kAttachCrossedWhileStopping
+tc2021		kAttachCrossedWhilePausing
+tc2022		kCurrentBufferOnPause
+tc2023		kStartSpooler
+tc2024		kResumeSpooler
+
+# MPEG Audio Subscriber Trace Event IDs
+tc2500		kTraceCompressedBfrMsg 
+tc2501		kTraceSendDecompressedBfrMsg
+tc2502		kTraceReceivedDecompressedBfrMsg
+tc2503		kTraceCloseDecoderMsg
+tc2504		kTraceFlushReadMsg
+tc2505		kTraceFlushWriteMsg
+tc2506		kTraceFlushReadWriteMsg
+tc2507		kSendDecoderRequestMsg
+tc2508		kGotDecoderReply
+
+# MPEG Video Subscriber Trace Event IDs
+tc3000		kRecievedFrameBufferList
+tc3001		kRecievedFramePort
+
+tc3002		kSubmitMPEGWriteBuffer
+tc3003		kCompleteMPEGWriteBuffer
+
+tc3004		kSubmitMPEGReadBuffer
+tc3005		kCompleteMPEGReadBuffer
+
+tc3006		kMPEGReadPTS
+tc3007		kMPEGReadDeltaPTS
+tc3008		kSubmitMPEGBranch

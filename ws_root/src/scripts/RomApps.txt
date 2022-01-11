@@ -1,0 +1,10 @@
+# @(#) RomApps.txt 96/11/23 1.11
+# The RomApp.txt file that goes in the system ROM.
+# This lists all the RomApps which exist in the system ROM.
+
+AudioCD			audio	1
+VideoCD			video	1
+EjectDisk		opera	1
+PhotoCD			photo	1
+Attract			empty	1
+EjectDisk		unknown	1

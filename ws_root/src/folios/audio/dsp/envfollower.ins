@@ -1,0 +1,83 @@
+\ @(#) envfollower.ins 96/05/10 1.16
+\ $Id: envfollower.ins,v 1.7 1995/01/20 20:20:23 peabody Exp $
+\ Envelope Follower
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\\\	AUTODOC -class DSP -group Control_Signal -name envfollower.dsp
+\\\	Tracks the contour of a signal.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument tracks the positive peaks of an input signal. It decays
+\\\	    exponentially based on the droop factor. It outputs a fairly smooth signal
+\\\	    that can be used to control other signals.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Droop - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Number to multiply previous result by to generate exponential decay.
+\\\	        Higher numbers give slower decay. 0.0 to 1.0. Default is 0.9995.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signed signal to analyze.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Contour of signal. This signal is also available in the DSP accumulator
+\\\	        for use with instruments such as add_accum.dsp(@).
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 13
+\\\
+\\\	    Code: 12 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    envelope.dsp(@), minimum.dsp(@), maximum.dsp(@), schmidt_trigger.dsp(@)
+
+include? DFID_ENVFOLLOWER function_ids.j
+
+anew task-envfollower.ins
+
+_BULLDOG
+
+dspp{
+ins{
+
+DFID_ENVFOLLOWER dspp-function-id !
+$" envfollower.dsp" ins-name !
+
+$ 7FF0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Droop
+ALLOC.INPUT    Input
+ALLOC.OUTPUT   Output
+13 ALLOC.TICKS
+
+	Input _A Output _A _-
+	_BLT: @Decay
+
+\ New maxima, so discard previous output. use accumulator result from above:
+\ Input = Input + Output - Output = Output + (Input - Output) = Output + ACCUM
+	Output _%A ACCUME _+
+	_JUMP: @Done
+
+\ Multiply previous output by Droop to generate exponential ramp.
+_LABEL: @Decay
+	Output _%A Droop _A _*
+
+_LABEL: @Done
+	_ENDEXT
+}ins
+}dspp

@@ -1,0 +1,47 @@
+\ @(#) test_eat_ticks.ins 96/01/17 1.2
+
+anew task-schmidt_trigger.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_schmidt_trigger dspp-function-id !  \ use proper one !!!
+$" schmidt_trigger.dsp" ins-name !
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Control
+20 ALLOC.TICKS
+
+    Control _A #$ 0 _-
+    _BLE:  @Done
+
+    Control _A #$ 1000 _-
+    _BLE:  @Done
+
+    Control _A #$ 2000 _-
+    _BLE:  @Done
+
+    Control _A #$ 3000 _-
+    _BLE:  @Done
+
+    Control _A #$ 4000 _-
+    _BLE:  @Done
+
+    Control _A #$ 5000 _-
+    _BLE:  @Done
+
+    Control _A #$ 6000 _-
+    _BLE:  @Done
+
+    Control _A #$ 7000 _-
+    _BLE:  @Done
+
+    _NOP
+    _NOP
+    _NOP
+    _NOP
+
+_LABEL: @Done
+
+}ins
+}dspp

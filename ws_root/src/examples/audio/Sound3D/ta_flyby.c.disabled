@@ -1,0 +1,461 @@
+/***************************************************************
+**
+** @(#) ta_flyby.c.disabled 96/02/01 1.5
+**
+** Test sound3d library: animate an object flying past the head.
+**
+** By:  Robert Marsanyi
+**
+** Copyright (c) 1995, 3DO Company.
+** This program is proprietary and confidential.
+**
+***************************************************************/
+
+#include <kernel/types.h>
+#include <kernel/debug.h>
+#include <kernel/operror.h>
+#include <audio/audio.h>
+#include <audio/music.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <values.h>
+
+#define	PRT(x)	{ printf x; }
+#define	ERR(x)	PRT(x)
+#define	DBUG(x)	/* PRT(x) */
+#define FRAMERATE (44100.0)
+#define REFRESHRATE (FRAMERATE / 5.0)
+#define MAX_WETNESS (0.05)	/* Maximum amount of reverb */
+
+/* Macro to simplify error checking. */
+#define CHECKRESULT(val,name) \
+	if (val < 0) \
+	{ \
+		Result = val; \
+		ERR(("Failure in %s: $%x\n", name, val)); \
+		goto cleanup; \
+	}
+
+/* Structure to keep track of the source sound items */
+typedef struct Sound3DSource 
+{
+	Item s3di_Template;
+	Item s3di_Instrument;
+} Sound3DSource;
+
+/* Structure to keep track of environmental items */
+typedef struct Sound3DSpace
+{
+	Item s3ds_OutputTemplate;
+	Item s3ds_OutputInst;
+	Item s3ds_LineOut;
+	Item s3ds_WetKnob;
+	Item s3ds_DryKnob;
+	Item s3ds_FreqKnob;
+	Item s3ds_NominalFrequency;
+} Sound3DSpace;
+
+typedef struct CartesianPosition
+{
+	float32 xyz_X;
+	float32 xyz_Y;
+	float32 xyz_Z;
+} CartesianPosition;
+
+/* function declarations */
+Sound3DSpace* CreateSoundSpace( void );
+int32 DeleteSoundSpace( Sound3DSpace *Snd3DSpace );
+Err TestS3DInit(Sound3DSource* SourceSoundPtr, Sound3D** s3dContextHandle, Sound3DSpace** s3dSpaceHandle);
+Err TestS3DUpdateMove(PolarPosition4D* posStart, PolarPosition4D* posEnd,
+  Sound3D* s3dContext, Sound3DSpace* s3dSpace);
+Err TestS3DAnimate(Sound3DSource* SourceSoundPtr, Sound3D* s3dContextPtr,
+  Sound3DSpace* s3dSpace);
+void TestS3DTerm(Sound3DSource* SourceSoundPtr, Sound3D* s3dContextPtr,
+  Sound3DSpace* s3dSpace);
+
+/* Globals */
+float32 t3dsGlobalReverb;
+
+int main( int32 argc, char *argv[])
+{
+	
+	int32 Result = 0;
+	Sound3D* s3dContextPtr;
+	Sound3DSource SourceSound;
+	Sound3DSpace* s3dSpace;
+
+	t3dsGlobalReverb = (argc > 1) ? strtof( argv[1], NULL ) : MAX_WETNESS;
+
+	SourceSound.s3di_Instrument = 0;
+	SourceSound.s3di_Template = 0;
+	s3dContextPtr, s3dSpace = NULL;
+	
+	Result = TestS3DInit(&SourceSound, &s3dContextPtr, &s3dSpace);
+	CHECKRESULT(Result, "TestS3DInit");
+
+	Result = TestS3DAnimate(&SourceSound, s3dContextPtr, s3dSpace);
+	CHECKRESULT(Result, "TestS3DAnimate");
+	
+cleanup:
+	TestS3DTerm(&SourceSound, s3dContextPtr, s3dSpace);
+	printf("ta_flyby done\n");
+	
+	return((int) Result);
+	
+}
+
+/****************************************************************/
+Sound3DSpace *CreateSoundSpace( void )
+/* Allocate in this routine in case size changes. */
+{
+	Sound3DSpace *Snd3DSpace;
+	int32 Result;
+
+	Snd3DSpace = (Sound3DSpace *) malloc(sizeof(Sound3DSpace));
+	if (Snd3DSpace != NULL)
+	{
+		Snd3DSpace->s3ds_OutputTemplate = LoadScoreTemplate("sound3dspace.patch");
+		CHECKRESULT(Snd3DSpace->s3ds_OutputTemplate, "LoadScoreTemplate");
+
+		Snd3DSpace->s3ds_OutputInst = CreateInstrument(Snd3DSpace->s3ds_OutputTemplate, NULL);
+		CHECKRESULT(Snd3DSpace->s3ds_OutputInst, "CreateInstrument");
+
+/* Connect wet/dry gain knobs to the space's output mixer */
+		Snd3DSpace->s3ds_WetKnob = CreateKnob(Snd3DSpace->s3ds_OutputInst, "Wet",
+		  NULL);
+		CHECKRESULT(Snd3DSpace->s3ds_WetKnob, "CreateKnob");
+
+		Snd3DSpace->s3ds_DryKnob = CreateKnob(Snd3DSpace->s3ds_OutputInst, "Dry",
+		  NULL);
+		CHECKRESULT(Snd3DSpace->s3ds_DryKnob, "CreateKnob");
+
+/* Load the output instrument */
+		Snd3DSpace->s3ds_LineOut = LoadInstrument("line_out.dsp", 0, 100);
+		CHECKRESULT(Snd3DSpace->s3ds_LineOut, "LoadInstrument");
+	
+/* Connect the space to the output instrument */
+		Result = ConnectInstrumentParts(
+		   Snd3DSpace->s3ds_OutputInst, "Output", 0,
+		   Snd3DSpace->s3ds_LineOut, "Input", 0);
+		CHECKRESULT(Result, "ConnectInstrumentParts");
+		Result = ConnectInstrumentParts(
+		   Snd3DSpace->s3ds_OutputInst, "Output", 1,
+		   Snd3DSpace->s3ds_LineOut, "Input", 1);
+		CHECKRESULT(Result, "ConnectInstrumentParts");
+	
+		return Snd3DSpace;
+	}
+	else
+		return NULL;
+	
+cleanup:
+	DeleteSoundSpace( Snd3DSpace );
+	return NULL;
+}
+
+/****************************************************************/
+int32 DeleteSoundSpace( Sound3DSpace *Snd3DSpace )
+{
+	int32 Result;
+	
+	if (Snd3DSpace)
+	{
+		Result = UnloadScoreTemplate( Snd3DSpace->s3ds_OutputTemplate );
+		Snd3DSpace->s3ds_OutputTemplate = 0;
+
+		UnloadInstrument( Snd3DSpace->s3ds_LineOut );
+	
+		free (Snd3DSpace);
+	}
+	
+	return Result;
+}
+
+/****************************************************************/
+Err TestS3DInit(Sound3DSource* SourceSoundPtr, Sound3D** s3dContextHandle, Sound3DSpace** s3dSpaceHandle)
+{
+	Err Result;
+	Item SourceInst, Inst3D, SpaceInst;
+	float32 NominalFreq;
+	
+	/* Initialize audio, return if error. */
+	if ((Result = OpenAudioFolio()) < 0)
+	{
+		ERR(("Audio Folio could not be opened!\n"));
+		return(Result);
+	}
+
+	/* Allocate and set up the context */
+DBUG(("Opening sound3d\n"));
+	if ((*s3dContextHandle = Create3DSound()) == NULL)
+	{
+		ERR(("Couldn't allocate 3D instrument!\n"));
+		return(-1);
+	}	
+DBUG(("Here it is: 0x%x\n", *s3dContextHandle));
+	
+	Inst3D = (*s3dContextHandle)->s3d_InsItem;
+
+	/* Allocate and set up the space */
+	if ((*s3dSpaceHandle = CreateSoundSpace()) == NULL)
+	{
+		ERR(("Couldn't allocate 3D sound space!\n"));
+		return(-1);
+	}
+	
+	SpaceInst = (*s3dSpaceHandle)->s3ds_OutputInst;
+	
+	/* Set up the source instrument */
+	SourceSoundPtr->s3di_Template = LoadScoreTemplate("TestSound3D.patch");
+	CHECKRESULT(SourceSoundPtr->s3di_Template, "LoadScoreTemplate");
+	
+	SourceSoundPtr->s3di_Instrument = CreateInstrument(SourceSoundPtr->s3di_Template, 0);
+	CHECKRESULT(SourceSoundPtr->s3di_Instrument, "CreateInstrument");
+
+	SourceInst = SourceSoundPtr->s3di_Instrument;
+	
+DBUG(("Made source instrument, item %i\n", SourceSoundPtr->s3di_Instrument));
+	
+	/* Connect the source to the 3D instrument context*/
+	Result = Connect3DSoundSource(*s3dContextHandle, SourceInst);
+	CHECKRESULT(Result, "Connect3DSoundSource");
+	
+	/* Connect the Frequency knob, for doppler */
+	(*s3dSpaceHandle)->s3ds_FreqKnob = CreateKnob(SourceInst, "Frequency",
+	  NULL);
+	CHECKRESULT((*s3dSpaceHandle)->s3ds_FreqKnob,
+	  "CreateKnob: can't connect to doppler");
+
+	/* Read the default knob value, assume that's nominal */
+	Result = ReadKnob((*s3dSpaceHandle)->s3ds_FreqKnob, &NominalFreq);
+	CHECKRESULT(Result, "ReadKnob");
+	(*s3dSpaceHandle)->s3ds_NominalFrequency = NominalFreq;
+	
+	/* Connect the 3D processor to the space */
+	Result = ConnectInstrumentParts(
+	   Inst3D, "Output", 0, SpaceInst, "Input", 0);
+	CHECKRESULT(Result, "ConnectInstrumentParts");
+	Result = ConnectInstrumentParts(
+	   Inst3D, "Output", 1, SpaceInst, "Input", 1);
+	CHECKRESULT(Result, "ConnectInstrumentParts");
+	
+cleanup:
+	return(Result);
+
+}
+
+/****************************************************************/
+void TestS3DTerm(Sound3DSource* SourceSoundPtr, Sound3D* s3dContext, Sound3DSpace* s3dSpace)
+{
+	UnloadScoreTemplate(SourceSoundPtr->s3di_Template);
+	
+	Delete3DSound(s3dContext);
+	DeleteSoundSpace(s3dSpace);
+	CloseAudioFolio();
+	return;
+}
+
+/****************************************************************/
+void PolarToXYZ( PolarPosition4D* polar, CartesianPosition* cart )
+{
+	cart->xyz_X = polar->pp4d_Radius * sinf(polar->pp4d_Theta);
+	cart->xyz_Y = polar->pp4d_Radius * cosf(polar->pp4d_Theta);
+	cart->xyz_Z = 0;
+	
+	return;
+}
+
+/****************************************************************/
+void XYZToPolar( CartesianPosition* cart, PolarPosition4D* polar )
+{
+	polar->pp4d_Radius = sqrtf(cart->xyz_X * cart->xyz_X +
+	  cart->xyz_Y * cart->xyz_Y);
+	polar->pp4d_Theta = atan2f(cart->xyz_X, cart->xyz_Y);
+	polar->pp4d_Phi = 0.0;
+	
+	return;
+}
+
+/****************************************************************/
+void TestCoordConversion( void )
+{
+	PolarPosition4D polar, pback;
+	CartesianPosition cart;
+	int32 i;
+	
+	polar.pp4d_Radius = 1000;
+	
+	for (i=0;i<=12;i++)
+	{
+		polar.pp4d_Theta = NormalizeAngle( i * FULLCIRCLE / 12 );
+		PolarToXYZ( &polar, &cart );
+		XYZToPolar( &cart, &pback );
+		PRT(("%2i2PI/6: %i  %f  %f  %f  %i  %f\n",
+		  i,
+		  polar.pp4d_Radius, polar.pp4d_Theta,
+		  cart.xyz_X, cart.xyz_Y,
+		  pback.pp4d_Radius, pback.pp4d_Theta));
+	}
+	
+	return;
+}
+
+/***********************************************************************/
+void TestS3DUpdateHost( Sound3D* s3dContext, Sound3DSpace* s3dSpace )
+{
+	float32 Wetness, Dryness, Amplitude, Doppler;
+	
+/* Do all the host updates that the API doesn't do */
+
+	Doppler = s3dContext->s3d_Parms.s3dp_Doppler;
+	SetKnob(s3dSpace->s3ds_FreqKnob, s3dSpace->s3ds_NominalFrequency
+	  * Doppler);
+		
+/*
+   Reverb calculations:
+   Assume wetness is a constant, until we're so far away that the wet/dry
+   ratio is 1:1.  Thereafter, decrease _both_ wet and dry to maintain the
+   1:1 ratio.
+*/
+	Amplitude = s3dContext->s3d_Parms.s3dp_DistanceFactor;
+	Dryness = (1.0 - t3dsGlobalReverb) * Amplitude;
+/*	if (Dryness < t3dsGlobalReverb)
+		Wetness = Dryness;
+	else */
+		Wetness = t3dsGlobalReverb;
+		
+	SetKnobPart(s3dSpace->s3ds_DryKnob, 0, Dryness);
+	SetKnobPart(s3dSpace->s3ds_DryKnob, 1, Dryness);
+	SetKnobPart(s3dSpace->s3ds_WetKnob, 0, Wetness);
+	SetKnobPart(s3dSpace->s3ds_WetKnob, 1, Wetness);
+		
+	return;
+}
+
+/***********************************************************************/
+Err TestS3DUpdateMove( PolarPosition4D* posStart, PolarPosition4D* posEnd,
+  Sound3D* s3dContext, Sound3DSpace* s3dSpace )
+{
+	Err Result;
+	PolarPosition4D segmentStart, segmentEnd;
+	CartesianPosition xyzStart, xyzEnd, xyzEndSegment;
+	float32 deltaX, deltaY, deltaTime;
+	float32 xIncr, yIncr;
+	int32 elapsedTime;
+	Item SleepCue;
+
+	SleepCue = CreateCue(NULL);
+	CHECKRESULT(SleepCue, "CreateCue");
+
+/* Set up the start of the first segment to the absolute start at time now */
+	segmentStart = *posStart;
+	segmentStart.pp4d_Time = GetAudioFrameCount();
+
+/* Calculate increments in xyz space */
+	PolarToXYZ( posEnd, &xyzEnd );
+	PolarToXYZ( posStart, &xyzStart );
+DBUG(("x1: %f, y1: %f, x2: %f, y2: %f\n", xyzStart.xyz_X, xyzStart.xyz_Y,
+  xyzEnd.xyz_X, xyzEnd.xyz_Y));
+  	
+	deltaX = xyzEnd.xyz_X - xyzStart.xyz_X;
+	deltaY = xyzEnd.xyz_Y - xyzStart.xyz_Y;
+	deltaTime = posEnd->pp4d_Time - posStart->pp4d_Time;
+	xIncr = (deltaX * REFRESHRATE) / deltaTime;
+	yIncr = (deltaY * REFRESHRATE) / deltaTime;
+	
+DBUG(("xIncr: %f, yIncr: %f, dTime: %f\n", xIncr, yIncr, deltaTime));
+
+/* Initialize loop variables */	
+	elapsedTime = 0;
+	PolarToXYZ( &segmentStart, &xyzEndSegment );
+	
+	do
+	{
+/* Increment the end segment position */
+		xyzEndSegment.xyz_X += xIncr;
+		xyzEndSegment.xyz_Y += yIncr;
+		xyzEndSegment.xyz_Z = 0;
+		XYZToPolar( &xyzEndSegment, &segmentEnd );
+		
+/* Increment the end segment time */		
+		segmentEnd.pp4d_Time += REFRESHRATE;
+
+/* Move from the start to the new end */		
+		Move3DSound( s3dContext, &segmentStart, &segmentEnd );
+
+/* Do all the host updates that the API doesn't do */
+		TestS3DUpdateHost( s3dContext, s3dSpace );
+		
+/* Relax until it's time for an update */		
+		SleepUntilTime( SleepCue, GetAudioTime() +
+		  REFRESHRATE/GetAudioClockDuration(AF_GLOBAL_CLOCK) );
+
+/* Increment the elapsed time, make next segment start where old one ended */		  
+		elapsedTime += REFRESHRATE;
+DBUG(("Segment: Radius %i, Angle %f, Time %i\n", segmentEnd.pp4d_Radius,
+  segmentEnd.pp4d_Theta, elapsedTime));
+		segmentStart = segmentEnd;
+	}
+	while (elapsedTime < deltaTime);
+	
+	DeleteCue(SleepCue);
+
+cleanup:
+	return Result;
+}
+
+/***********************************************************************/
+Err TestS3DAnimate(Sound3DSource* ssPtr, Sound3D* s3dContext, Sound3DSpace* s3dSpace)
+{
+	Err Result=0;
+	PolarPosition4D whereamI;
+	int32 leftDelay, rightDelay;
+
+/*
+   Fly from pos1 (behind, to the left) to pos1 (ahead, to the right) over head,
+   over 20 seconds
+*/	
+	PolarPosition4D pos1 = {4600, -3*M_PI/4, 0.0, 0};
+	PolarPosition4D pos2 = {4600, M_PI/3, 0.0, 40 * FRAMERATE};
+		
+DBUG(("Starting everything up\n"));
+
+	/* Start the output instrument */
+	Result = StartInstrument(s3dSpace->s3ds_LineOut, 0);
+	CHECKRESULT(Result, "StartInstrument");
+	Result = StartInstrument(s3dSpace->s3ds_OutputInst, 0);
+	CHECKRESULT(Result, "StartInstrument");
+	
+	/* Start the 3D processing */
+	Result = Start3DSound(s3dContext, &pos1, 0);
+	CHECKRESULT(Result, "Start3DSound");
+	TestS3DUpdateHost( s3dContext, s3dSpace );
+		
+	/* Start the source instrument */
+	Result = StartInstrument(ssPtr->s3di_Instrument, 0);
+	CHECKRESULT(Result, "StartInstrument");
+
+	/* Go into the movement refresh loop */
+	Result = TestS3DUpdateMove( &pos1, &pos2, s3dContext, s3dSpace );
+	
+	/* Report the current position */
+	Result = Get3DSoundPos(s3dContext, &whereamI);
+	CHECKRESULT(Result, "Get3DSoundPos");
+	
+	Result = s3dReadLeftRightDrift( s3dContext, &leftDelay, &rightDelay );
+	CHECKRESULT(Result, "Get3DSoundRadiusTime: s3dReadLeftRightDrift");
+	
+PRT(("I've arrived at: radius %i, theta %f, phi %f, left %i, right %i\n",
+  whereamI.pp4d_Radius, whereamI.pp4d_Theta, whereamI.pp4d_Phi, leftDelay, rightDelay));
+
+cleanup:
+
+DBUG(("Stopping everything\n"));
+	
+	StopInstrument(ssPtr->s3di_Instrument, 0);
+	Stop3DSound(s3dContext, 0);
+	StopInstrument(s3dSpace->s3ds_OutputInst, 0);
+	
+	return(Result);
+}

@@ -1,0 +1,102 @@
+Mercury Tools Release Notes
+
+First some definitions.
+
+IFF stands for Interchange File Format.  It is a specification for how data files formats should be layed out.  It was invented by Jerry Morrison and others.  Currently, the UTF and PBSDF file formats for M2 are IFF compliant.  To find out more about the IFF format, see Jerry Morrison's homepage:  http://street/nw3d0/jmorriso/profile/profile.html
+
+
+A UTF texture is the M2 specific image file format that we've all come to know and love.  It's an IFF format with FORM type 'TXTR'.
+
+A UTF page file is simply a UTF texture (still FORM type 'TXTR') with an additional page chunk ('M2PG').  This chunk contains information about the sub-textures contained in the texel data chunk (now thought of as the texture page).  M2PG is meant to be easy to parse and to be very general purpose and not subject to change from release to release.
+
+A Mercury page file is a UTF page file with an additional chunk, 'PCLT'.  This chunk is very implementation specific and will probably change as Mercury itself evolves.  Think of this chunk as a compilation of all the data necessary to render a sub-texture within a texture page.  This chunk is extremely hard to parse as it is mostly CLTs.  Right now the creation of this chunk is considered to be a one-way street and the the M2 Texture Library and texture tools will merely skip over this chunk when they see it.  When this chunk is present, the header chunk and TAB chunk are not needed and can be stripped out of the final texture.  Future implementations of utfpage and the texture reader will eliminate the need of the DAB and M2PG chunks from the final textures as well, simplifying reading and processing of incoming textures.
+
+IFF CAT files are simple concatenations of standard IFF FORMs.  In this case, we are only interested in concatenations of 'TXTR' FORMs, which are the UTF textures.
+
+IFF LIST files are a more sophisticated way of storing multiple FORMs in a single file and allow for sharing of properties between FORMs.  For example, an IFF LIST of UTF textures could contain twenty texture pages which share the same PIP.  This would mean that only one copy of the PIP data ever need be stored in the file, thus saving the space required by nineteen PIP chunks.  Because IFF LISTs are MUCH more complicated to parse (and may be too inefficient for a runtime environment) the current texture reader in Mercury doesn't support IFF LIST files. Adding IFF LIST support will be investigated and will become part of the runtime reader if it's performance is satisfactory. 
+
+
+April 22, 1996
+Release 2.0d1  First Release
+
+Tools
+
+utfpage - This is the workhorse.  This takes in the ASCII texture file (TexArray and TexPageArray) and uses it to construct a Mercury page file.  If multiple pages are specified, it concatenates them into an IFF CAT file which can be read by the mercury reader.
+
+Features
+Any Texture Application setting set in the TexArray or the texture itself will be converted to a CltSnippet and become part of the texture.  This includes settings like WrapModes, PIPSelect, Blend Operations, etc.  It should be noted that the settings in the TexArray have precedence over those in the texture file (which are stored in the TAB chunk).  One upshot of this is that it is no longer necessary to manually set the WrapMode settings of a texture before creating the page.  It is only necessary to set proper WrapMode in the TexArray (and this field is set by all the 3D converters provided by the Tools group) entry for that texture.
+
+One of the input options to the utfpage tool is an external PIP.  Why would you want to specify a custom PIP for page processing?  To allow for each sub-texture within a page to have it's own unique PIP.  Since the TexArray entry for a sub-texture can specify a PIP Index Offset, it's possible to have a multiple PIPs represented within the page's PIP.  For example, four six-bit textures have at most 256 colors total between them. That means that all four textures PIPs could be represented entirely with a single PIP which is a concatenation of all the PIP.  To create this concatenated pip one can use utfpipcat. Then that PIP file can be given to utfpage. The only other necessary step is to set each texture's TexArray entry to have the appropriate PIPIndexOffset.  The first texture will have a PIPIndexOffset of 0 (so it doesn't need to be set), the second 64, the third 128, etc.
+Rather than create a PIP by hand and manually compute the PipIndexOffset for each TexArray entry, one can use the -superpip option.  This option takes all the sub-textures' PIPs in a page and concatenates them into a single PIP for the page.  The restriction that the total number of colors of all the PIPs cannot exceed 256 is still in effect.  This is a quick way to make shared PIPs, but the result may not be optimal since each texture in the page now has it's own exclusive PIP.  In most applications, many textures are bound to have a common PIP and these values could be shared.  The -superpip option, as handy as it is, makes no attempt to find these.
+
+Limitations
+*All the textures in a given page must share the same PIP (one way or another) and the sum of their texel data cannot exceed 16KB.
+*Right now each page uses the first valid PIP of a sub-texture to be the PIP for the whole texture UNLESS a PIP is specified in the command-line options(see above) or the -superpip option is used.
+*If a PIP is specified in the command-line options, that PIP will be used for each texture page. 
+
+utfunpage - This recreates the original textures in a UTF page file, however, it currently only works on single page files.  Texture page CAT files (i.e. a file with multiple texture pages) must first be run through utfsplit.  This will be changed shortly.
+
+utfsplit - This takes UTF files which are either in CATs or LISTs (i.e. multiple UTF textures in a single file) and splits them into individual UTF texture files.
+
+utfquantmany - takes a series of images and find a common pip for them all and does color reduction if necessary.  There is an option to quantize the input textures (and overwrite them) to that resulting PIP.
+
+utfpipcat - concatenates the PIPs of several input files into a single PIP.  Useful for have unique PIP among textures within a texture page.  See below.
+
+utfpipsub - replaces the ssb and alphas in a PIP with one that the user specifies.  Useful if you want all entries in a PIP to have say SSB set to 1.
+
+Version 2.0d3
+5/10/96
+===============================
+
+*utfpage now has a new option, -superpip.  The option is extremely useful for creating pages quickly without having to worry about have a single PIP for the whole page.  This option concatenates each page's sub-textures' PIPs into a single PIP for each page.  It also automatically sets the PIPIndexOffset for each sub-texture so that each texture will reference it's own unique PIP.  The restriction is that the number of colors of all the sub-textures' PIPs cannot exceed 256. For example, if you have a bunch of 64-color textures, you could have four per page with the -superpip option.  The sub-textures need not share the same bitdepth or number of colors so you could have two 64-color textures and still have room in the PIP for 8 16-color textures.  You could even have two eight-bit textures as long as their total number of color didn't exceed 256 (one could have 100 colors and the other 156, for example).
+
+Versions 3.0
+8/10/96
+===============================
+
+*utfpage will now allow compressed textures to be within a texture page. The restrictions of aregular texture page still applies and the final size of all the texel data must not exceed 16K when UNCOMPRESSED. For Mercury, an updated version of tex_read.c is needed to read the new texture pages.  
+Developers using their own texture readers will have to update their readers to get this new functionality.  The new reader will read older texture pages but the old readers will not be able to handle the new texture pages.  Due to this change in the texture page format, the "M2PG" chunk is no longer needed by Mercury for rendering.  The only chunks in a UTF file needed by Mercury are "M2TD" (texel data), "M2PI" (PIP -if the texture contains indexed textures), and "PCLT" (CLT snippets).  All other chunks may be stripped out for Mercury apps. It is important to note that the additional chunks are needed for the texture tools to read and write the UTF textures.  The other chunks should not be stripped out unless it is known that no more operations will be performed on the textures.
+*utfunpage will now work on concatenated UTF texture pages.  It is no longer necessary to run utfsplit on a UTF CAT file to get at the individual texture pages.  utfunpage will append the texture number and the sub-texture number to the base name to get a file name for each sub-texture it extracts from a UTF texture page.  i.e.  instead of myname.0.utf, myname.1.utf, it will now output myname.0.0.utf, myname.0.1.utf, myname.1.0.utf, etc.  It will also work with compressed textures with a texture page.
+
+*utfsdfpage is added in this release.  This tool creates the texture page and an ASCII SDF TexPageArray file (needed by gmerc) given only the ASCII SDF file.  It also outputs the commands necessary to duplicate what the tool did to create the texture page.  These commands can be redirected into a file with the -s option and can be used as the basis to processing the textures in the future (perhaps to share the same palette or have a different bitdepth).
+utsdfpage works on some simple assumptions.  1) Every texture is a unique texture page.  2) Every texture >16K is resized to fit into 16K and will have the same number of LODs (which can be set with the -lod option) 3) Every texture >16K can be quantized to the same bitdepth (which can be set with the -depth option).
+Example
+
+Given a model spacefig.sdf:
+>utfsdfpage spacefig.sdf spacefig.txp spacefig.page.tex
+
+spacefig.txp will be the texture page.  The only remaining step is to run gmerc
+
+>gmerc -t spacefig.page.tex -b spacefig.bsf spacefig.sdf
+
+That's it.  The .bsf and .txp file can then be fed to a Mercury viewer.
+
+
+Versions 3.1
+9/20/96
+===============================
+A new notation for describing texture pages has been introduced with this release.
+The keywords PageIndex and SubIndex can be used in a TexArray entry to indicate where in the texture page file (generated by utfpage) a texture will be located.  When using this notation, it is no longer necessary to supply gmerc a separate texture page description file, rather make sure that the TexArray in the ASCII SDF file has the PageIndex and SubIndex fields set for every texture.
+In other words, the call to gmerc is changed from the old format of:
+
+>gmerc -t TexPageArray.File -b output.bsf input.sdf
+
+to the new format:
+>gmerc -b output.bsf input.sdf
+
+This assumes that input.sdf has a TexArray with the new PageIndex and SubIndex fields set for each entry.
+NOTE:DO NOT USE -t OPTION WITH THE NEW TEXARRAY FORMAT.  THE TWO ARE MUTUALLY EXCLUSIVE.
+
+For example to specify that a TexArray is the fourth sub-texture of the first 16K texture page use the lines
+
+PageIndex 0
+SubIndex 3
+
+in the TexArray entry.
+The old TexPageArray notation is still valid (and sometimes easier to use) but the new notation is much more flexible and functional.  The PageIndex notation has the ability to specify TexArray entries that have no texel data associated with them.  For instance, to set up the destination blend settings of an untextured surface.  Also, it is now possible to have multiple sub-textures in a page share the same texel data but have different TexBlend settings.  For instance, you may have a texture that is used both as a clamped texture and a tiled texture.  Before it would be necessary to copy the texture to two UTF files (and double their TRAM usage) and reference them with unique file names.  With the PageIndex notation, you can have the two entries and only use one copy of the texel data.
+
+utfpage and utfsdfpage now both understand the PageIndex and SubIndex arguments in TexArray entries.
+utfsdfpage will now by default create a TexArray with the PageIndex notation (but can be made to use the TexPageArray notation by using the -old option).
+utfpage can still read in the old TexPageArray notation and output a TexArray in the new notation using the -t option.  The easiest way to switch to the new notation is to simply run utfpage on a TexPageArray file and use the -t option to output the TexArray in the new notation and use that in future gmerc and utfpage sessions.
+
+

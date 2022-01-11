@@ -1,0 +1,32 @@
+fg
+bigcircle -2 650 -ld -p
+bigcircle -2 650 -ld -p -rnotex 
+bigcircle -2 650 -lenv -p 
+bigcircle -2 650 -ld -p -rtrans 
+bigcircle -2 650 -ld -p -rtrans -rnotex 
+bigcircle -2 650 -lenv -p -rtrans 
+bigcircle -2 650 -ld -p -lf
+bigcircle -2 650 -ld -p -lf -rnotex
+bigcircle -2 650 -lenv -p -lf 
+bigcircle -2 650 -ld -p -lf -rnotex -rtrans
+bigcircle -2 650 -ldst -p 
+bigcircle -2 650 -lds -p -rnotex
+bigcircle -2 650 -lds -lenv -p 
+bigcircle -2 650 -lds -p -rnotex -rtrans
+bigcircle -2 650 -ld -p -lp -rpre
+bigcircle -2 650 -ld -p -lp -rnotex -rpre
+bigcircle -2 650 -ld -p -lp -rtrans -rpre
+bigcircle -2 650 -ld -p -lp -rtrans -rnotex -rpre
+bigcircle -2 650 -ld -p -lp -lf -rpre
+bigcircle -2 650 -ld -p -lp -lf -rnotex -rpre
+bigcircle -2 650 -ld -p -lp -lf -rnotex -rtrans -rpre
+bigcircle -2 650 -ld -p  -aa
+bigcircle -2 650 -ld -p  -aaline
+bigcircle -2 650 -ld -p  -aa -rnotex
+bigcircle -2 650 -ld -p  -aaline -rnotex
+bigcircle -2 650 -ld -p  -aa -rpre
+bigcircle -2 650 -ld -p  -aaline -rpre
+bigcircle -2 650 -ld -p  -aa -rnotex -rpre
+bigcircle -2 650 -ld -p  -aaline -rnotex -rpre
+
+

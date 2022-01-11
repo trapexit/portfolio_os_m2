@@ -1,0 +1,19 @@
+fg
+bigcirclempm -q 108 -ld -p -rnotex 
+bigcirclempm -q 108 -ld -p
+bigcirclempm -q 108 -ld -p -rtrans 
+bigcirclempm -q 108 -ld -p -rnotex -rtrans 
+bigcirclempm -q 108 -ld -p -lf -rnotex
+bigcirclempm -q 108 -ld -p -lf
+bigcirclempm -q 108 -ld -p -lf -rnotex -rtrans
+bigcirclempm -q 108 -lds -p -rnotex
+bigcirclempm -q 108 -lds -p -rnotex -rtrans
+bigcirclempm -q 108 -ldst -p
+bigcirclempm -q 108 -ld -p -lp -rnotex -rpre
+bigcirclempm -q 108 -ld -p -lp -rpre
+bigcirclempm -q 108 -ld -p -lp -rtrans -rpre
+bigcirclempm -q 108 -ld -p -lp -rnotex -rtrans -rpre
+bigcirclempm -q 108 -ld -p -lp -lf -rnotex -rpre
+bigcirclempm -q 108 -ld -p -lp -lf -rpre
+bigcirclempm -q 108 -ld -p -lp -lf -rnotex -rtrans -rpre
+

@@ -1,0 +1,534 @@
+// @(#) system.recipe 96/08/26 1.33
+
+//////////////////////////////////////////////////////////
+//
+//	system.recipe
+//
+//	This is the master recipe file for building a
+//	system rom image using cook.
+//
+//////////////////////////////////////////////////////////
+
+#include "system.defines"				// Read ROM integration defines file
+
+
+//////////////////////////////////////////////////////////
+//
+//	Set up the local environment
+//
+//////////////////////////////////////////////////////////
+
+COMMAND		{/bin/rm -rf BUILD_FILES}		// Get rid of files from any previous builds
+CMDWARGS	{BUILDTREE ST_BLUEPRINT}		// Build template directory tree for file system image
+
+
+//////////////////////////////////////////////////////////
+//
+//	Construct the abridged version of dipir
+//
+//////////////////////////////////////////////////////////
+
+COMMAND		{GETROMELFINFO DIPIR_SRC DIPIR_INFO}	// Get ELF/3DO header info
+INITBUF
+
+VARIABLE	Start W:INFO_TEXT_OFF:DIPIR_INFO	// Get starting offset for .text section
+VARIABLE	End {Start + W:INFO_TEXT_SIZE:DIPIR_INFO}	// Get ending offset for .text section
+READFILE	DIPIR_SRC Start End			// Read in the section
+
+VARIABLE	DipirDataOffset ADDRESS			// Save offset of .data section in abridged file
+VARIABLE	Start W:INFO_DATA_OFF:DIPIR_INFO	// Get starting offset for .data section
+VARIABLE	End {Start + W:INFO_DATA_SIZE:DIPIR_INFO}	// Get ending offset for .data section
+READFILE	DIPIR_SRC Start End			// Read in the section
+
+OUTPUT		DIPIR_VOL
+
+
+//////////////////////////////////////////////////////////
+//
+//	Dry run to build ROM tag table and derive various placement addresses
+//
+//////////////////////////////////////////////////////////
+
+INITBUF							// Clear image buffer
+ADDRESS		{ROMVOLUMELABEL - SYSROMIMAGE}		// Place holder for boot code
+VARIABLE	VolStart ADDRESS			// Save volume starting address
+ADDRESS		{ADDRESS + M2_LABEL_LEN}		// Place holder for volume label
+VARIABLE	RTTStart ADDRESS			// Save ROM tag table starting address
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_DIPIR				// The component is the security code
+HALFWORD	{H:INFO_VERSION:DIPIR_INFO}		// File version & revision
+BYTE		{DIPIR_FLAGS}				// Dipir control flags
+BYTE		0					// Not used
+BYTE		0					// Not used
+BYTE		0					// Not used
+VARIABLE	DipirRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		DIPIR_VOL				// Length of component
+WORD		DipirDataOffset				// Offset of data section in dipir
+WORD		W:INFO_DATA_ADDR:DIPIR_INFO		// RAM target address for data section
+WORD		W:INFO_BSS_SIZE:DIPIR_INFO		// RAM size of BSS
+WORD		W:INFO_BSS_ADDR:DIPIR_INFO		// RAM target address for BSS
+
+VARIABLE	TagSize {ADDRESS - RTTStart}
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DEVDIPIR				// The component is a device dipir
+COMMAND		{GETROMELFINFO MICROCARD_DIPIR_SRC MICROCARD_DIPIR_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:MICROCARD_DIPIR_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	MicrocardDipirRTTOff ADDRESS		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		MICROCARD_DIPIR_SRC			// Length of component
+WORD		DIPIRID_MICROCARD			// The device is the microcard
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DEVDIPIR				// The component is a device dipir
+COMMAND		{GETROMELFINFO VISA_DIPIR_SRC VISA_DIPIR_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:VISA_DIPIR_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	VisaDipirRTTOff ADDRESS 		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		VISA_DIPIR_SRC				// Length of component
+WORD		DIPIRID_VISA				// The device is the Visa chip
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DEVDIPIR				// The component is a device dipir
+COMMAND		{GETROMELFINFO SYSROMAPP_DIPIR_SRC SYSROMAPP_DIPIR_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:SYSROMAPP_DIPIR_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	SysRomAppDipirRTTOff ADDRESS 		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		SYSROMAPP_DIPIR_SRC			// Length of component
+WORD		DIPIRID_SYSROMAPP			// The device is the system ROM
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#if INC_CDDIPIR
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DEVDIPIR				// The component is a device dipir
+COMMAND		{GETROMELFINFO CD_DIPIR_SRC CD_DIPIR_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:CD_DIPIR_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	CDDipirRTTOff ADDRESS 			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		CD_DIPIR_SRC				// Length of component
+WORD		DIPIRID_CD				// The device is the CD drive
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#endif	// if INC_CDDIPIR
+
+#if MEDIADEBUG
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DEVDIPIR				// The component is a device dipir
+COMMAND		{GETROMELFINFO MEDIADEBUG_DIPIR_SRC MEDIADEBUG_DIPIR_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:MEDIADEBUG_DIPIR_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	MediaDebugDipirRTTOff ADDRESS		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		MEDIADEBUG_DIPIR_SRC			// Length of component
+WORD		DIPIRID_MEDIA_DEBUG			// 
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#endif	// if MEDIADEBUG
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DRIVER				// The component is a dipir driver
+COMMAND		{GETROMELFINFO LCCD_DRIVER_SRC LCCD_DRIVER_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:LCCD_DRIVER_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	LCCDDriverRTTOff ADDRESS 		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		LCCD_DRIVER_SRC				// Length of component
+WORD		DDDID_LCCD				// The driver is for the LCCD drive
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_CHARACTER_DATA			// The component is the character data
+HALFWORD	0x0000					// Not used
+WORD		0x00000000				// Not used
+VARIABLE	CharacterDataRTTOff ADDRESS		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		CHARACTER_DATA_SRC			// Length of component
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#ifdef	BUILD_DEBUGGER
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DRIVER				// The component is a dipir driver
+COMMAND		{GETROMELFINFO HOST_DRIVER_SRC HOST_DRIVER_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:HOST_DRIVER_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	HostDrvrRTTOff ADDRESS 			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		HOST_DRIVER_SRC				// Length of component
+WORD		DDDID_HOST				// The driver is for the Mac host
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#if HOSTCD
+
+BYTE		RSANODE					// This tag is for a dipir related component
+BYTE		RSA_M2_DRIVER				// The component is a dipir driver
+COMMAND		{GETROMELFINFO HOSTCD_DRIVER_SRC HOSTCD_DRIVER_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:HOSTCD_DRIVER_INFO}	// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	HostCDDrvrRTTOff ADDRESS 		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		HOSTCD_DRIVER_SRC			// Length of component
+WORD		DDDID_HOSTCD				// The driver is for the Mac host CD emulator
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#endif	// if HOSTCD
+
+#else	// ifdef BUILD_DEBUGGER
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_STATIC_SCREEN			// The component is the static screen
+HALFWORD	0x00000000				// Not used
+WORD		0x00000000				// Not used
+VARIABLE	StaticScreenRTTOff ADDRESS		// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		STATIC_SCREEN_SRC			// Length of component
+HALFWORD	STATIC_SCREEN_WIDTH			// Width of static screen
+HALFWORD	STATIC_SCREEN_HEIGHT			// Height of static screen
+HALFWORD	STATIC_SCREEN_XCOORD			// Horizontal coord to place static screen
+HALFWORD	STATIC_SCREEN_YCOORD			// Vertical coord to place static screen
+WORD		STATIC_SCREEN_KEYCOLOR			// Color to map to background (0 if none)
+WORD		STATIC_SCREEN_BACKGND			// Background color to use for static screen
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_KINIT_ROM				// The component is the kernel init stuff
+COMMAND		{GETROMELFINFO KINIT_SRC KINIT_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:KINIT_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	KInitRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		KINIT_SRC				// Length of component
+WORD		0x00000000				// RAM address to download component to
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_KERNEL_ROM				// The component is the ROM app kernel
+COMMAND		{GETROMELFINFO KERNEL_SRC KERNEL_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:KERNEL_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	KernelRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		KERNEL_SRC				// Length of component
+WORD		0x00000000				// RAM address to download component to
+WORD		OS_ROMAPP				// OS related flags for this component
+WORD		OSRESERVEDMEM				// OSReservedMem
+WORD		0x00000000				// Not used
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_OPINIT				// The component is the operator init stuff
+COMMAND		{GETROMELFINFO OPINIT_SRC OPINIT_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:OPINIT_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	OpInitRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		OPINIT_SRC				// Length of component
+WORD		0x00000000				// RAM address to download component to
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_OPERATOR				// The component is the operator
+COMMAND		{GETROMELFINFO OPERATOR_SRC OPERATOR_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:OPERATOR_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	OperatorRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		OPERATOR_SRC				// Length of component
+WORD		0x00000000				// RAM address to download component to
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_FSINIT				// The component is the file system init stuff
+COMMAND		{GETROMELFINFO FSINIT_SRC FSINIT_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:FSINIT_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	FSInitRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		FSINIT_SRC				// Length of component
+WORD		0x00000000				// RAM address to download component to
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+BYTE		RT_SUBSYS_ROM				// This tag is for a ROM component
+BYTE		ROM_FS					// The component is the file system
+COMMAND		{GETROMELFINFO FILE_SYS_SRC FILE_SYS_INFO}	// Get ELF/3DO header info
+HALFWORD	{H:INFO_VERSION:FILE_SYS_INFO}		// File version & revision
+WORD		0x00000000				// Not used
+VARIABLE	FileSysRTTOff ADDRESS			// Save address of offset so we can fill it in
+WORD		0x00000000				// Place holder for offset to be filled in later
+WORD		FILE_SYS_SRC				// Length of component
+WORD		0x00000000				// RAM address to download component to
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+WORD		0x00000000				// Not used
+
+#endif	// ifdef BUILD_DEBUGGER
+
+VARIABLE	RTTEnd ADDRESS				// Save ROM tab table ending address
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+ADDRESS		{DIPIRCODESTART - SYSROMIMAGE}				// Place code at DIPIRCODESTART
+POKEWORD	DipirRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}		// Stuff offset in tag table
+VARIABLE	DipirROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + DIPIR_VOL}					// Place holder for dipir
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	MicrocardDipirRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE} // Stuff offset in tag table
+VARIABLE	MicrocardDipirROMOff ADDRESS				// Save offset for placement file
+ADDRESS		{ADDRESS + MICROCARD_DIPIR_SRC}				// Place holder for Microcard dipir
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	VisaDipirRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	VisaDipirROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + VISA_DIPIR_SRC}				// Place holder for Visa dipir
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	SysRomAppDipirRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE} // Stuff offset in tag table
+VARIABLE	SysRomAppDipirROMOff ADDRESS				// Save offset for placement file
+ADDRESS		{ADDRESS + SYSROMAPP_DIPIR_SRC}				// Place holder for SysROM dipir
+
+#if INC_CDDIPIR
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	CDDipirRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	CDDipirROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + CD_DIPIR_SRC}				// Place holder for CD-dipir
+
+#endif	// if INC_CDDIPIR
+
+#if MEDIADEBUG
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	MediaDebugDipirRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	MediaDebugDipirROMOff ADDRESS				// Save offset for placement file
+ADDRESS		{ADDRESS + MEDIADEBUG_DIPIR_SRC}			// Place holder for CD-dipir
+
+#endif	// if MEDIADEBUG
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	LCCDDriverRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	LCCDDriverROMOff ADDRESS				// Save offset for placement file
+ADDRESS		{ADDRESS + LCCD_DRIVER_SRC}				// Place holder for LCCD driver
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	CharacterDataRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	CharacterDataROMOff ADDRESS				// Save offset for placement file
+ADDRESS		{ADDRESS + CHARACTER_DATA_SRC}				// Place holder for character data
+
+#ifdef	BUILD_DEBUGGER
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	HostDrvrRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	HostDrvrROMOff ADDRESS					// Save offset for placement file
+ADDRESS         {ADDRESS + HOST_DRIVER_SRC}				// Place holder for host driver
+
+#if HOSTCD
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	HostCDDrvrRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	HostCDDrvrROMOff ADDRESS				// Save offset for placement file
+ADDRESS         {ADDRESS + HOSTCD_DRIVER_SRC}				// Place holder for host CD driver
+
+#endif	// if HOSTCD
+
+#else	// ifdef BUILD_DEBUGGER
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	StaticScreenRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	StaticScreenROMOff ADDRESS				// Save offset for placement file
+ADDRESS		{ADDRESS + STATIC_SCREEN_SRC}				// Place holder for static screen
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	KInitRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}		// Stuff offset in tag table
+VARIABLE	KInitROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + FILE_SYS_SRC}				// Place holder for file system
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	KernelRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	KernelROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + KERNEL_SRC}					// Place holder for kernel
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	OpInitRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	OpInitROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + FILE_SYS_SRC}				// Place holder for file system
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	OperatorRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	OperatorROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + OPERATOR_SRC}				// Place holder for operator
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	FSInitRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	FSInitROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + FILE_SYS_SRC}				// Place holder for file system
+
+ALIGN		BLOCK_SIZE						// Align to block boundary
+POKEWORD	FileSysRTTOff {(ADDRESS - RTTStart) / BLOCK_SIZE}	// Stuff offset in tag table
+VARIABLE	FileSysROMOff ADDRESS					// Save offset for placement file
+ADDRESS		{ADDRESS + FILE_SYS_SRC}				// Place holder for file system
+
+#endif	// ifdef BUILD_DEBUGGER
+
+OUTPUT		RTT_VOL RTTStart RTTEnd					// Write out the ROM tag table
+
+
+//////////////////////////////////////////////////////////
+//
+//	Finish putting together and building the file system image
+//
+//////////////////////////////////////////////////////////
+
+INITBUF									// Clear image buffer
+STRING		CALC {(RTTStart - VolStart) / BLOCK_SIZE}		// ROM tag table volume offset
+OUTPUT		RTT_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(DipirROMOff - VolStart) / BLOCK_SIZE}		// Dipir volume offset
+OUTPUT		DIPIR_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(MicrocardDipirROMOff - VolStart) / BLOCK_SIZE}	// Microcard dipir volume offset
+OUTPUT		MICROCARD_DIPIR_PLACE					// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(VisaDipirROMOff - VolStart) / BLOCK_SIZE}	// Visa dipir volume offset
+OUTPUT		VISA_DIPIR_PLACE					// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(SysRomAppDipirROMOff - VolStart) / BLOCK_SIZE}	// SysROM dipir volume offset
+OUTPUT		SYSROMAPP_DIPIR_PLACE					// Write to placement file
+
+#if INC_CDDIPIR
+
+INITBUF									// Clear image buffer
+STRING		CALC {(CDDipirROMOff - VolStart) / BLOCK_SIZE}		// CD dipir volume offset
+OUTPUT		CD_DIPIR_PLACE						// Write to placement file
+
+#endif	// if INC_CDDIPIR
+
+#if MEDIADEBUG
+
+INITBUF									// Clear image buffer
+STRING		CALC {(MediaDebugDipirROMOff - VolStart) / BLOCK_SIZE}	// CD dipir volume offset
+OUTPUT		MEDIADEBUG_DIPIR_PLACE					// Write to placement file
+
+#endif	// if MEDIADEBUG
+
+INITBUF									// Clear image buffer
+STRING		CALC {(LCCDDriverROMOff - VolStart) / BLOCK_SIZE}	// LCCD driver volume offset
+OUTPUT		LCCD_DRIVER_PLACE					// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(CharacterDataROMOff - VolStart) / BLOCK_SIZE}	// Character data volume offset
+OUTPUT		CHARACTER_DATA_PLACE					// Write to placement file
+
+#ifdef	BUILD_DEBUGGER
+
+INITBUF									// Clear image buffer
+STRING          CALC {(HostDrvrROMOff - VolStart) / BLOCK_SIZE}		// Host driver volume offset
+OUTPUT          HOST_DRIVER_PLACE					// Write to placement file
+
+#if HOSTCD
+
+INITBUF									// Clear image buffer
+STRING          CALC {(HostCDDrvrROMOff - VolStart) / BLOCK_SIZE}	// Host CD driver volume offset
+OUTPUT          HOSTCD_DRIVER_PLACE					// Write to placement file
+
+#endif	// if HOSTCD
+
+#else	// ifdef BUILD_DEBUGGER
+
+INITBUF									// Clear image buffer
+STRING		CALC {(StaticScreenROMOff - VolStart) / BLOCK_SIZE}	// Static screen volume offset
+OUTPUT		STATIC_SCREEN_PLACE					// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(KInitROMOff - VolStart) / BLOCK_SIZE}		// File system volume offset
+OUTPUT		KINIT_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(KernelROMOff - VolStart) / BLOCK_SIZE}		// Kernel volume offset
+OUTPUT		KERNEL_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(OpInitROMOff - VolStart) / BLOCK_SIZE}		// File system volume offset
+OUTPUT		OPINIT_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(OperatorROMOff - VolStart) / BLOCK_SIZE}		// Operator volume offset
+OUTPUT		OPERATOR_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(FSInitROMOff - VolStart) / BLOCK_SIZE}		// File system volume offset
+OUTPUT		FSINIT_PLACE						// Write to placement file
+
+INITBUF									// Clear image buffer
+STRING		CALC {(FileSysROMOff - VolStart) / BLOCK_SIZE}		// File system volume offset
+OUTPUT		FILE_SYS_PLACE						// Write to placement file
+
+#endif	// ifdef BUILD_DEBUGGER
+
+COMMAND		{FSBUILD SOURCE_TREE -b BLOCK_SIZE -d DIRECTORY_SIZE -s MAX_VOLUME_SIZE -l LAYOUT_TOOLS -o FS_IMAGE -v VOLUME_LABEL -L LAYOUT_LOG}
+
+
+//////////////////////////////////////////////////////////
+//
+//	Assemble, patch, and writeout the final image
+//
+//////////////////////////////////////////////////////////
+
+INITBUF		ROM_IMAGE_SIZE					// Clear image buffer
+
+COMMAND		{GETROMELFINFO BOOT_CODE_SRC BOOT_CODE_INFO}	// Get bootcode ELF/3DO header info
+VARIABLE	Start W:INFO_TEXT_OFF:BOOT_CODE_INFO		// Get starting offset for .text section
+VARIABLE	End {Start + W:INFO_TEXT_SIZE:BOOT_CODE_INFO}	// Get ending offset for .text section
+READFILE	BOOT_CODE_SRC Start End				// Read in the section
+POKEWORD	BOOT_BSS_SIZE W:INFO_BSS_SIZE:BOOT_CODE_INFO	// Put ROM BSS section size in magic location
+POKEWORD	BOOT_BSS_ADDR W:INFO_BSS_ADDR:BOOT_CODE_INFO	// Put ROM BSS section address in magic location
+POKEWORD	SYS_ROM_SIZE ROM_IMAGE_SIZE		 	// Put ROM image size in magic location
+
+ADDRESS		{ROMVOLUMELABEL - SYSROMIMAGE}			// Set address for ROM file system
+READFILE	FS_IMAGE					// Read in ROM file system
+POKEBYTE	{VolStart + 7} {11}		 		// Set volume flags to M2 only, blessed
+POKEWORD	{VolStart + 132} {(RTTEnd - RTTStart)/ TagSize}	// Set number of ROM tags
+
+OUTPUT		SYSTEM_FILE					// Output ROM image
+
+COMMAND		{TREESIZE BUILD_FILES}				// Capture size info for this build
+
+

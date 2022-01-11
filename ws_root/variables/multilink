@@ -1,0 +1,8 @@
+# @(#) multilink 95/12/04 1.7
+
+ifndef TARGET_NAMES
+TARGET_NAMES =		${CSRC:%.c=%}
+endif
+
+include ${CODEMGR_WS}/ws_root/variables/generic
+

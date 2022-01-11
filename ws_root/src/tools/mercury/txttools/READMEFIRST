@@ -1,0 +1,2 @@
+To allow for compressed textures, smaller file sizes, and faster texture loading, the format of the textures pages output by utfpage has changed. A new runtime texture reader is needed to read the new format.  See examples/mercury/helloworld/tex_read.c for an example of a new texture reader.  Developers using their own texture readers will have to update their readers if they wish to use the new version of utfpage.  The new reader will read older texture pages but the old readers will not be able to handle the new texture pages.
+

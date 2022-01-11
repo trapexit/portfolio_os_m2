@@ -1,0 +1,108 @@
+#
+#
+#
+SHELL = /bin/sh
+
+PLATFORM = Sun
+LIBDIR = ../../libs/$(PLATFORM)
+OBJDIR = objects/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+AR = ar clq
+RANLIB = ranlib
+
+M2TXLIB = M2TXlib.a
+
+INCLUDES = -I../include -I../../ifflib
+CC = gcc
+CCFLAGS = -O -DNO_64_BIT_SCALARS -ansi $(INCLUDES)
+
+AUTOMAGIC_DIR = \
+	objects     \
+	$(OBJDIR) \
+	$(LIBDIR)
+
+LIBSRCS = \
+        M2TXDCI.c \
+        M2TXEncode.c \
+        M2TXFormat.c \
+        M2TXLibrary.c \
+	M2TXHeader.c \
+        M2TXbestcompress.c \
+        M2TXcompress.c \
+        M2TXio.c \
+        M2TXQuant.c \
+        ReSample.c \
+        filter.c \
+        qmem.c \
+        qstream.c 
+
+IFFSRCS = \
+	M2TXDither.c \
+	M2TXattr.c \
+	M2TXiff.c
+
+IFFOBJS = \
+	${OBJDIR}/M2TXattr.o \
+	${OBJDIR}/M2TXDither.o \
+	${OBJDIR}/M2TXiff.o
+
+CLTSRCS = \
+	clttxattr.c \
+	cltcopy.c \
+	cltdblndattr.c
+
+CLTOBJS = \
+	${OBJDIR}/clttxattr.o \
+	${OBJDIR}/cltcopy.o \
+	${OBJDIR}/cltdblndattr.o
+
+LIBOBJS = \
+        ${OBJDIR}/M2TXDCI.o \
+        ${OBJDIR}/M2TXEncode.o \
+        ${OBJDIR}/M2TXFormat.o \
+        ${OBJDIR}/M2TXLibrary.o \
+	${OBJDIR}/M2TXHeader.o \
+        ${OBJDIR}/M2TXbestcompress.o \
+        ${OBJDIR}/M2TXcompress.o \
+        ${OBJDIR}/M2TXio.o \
+        ${OBJDIR}/M2TXQuant.o \
+        ${OBJDIR}/ReSample.o \
+        ${OBJDIR}/filter.o \
+        ${OBJDIR}/qmem.o \
+        ${OBJDIR}/qstream.o 
+
+MISCOBJS = \
+	$(OBJDIR)/futil.o \
+	$(OBJDIR)/LWToken.o \
+	$(OBJDIR)/page.o \
+	$(OBJDIR)/SDFTexBlend.o
+
+all: $(AUTOMAGIC_DIR) $(LIBDIR)/$(M2TXLIB) $(MISCOBJS)
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+${OBJDIR}/%.o: %.c
+	$(CC) $(CCFLAGS) -c -o $@ $< 
+
+depends:
+	makedepend -- $(INCLUDES) -- $(LIBSRCS) -- $(IFFSRCS)
+
+
+$(LIBDIR)/$(M2TXLIB): $(LIBOBJS) $(IFFOBJS) $(CLTOBJS)
+	$(RM) $(OBJDIR)/$(M2TXLIB)
+	$(AR) $(OBJDIR)/$(M2TXLIB) $(LIBOBJS) $(IFFOBJS) $(CLTOBJS)
+	$(RANLIB) $(OBJDIR)/$(M2TXLIB)
+	$(CP) $(OBJDIR)/$(M2TXLIB) $(LIBDIR)/$(M2TXLIB)
+
+clean:
+	$(RM) $(LIBOBJS) $(IFFOBJS) $(CLTOBJS) $(MISCOBJS) $(OBJDIR)/$(M2TXLIB)
+
+clobber: clean
+	$(RM) $(LIBDIR)/$(M2TXLIB)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

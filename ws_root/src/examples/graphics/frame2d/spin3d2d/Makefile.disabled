@@ -1,0 +1,12 @@
+# @(#) Makefile.disabled 96/02/28 1.4
+
+EXAMPLE_CLASS =     Graphics/Frame2d/spin3d2d
+
+INCDIRS += ${SRC}/libs/frame_utils/includes
+LINK_LIBS = ${GFX_LIBS} ${GFX_OS_LIBS}
+MODULES = graphics gstate frame2d
+
+include ${CODEMGR_WS}/ws_root/variables/makeexamples
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/makeexamples
+include ${CODEMGR_WS}/ws_root/rules/linkexec

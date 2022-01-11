@@ -1,0 +1,60 @@
+\ @(#) times_256.ins 96/03/11 1.11
+\ Instrument Template for times_256
+\
+\ Robert Marsanyi
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Arithmetic -name times_256.dsp
+\\\	Fast multiplication by 256.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument provides a fast multiplication by 256.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        -1.0 to +1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Unclipped result of Input * 256 in the range of -1.0 to +1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 5
+\\\
+\\\	    Code: 5 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    multiply.dsp(@)
+
+include? DFID_TIMES_256 function_ids.j
+
+anew task-times_256.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_TIMES_256 dspp-function-id !
+$" times_256.dsp" ins-name !
+
+ALLOC.INPUT  Input
+ALLOC.OUTPUT Output
+5 ALLOC.TICKS
+
+	Output _A _= Input _A 8 _<<' _TRL
+
+}ins
+}dspp

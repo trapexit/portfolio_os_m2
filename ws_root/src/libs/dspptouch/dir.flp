@@ -1,0 +1,21 @@
+#!/bin/sh
+# @(#) dir.flp 95/05/08 1.1
+# dspptouch library FLP. Adds dspptouch include files to list of things to
+# bringover and putback.
+
+# Output something about what's going on.
+#
+echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/includes/dspptouch"
+
+# Include includes/dspptouch
+#
+find $CODEMGR_WS_ROOT/ws_root/src/includes/dspptouch -name 's.*' -print | grep '/SCCS/s\.'
+
+# Default action: everything beneath here.
+#
+find `pwd` -name 's.*' -print | grep '/SCCS/s\.'
+
+# If find doesn't find anything it will exit 1 and bringover
+# and putback will stop.  Always exit 0 here.
+#
+exit 0

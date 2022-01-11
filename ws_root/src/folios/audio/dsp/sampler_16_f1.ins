@@ -1,0 +1,66 @@
+\ @(#) sampler_16_f1.ins 96/03/11 1.11
+\ $Id: sampler_16_f1.ins,v 1.9 1995/01/20 21:27:52 peabody Exp $
+\ sampler_16_f1 - Instrument Template for Sample Player without rate conversion
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_16_f1.dsp
+\\\	Fixed-rate mono 16-bit sample player.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument plays a monophonic 16-bit sample at the instrument's
+\\\	    execution rate (e.g., 44100 samples/sec).
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        0.0 to 1.0. Defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_f2.dsp(@), sampler_16_v1.dsp(@), sampler_raw_f1.dsp(@)
+
+include? DFID_SAMPLER_16_F1 function_ids.j
+
+anew task-sampler_16_f1.ins
+
+
+_BULLDOG
+dspp{
+ins{
+DFID_SAMPLER_16_F1 dspp-function-id !
+$" sampler_16_f1.dsp" ins-name !
+dspp-echo off
+
+ALLOC.INFIFO  InFIFO
+
+	include sampler_16_f1.j
+
+}ins
+}dspp

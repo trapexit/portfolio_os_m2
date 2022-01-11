@@ -1,0 +1,105 @@
+#
+# @(#) Makefile.Dos 96/12/04 1.6
+#
+SHELL = /bin/sh
+
+
+PLATFORM = Dos
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../libs/$(PLATFORM)
+MISCOBJDIR = ../txtlib/src/objects/$(PLATFORM)
+OBJDIR = objects/$(PLATFORM)
+HGRELEASEDIR = ../release/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+
+IFFLIB = IFFlib.a
+MLIBS = $(LIBDIR)/$(IFFLIB) -lm
+SLIBS = -lm
+INCLUDES = -I../txtlib/include  -I../ifflib -I./
+CC = gcc
+CCFLAGS = -ansi -DINTEL -DMSDOS -DNO_64_BIT_SCALARS -DSIMPLE -DLW_VERSION_STRING='"3.1b1"' $(INCLUDES)
+
+AUTOMAGIC_DIR = \
+	objects		\
+	$(OBJDIR)	\
+	bin		\
+	$(BINDIR)	\
+	$(HGRELEASEDIR)
+
+SCENESRCS = \
+    	LWSceneParse.c
+
+SCENEOBJS = \
+    	$(OBJDIR)/LWSceneParse.o \
+    	$(MISCOBJDIR)/futil.o
+
+MODOBJS = \
+    	$(MISCOBJDIR)/futil.o \
+	$(MISCOBJDIR)/LWToken.o \
+    	$(MISCOBJDIR)/SDFTexBlend.o \
+	$(MISCOBJDIR)/qstream.o \
+	$(MISCOBJDIR)/qmem.o
+
+
+CONVSRCS = \
+    	LWParse.c \
+    	LWParseMath.c \
+    	SDFMat.c \
+    	LWSURF.c \
+	tri.c \
+	monotone.c \
+	misc.c \
+	xlines.c \
+	texmap.c \
+	construct.c
+
+CONVOBJS = \
+	$(OBJDIR)/LWParse.o \
+	$(OBJDIR)/LWParseMath.o \
+	$(OBJDIR)/SDFMat.o \
+	$(OBJDIR)/LWSURF.o \
+	$(OBJDIR)/tri.o \
+	$(OBJDIR)/monotone.o \
+	$(OBJDIR)/misc.o \
+	$(OBJDIR)/xlines.o \
+	$(OBJDIR)/texmap.o \
+	$(OBJDIR)/construct.o
+
+all: $(AUTOMAGIC_DIR) $(BINDIR)/lwstoanim.exe $(BINDIR)/lwtosdf.exe \
+	$(HGRELEASEDIR)/lwstoanim.exe $(HGRELEASEDIR)/lwtosdf.exe
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+${OBJDIR}/%.o: %.c
+	$(CC) $(CCFLAGS) -c -o $@ $< 
+
+$(BINDIR)/lwtosdf.exe: $(CONVOBJS) $(MODOBJS)
+	$(CC) $(CONVOBJS) $(MODOBJS) -o $@ $(MLIBS)
+
+$(BINDIR)/lwstoanim.exe: $(SCENEOBJS)
+	$(CC) $(SCENEOBJS) -o $@ $(SLIBS)
+
+$(HGRELEASEDIR)/lwtosdf.exe: $(CONVOBJS) $(MODOBJS)
+	$(CC) $(CONVOBJS) $(MODOBJS) -o $@ $(MLIBS)
+
+$(HGRELEASEDIR)/lwstoanim.exe: $(SCENEOBJS)
+	$(CC) $(SCENEOBJS) -o $@ $(SLIBS)
+
+depends:
+	makedepend -- $(INCLUDES)
+
+
+clean:
+	$(RM) $(CONVOBJS) $(OBJDIR)/LWSceneParse.o
+
+clobber:
+	$(RM) $(BINDIR)/lwtosdf.exe $(BINDIR)/lwstoanim.exe
+	$(RM) $(HGRELEASEDIR)/lwtosdf.exe $(HGRELEASEDIR)/lwstoanim.exe
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+

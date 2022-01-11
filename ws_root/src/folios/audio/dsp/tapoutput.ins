@@ -1,0 +1,98 @@
+\ @(#) tapoutput.ins 96/03/11 1.16
+\ $Id: tapoutput.ins,v 1.6 1995/01/20 21:27:52 peabody Exp $
+\ tap gMixer for debugging purposes
+\
+\ Author: Phil Burk
+\ Copyright 1992 3DO
+\ All Rights Reserved
+
+\\\	AUTODOC -class DSP -group Line_In_And_Out -name tapoutput.dsp
+\\\	Taps accumulated stereo line out signal.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument permits reading the accumulated stereo output from all
+\\\	    currently running output instruments (e.g., line_out.dsp(@), Mixer(@) with
+\\\	    AF_F_MIXER_WITH_LINE_OUT set). These signals are what is eventually sent to
+\\\	    the audio DACs.
+\\\
+\\\	    This can be used to snoop the audio output of an application without the
+\\\	    application being aware of it (real handy for debugging!).
+\\\
+\\\	    It can also be used to provide instrumentation, and such, for the accumulated
+\\\	    audio output of the DSP (see examples).
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 2 parts
+\\\	        Accumulated stereo output signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  Examples -normal_format
+\\\
+\\\	    Combine with delay_f2.dsp(@) to capture the output of an application to
+\\\	    memory without the cooperation of the application (kind of like a screen
+\\\	    grabber for audio).
+\\\
+\\\	    Combine with a pair of envfollower.dsp(@) instruments and a pair of
+\\\	    Probe(@)s to make stereo VU meters for the accumulated audio of all
+\\\	    applications currently running.
+\\\
+\\\	    Combine with a pair of envfollower.dsp(@) instruments, a pair of
+\\\	    maximum.dsp(@) instruments, and a pair of Probe(@)s to make a stereo peak
+\\\	    level detector for the accumulated audio of all applications currently
+\\\	    running.
+\\\
+\\\	  Notes
+\\\
+\\\	    You should only use this instrument when there's no direct way to get the
+\\\	    signals you want. For example, if you want to add metering or peak detection
+\\\	    to your own application (as opposed to every application that is running on
+\\\	    the 3DO at a given time), split your audio (e.g. the output of a sub-mixer),
+\\\	    between line_out.dsp(@) and envfollowers instead of using tapoutput.dsp(@).
+\\\
+\\\	    This instrument must be allocated at a lower priority than all the output
+\\\	    instruments that you want to snoop. If not, you'll only get the accumulated
+\\\	    results of all of the output instruments at higher (and perhaps equal)
+\\\	    priority to tapoutput.dsp(@). Allocate at a priority of 0 to get the accumulated
+\\\	    results of most output instruments.
+\\\
+\\\	  See Also
+\\\
+\\\	    line_out.dsp(@), delay_f1.dsp(@), envfollower.dsp(@), maximum.dsp(@),
+\\\	    capture_audio(@), minmax_audio(@)
+
+decimal
+
+include? DFID_TAPOUTPUT function_ids.j
+
+anew task-tapoutput.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_TAPOUTPUT dspp-function-id !
+$" tapoutput.dsp" ins-name !
+
+
+_IMPORT 2 ALLOC.VARIABLE.ARRAY gMixer
+2 ALLOC.OUTPUT.ARRAY Output
+6 ALLOC.TICKS
+
+	Output 0 PART+ _A gMixer 0 PART+ _A _MOVE
+	Output 1 PART+ _A gMixer 1 PART+ _A _MOVE
+}ins
+}dspp
+

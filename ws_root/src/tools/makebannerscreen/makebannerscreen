@@ -1,0 +1,1 @@
+makeimage -w640 -h240 -b {Parameters}

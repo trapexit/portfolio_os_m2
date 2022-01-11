@@ -1,0 +1,22 @@
+# @(#) Makefile 96/05/31 1.5
+
+TARGET_NAME =		triangleengine.driver
+TARGET_DIRECTORY =	${REMOTE_DIR}/System.m2/Drivers
+DDF_DIRECTORY =		${REMOTE_DIR}/System.m2/Drivers/Descriptions
+LOADERTOOL_FLAGS =	-Htype=13 -e main
+MODULES =		graphics
+PRIVILEGED_MODULE =	1
+NO_CHDIR_MODULE =	1
+SHOW_MODULE_INFO =	1
+
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/linkexec
+
+all.here: ${DDF_DIRECTORY} ${DDF_DIRECTORY}/triangleengine.ddf
+
+${DDF_DIRECTORY}/triangleengine.ddf: ${OBJDIR}/triangleengine.ddf
+	${hardlinkme}
+
+${DDF_DIRECTORY}:
+	${MD} $@
+

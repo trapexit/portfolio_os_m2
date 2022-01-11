@@ -1,0 +1,24 @@
+// @(#) cdrom.recipe 96/10/08 1.8
+//
+// Recipe for building CD-ROM image.
+// Just set some defines and include "generic.recipe".
+
+#define	VOLUME_NAME		CD-ROM
+#define	FSTYPE			cd-rom
+#define	VOLSIZE			8192
+#define	BLOCK_SIZE		2048
+#define	DIR_BLOCK_SIZE		2048
+
+#define RTT2_OFFSET		( DISC_LABEL_OFFSET + 1 ) * BLOCK_SIZE
+#define ENCODER_OFFSET		6 * BLOCK_SIZE
+
+#define	BLUEPRINT		cdrom.blueprint
+#define	DEVDIPIR_COMPONENT_ID	DIPIRID_CD
+#define	DEVDIPIR_NAME		dipir.cd.unenc
+#define	APPBANNER_NAME		AppBanner
+
+#define	BOOTABLE		1
+#define	OSFLAGS			OS_NORMAL
+#define	DEVICEPERMS		0xFFFFFFFF
+
+#include "generic.recipe"

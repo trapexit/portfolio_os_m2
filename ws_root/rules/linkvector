@@ -1,0 +1,57 @@
+# @(#) linkvector 96/07/16 1.2
+
+default.linkvector: default.generic
+
+TARGET =		${OBJDIR}/${TARGET_NAME}
+
+${TARGET}: ${OBJS}
+	-@${RM} $@
+	${LD} ${LFLAGS} ${LDFLAGS} -o$@ \
+	        $(foreach lf,$(wildcard ${LINK_CONTROL_FILE}),-x$(lf)) \
+		${LOADERTOOL_STDFLAGS} \
+		${LOADERTOOL_FLAGS} \
+		${OBJS}
+	@${CAT} ${SRC}/docs/copyright.txt >>$@
+
+all.post: ${TARGET}
+
+ifdef TARGET_DIRECTORY
+
+PLATFORM_TARGET_DIR =		${TARGET_DIRECTORY:${ROOT}/%=${PLATFORM_DIR}/%}
+
+ifdef VECTOR_IS_PUBLIC
+PTARGET =			${PLATFORM_TARGET_DIR}/${TARGET_NAME}
+endif
+
+BTARGET =			${TARGET_DIRECTORY}/${TARGET_NAME}
+
+TARGETS =			${PTARGET} ${BTARGET}
+
+all.post: ${TARGETS}
+
+${BTARGET}: ${TARGET}
+	${hardlinkme}
+
+ifdef VECTOR_IS_PUBLIC
+${PTARGET}: ${TARGET}
+	${hardlinkme}
+endif
+
+endif
+
+clean: clean.linkvector
+clean.linkvector:
+	${RM} ${TARGET} ${TARGETS} vectors.s
+
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+vectors.s: ${EXPORT_FILE}
+	echo '#include <hardware/PPCMacroequ.i>' >vectors.s
+	echo >>vectors.s
+	echo '	DECFN main' >>vectors.s
+	echo '	blr' >>vectors.s
+	echo >>vectors.s
+	-@${CAT} ${EXPORT_FILE} | \
+	${GREP} '^EXPORTS' | \
+	${SED} 's/^EXPORTS[ 	]*[0-9]*=\(.*\)/	DECFN \1@	blr@/' | \
+	${TR} @ '\12' >>vectors.s

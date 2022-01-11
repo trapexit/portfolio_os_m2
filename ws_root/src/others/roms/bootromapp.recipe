@@ -1,0 +1,22 @@
+// @(#) bootromapp.recipe 96/07/02 1.4
+//
+// Recipe for building RomApp image.
+// Just set some defines and include "generic.recipe".
+
+#define	VOLUME_NAME		ROMAPP_CART
+#define	FSTYPE			romdisk
+#define	VOLSIZE			3072
+#define	BLOCK_SIZE		4
+#define	DIR_BLOCK_SIZE		512
+#define	BLUEPRINT		bootromapp.blueprint
+#define	DEVDIPIR_NAME		dipir.bootromapp
+#define	DEVDIPIR_COMPONENT_ID	DIPIRID_BOOTROMAPP
+#define	DEVICON_NAME		bootromapp.icon
+#define	OSFLAGS			OS_ROMAPP
+
+#define	BOOTABLE		1
+
+COMMAND { rm -f OBJDIR/RomApps.txt }
+COMMAND { cp bootromapp.rat OBJDIR/RomApps.txt }
+
+#include "generic.recipe"

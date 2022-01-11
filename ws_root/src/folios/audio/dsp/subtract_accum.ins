@@ -1,0 +1,55 @@
+\ @(#) subtract_accum.ins 96/03/26 1.8
+\ A-ACCUM
+
+\\\	AUTODOC -class DSP -group Accumulator -name subtract_accum.dsp
+\\\	Subtracts accumulator from input.
+\\\
+\\\	  Description
+\\\
+\\\	    Subtracts the accumulator value from the input, leaving the result in the
+\\\	    accumulator: Accum = Input - Accum.
+\\\
+\\\	    This instrument can only be used within a patch.
+\\\	    It may not be used as a stand-alone instrument.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Input - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed input value. -1.0 to 1.0. Defaults to 0.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 4
+\\\
+\\\	    Code: 4 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    add_accum.dsp(@), multiply_accum.dsp(@), subtract_from_accum.dsp(@),
+\\\	    input_accum.dsp(@), output_accum.dsp(@), subtract.dsp(@)
+
+include? DFID_SUBTRACT_ACCUM function_ids.j
+
+anew task-subtract_accum.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PATCHES_ONLY dspp-header-flags !
+
+DFID_ADD dspp-function-id !
+$" subtract_accum.dsp" ins-name !
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Input
+4 ALLOC.TICKS
+
+	Input _A ACCUME _CLIP _-
+}ins
+}dspp

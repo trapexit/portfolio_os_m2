@@ -1,0 +1,29 @@
+# @(#)hostexec 95/04/03 1.13
+#
+
+ifndef	TARGET_DIRECTORY
+TARGET_DIRECTORY =	${HOSTOSBIN}
+endif
+
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+ifndef LINK_LIBS_DIR
+LINK_LIBS_DIR =		${HOSTOSLIB}
+endif
+
+TARGET =		${TARGET_NAME:%=${TARGET_DIRECTORY}/%}
+
+all.post: ${TARGET}
+
+${TARGET}: ${HOSTOBJS} ${wildcard ${foreach dir,${LINK_LIBS_DIR},${LINK_LIBS:%=${dir}/lib%.a}}}
+	${HOSTCC} -o $@ ${HOSTCFLAGS} ${HOSTOBJS} \
+		${LINK_LIBS_DIR:%=-L%} \
+		${LINK_LIBS:%=-l%} ${HOST_LINK_LIBS:%=-l%}
+
+clean: clean.hostexec
+clean.hostexec:
+	${RM} -f ${TARGET}
+
+unlink: unlink.hostexec
+unlink.hostexec:
+	${RM} -f ${TARGET}

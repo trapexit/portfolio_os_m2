@@ -1,0 +1,46 @@
+# @(#) see_sound.sdf 96/03/20 1.2
+# render cube as trip strip
+
+SDFVersion 0.1
+
+include matarrays.sdf
+
+Define Group All {
+	
+	Define Model Bee {
+		use materials minerals
+		Move {0.0 0.5 0.0}
+		Surface {
+			MatIndex 1
+			Cone {
+				radius 0.1
+				height 0.2
+			}
+		}
+	}
+
+	Define Model Machine {
+		use materials minerals
+		Move {-27.0 0.0 -27.0}
+		Surface {
+			MatIndex 3
+			Block {
+				width 0.2
+				depth 3
+				height 1
+			}
+		}
+	}
+	
+	Define Model Phone {
+		use materials minerals
+		Move {33.0 0.0 -19.0}
+		Surface {
+			MatIndex 2
+			Cylinder {
+				radius 0.5
+				height 0.5
+			}
+		}
+	}
+}

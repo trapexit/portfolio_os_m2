@@ -1,0 +1,28 @@
+#!/bin/sh
+# @(#) dir.flp 96/02/16 1.11
+# audio folio FLP. Adds audio.lib and audio.h to list of things to
+# bringover and putback.
+
+# Include audio.h.
+#
+echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/includes/audio"
+echo $CODEMGR_WS_ROOT/ws_root/src/includes/audio/SCCS/s.audio.h
+
+# Include error text
+#
+echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/errors/FAu.errs.c"
+echo $CODEMGR_WS_ROOT/ws_root/src/errors/SCCS/s.FAu.errs.c
+
+# Include all libs/c/audio
+# @@@ Don't do this because it messes up partial build
+# echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/libs/c/audio"
+# find $CODEMGR_WS_ROOT/ws_root/src/libs/c/audio -name 's.*' -print | grep '/SCCS/s\.'
+
+# Default action: everything beneath here.
+#
+find `pwd` -name 's.*' -print | grep '/SCCS/s\.'
+
+# If find doesn't find anything it will exit 1 and bringover
+# and putback will stop.  Always exit 0 here.
+#
+exit 0

@@ -1,0 +1,97 @@
+\ @(#) fixedstereo16swap.ins 95/11/16 1.8
+\ $Id: fixedstereo16swap.ins,v 1.10 1995/01/20 21:27:52 peabody Exp $
+\ Fixed rate 16 bit stereo sample with byte swapping for CD player.
+ \
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+\
+\ 940608 PLB removed debug writing of outputs to $ 308, $ 309
+\            This will cause a problem if run on bulldog.
+\            Luckily it is unlikely anything but ROM apps will use it.
+\ 940809 PLB Fixed very old bug where I was doing +F instead
+\            of &F which is needed to mask off the low 4 bits.
+\            A side switch could otherwise occur if the DMA
+\            started between FIFO reads.
+
+\\\	NOAUTODOC -private -class DSP -name fixedstereo16swap.dsp
+\\\	OBSOLETE - Play a stereo sample with byte swap.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a stereophonic sample at 44,100 Hz. The audio CD
+\\\	    player uses it to swap the bytes as they come off the Red Book CD.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    LeftOutput
+\\\
+\\\	    RightOutput
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 46
+\\\
+\\\	    Code: 38 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    fixedstereosample.dsp
+\\\
+
+include? DFID_FIXEDSTEREO16SWAP function_ids.j
+
+anew task-fixedstereo16swap.ins
+
+_RED
+dspp{
+ins{
+
+DFID_FIXEDSTEREO16SWAP dspp-function-id !
+$" fixedstereo16swap.dsp" ins-name !
+
+ALLOC.INFIFO  InFIFO
+ALLOC.OUTPUT LeftOutput
+ALLOC.OUTPUT RightOutput
+ALLOC.IMEM   HoldSample
+ALLOC.IMEM   LowByte    \ the low  byte comes in from RedBook on high side
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+46 ALLOC.TICKS
+
+\	InFIFO FIFOSTATUS+ _A #$ 000F _+    \ check FIFO status, OLD BUG, 940809
+	InFIFO FIFOSTATUS+ _A #$ 000F _AND  \ check FIFO status, mask off low 4 bits, FIXED
+	ACCUME #$ 0002 _-                   \ are there at least two samples
+	_BLT: NODATA                        \ if not forget it
+
+	HoldSample _A _= InFIFO _A _TRA
+	LowByte _A _= ACCUME #$ FF00 8 _>>' _AND
+	HoldSample _A #$ 00FF 8 _<<' _AND
+	LowByte _A ACCUME _OR
+	LeftOutput _A _= ACCUME Amplitude _A _*
+	_NOP  \ let pipeline clear
+	HoldSample _A _= InFIFO _A _TRA
+	LowByte _A _= ACCUME #$ FF00 8 _>>' _AND
+	HoldSample _A #$ 00FF 8 _<<' _AND
+	LowByte _A ACCUME _OR
+	RightOutput _A _= ACCUME Amplitude _A _*
+	_NOP
+
+\	$ 308 _A LeftOutput _A _MOVE
+\	$ 309 _A RightOutput _A _MOVE
+_LABEL: NODATA
+
+}ins
+}dspp

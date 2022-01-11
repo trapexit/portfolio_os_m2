@@ -1,0 +1,64 @@
+\ @(#) line_out.ins 96/03/22 1.14
+\ line_out to dac via gMixer
+\
+\ Author: Phil Burk
+\ Copyright 1992 3DO
+\ All Rights Reserved
+\
+\ 931104 PLB Added _CLIP
+
+\\\	AUTODOC -class DSP -group Line_In_And_Out -name line_out.dsp
+\\\	Adds to stereo signal to send to audio line out.
+\\\
+\\\	  Description
+\\\
+\\\	    Mixes input stereo signal with the output of other line_out.dsp(@) or
+\\\	    Mixer(@) instruments with AF_F_MIXER_WITH_LINE_OUT set. The result is sent
+\\\	    to the DAC at the end of each audio frame.
+\\\
+\\\	    The audio folio specially handles half-rate output instruments such as
+\\\	    this. Their output is accumulated separately from full-rate output
+\\\	    instruments and interpolated up to 44100 Hz to improve their fidelity.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input - 2 parts
+\\\	        Stereo signal to send to line out. You may use AF_PART_LEFT and
+\\\	        AF_PART_RIGHT to address each part of the stereo signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 8
+\\\
+\\\	    Code: 8 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V21
+\\\
+\\\	  See Also
+\\\
+\\\	    line_in.dsp(@), Mixer(@)
+
+decimal
+
+include? DFID_LINE_OUT function_ids.j
+
+anew task-line_out.f
+
+_BULLDOG
+dspp{
+ins{
+dspp-echo off
+DFID_LINE_OUT dspp-function-id !
+$" line_out.dsp" ins-name !
+
+_IMPORT 2 ALLOC.VARIABLE.ARRAY gMixer
+2 ALLOC.INPUT.ARRAY Input
+8 ALLOC.TICKS
+
+	gMixer 0 PART+ _%A Input 0 PART+ _A _CLIP _+
+	gMixer 1 PART+ _%A Input 1 PART+ _A _CLIP _+
+}ins
+}dspp
+

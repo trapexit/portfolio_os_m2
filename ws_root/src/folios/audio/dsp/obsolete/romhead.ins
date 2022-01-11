@@ -1,0 +1,55 @@
+\ @(#) romhead.ins 95/04/14 1.4
+\ $Id: romhead.ins,v 1.4 1995/01/16 22:36:53 peabody Exp $
+\ HEAD - starting code for run time execution
+\ for ROM, probably the same as normal
+\
+\ 950116 WJB Updated comment for initial _NOP.
+
+include? I_MixLeft dspp_map.j
+include? DFID_ROMHEAD function_ids.j
+
+anew task-romhead.ins
+
+$ 0EB constant AUDSTATUS
+$ 3EE constant ARM_Interrupt
+
+
+_RED
+dspp{
+ins{
+
+DFID_ROMHEAD dspp-function-id !
+$" romhead.dsp" ins-name !
+
+
+ALLOC.IMEM Counter
+ALLOC.IMEM IntCount
+0 $ FFFF 44100 240 / ALLOC.KNOB CountDown
+29 ALLOC.TICKS   \ This is a guess.
+
+	_NOP  \ head instrument is disabled by overwriting this _NOP with a _SLEEP
+          \ (940812 - used to overwrite with a _JUMP)
+	WCLKRLD _A #$ 0000 _MOVE
+	AUDLOCK _A #$ 8000 _MOVE
+
+	I_Bench _A DSPPCLK _A _MOVE
+	I_FrameCount _%A #$ 0001 _+
+	OutputLeft _A I_MixLeft _A _MOVE       \ Out to DAC
+	OutputRight _A I_MixRight _A _MOVE
+	I_MixLeft _A 0 _# _MOVE                \ Clear Mixer
+	I_MixRight _A 0 _# _MOVE
+	EO_FrameCount _A I_FrameCount _A _MOVE
+\
+\ DSPP Interrupt for Audio Clock
+
+	Counter _%A _--
+	_BGT:  KeepGoing
+
+	IntCount _%A #$ 0001 _+             \ Keep Internal Count
+	Counter _A   CountDown _A  _MOVE    \ Get new duration
+	ARM_Interrupt _A IntCount _A _MOVE  \ Interrupt ARM and pass count
+
+_LABEL: KeepGoing
+
+}ins
+}dspp

@@ -1,0 +1,63 @@
+#
+#
+#
+SHELL = /bin/sh
+
+
+PLATFORM = Dos
+LIBDIR = ../libs/$(PLATFORM)
+OBJDIR = objects/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+AR = ar clq
+RANLIB = ranlib
+
+INCLUDES = -I. 
+CC = gcc
+CCFLAGS = -DINTEL -DNO_64_BIT_SCALARS -ansi $(INCLUDES)
+
+IFFLIB = IFFlib.a
+
+AUTOMAGIC_DIR = \
+	objects     \
+	$(OBJDIR) \
+	$(LIBDIR)
+
+LIBSRCS = \
+        iff.c \
+        unix.c
+
+LIBOBJS = \
+        ${OBJDIR}/iff.o \
+        ${OBJDIR}/unix.o
+
+all: $(AUTOMAGIC_DIR) $(LIBDIR)/$(IFFLIB)
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+${OBJDIR}/%.o: %.c
+	$(CC) $(CCFLAGS) -c -o $@ $< 
+
+$(LIBDIR)/$(IFFLIB): $(LIBOBJS) 
+	$(RM) $(OBJDIR)/$(IFFLIB)
+	$(AR) $(OBJDIR)/$(IFFLIB) $(LIBOBJS)
+	$(RANLIB) $(OBJDIR)/$(IFFLIB)
+	$(CP) $(OBJDIR)/$(IFFLIB) $(LIBDIR)/$(IFFLIB)
+
+clean:
+	$(RM) $(LIBOBJS) $(OBJDIR)/$(IFFLIB)
+
+
+clobber: clean
+	$(RM) ${LIBDIR}/$(IFFLIB)
+
+depends:
+	makedepend -- $(INCLUDES) -- $(LIBSRCS)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+
+

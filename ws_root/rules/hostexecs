@@ -1,0 +1,58 @@
+# @(#)hostexecs 95/04/03 1.16
+#
+
+ifndef TARGET_DIRECTORY
+TARGET_DIRECTORY =	${HOSTOSBIN}
+endif
+
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+ifndef LINK_LIBS_DIR
+LINK_LIBS_DIR =		${HOSTOSLIB}
+endif
+
+TARGETS =		${TARGET_NAMES:%=${TARGET_DIRECTORY}/%}
+
+all.post: ${TARGETS}
+
+${TARGET_DIRECTORY}/%: %.c
+	${HOSTCC} -o $@ ${HOSTCFLAGS} $*.c \
+		${LINK_LIBS_DIR:%=-L%} \
+		${LINK_LIBS:%=-l%} ${HOST_LINK_LIBS:%=-l%}
+
+depends: depends.hostexecs
+depends.hostexecs:
+ifneq (0, ${words ${TARGET_NAMES}})
+ifneq (0, ${words ${LINK_LIBS}})
+ifneq (0, ${words ${HOSTOSLIB}})
+	-@${RM} .HXdepends
+	-@echo '# Constructed by target "depends" in file "rules/hostexecs"' > .HXdepends
+	-@for t in ${TARGET_NAMES}					; \
+	  do for  l in ${LINK_LIBS}					; \
+	     do for d in ${HOSTOSLIB}					; \
+		do if [ -f $$d'/lib'$$l'.a' ]				; \
+		   then echo ${TARGET_DIRECTORY:%=%/}$$t: $$d/lib$$l.a		; \
+		   fi							; \
+		done							; \
+	     done							; \
+	  done								| \
+	  sed 's;${SRC};$$(SRC);g'					| \
+	  sed 's;${ROOT};$$(ROOT);g'				>> .HXdepends
+endif
+endif
+endif
+
+ifndef IGNORE_AUTODEPENDS	
+dotHXdepends=	${wildcard .HXdepends}
+ifneq (0, ${words ${dotHXdepends}})
+include ${dotHXdepends}
+endif
+endif
+
+clean: clean.hostexecs
+clean.hostexecs:
+	${RM} -f ${TARGETS} ${dotHXdepends}
+
+unlink: unlink.hostexecs
+unlink.hostexecs:
+	${RM} -f ${TARGETS}

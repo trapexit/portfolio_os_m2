@@ -1,0 +1,141 @@
+\ @(#) sampler.ins 95/11/16 1.10
+
+\ variable rate monophonic sample player
+\ based on M2 FIFO/OSC hardware
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992-1995
+\
+
+\\\	NOAUTODOC -private -class DSP -name sampler.dsp
+\\\	OBSOLETE - Variable-rate multi-format sample player.
+\\\
+\\\	  Function
+\\\
+\\\	    Variable-rate multi-format sample player.
+\\\
+\\\	    This instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up. A rate of 0x8000 corresponds to one data sample per DAC sample
+\\\	    frame. 0xFFFF is the highest possible rate.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency
+\\\	        Phase increment. 0..0xFFFF (nearly double the normal rate), defaults to
+\\\	        0x8000, which equals the normal sample rate, with 1 sample per frame.
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF, defaults to 0x7FFF.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: !!!
+\\\
+\\\	    Code: 5 words per instrument + 13 words once for shared subroutine
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    varmono16.dsp, sampler.dsp
+\\\
+
+echo off
+include? DFID_SAMPLER function_ids.j
+echo off
+anew task-sampler.ins
+
+dspp-echo off
+_BULLDOG
+
+ins.file{
+dspp{
+ins.main{
+DFID_SAMPLER dspp-function-id !
+$" sampler.dsp" ins-name !
+
+\ These numeric definitions should be in an include file.
+0 constant FIFO_CURRENT
+1 constant FIFO_NEXT
+2 constant FIFO_FREQ
+3 constant FIFO_PHASE
+
+4 constant UNIS_BASE_DATA_REG
+UNIS_BASE_DATA_REG
+dup 1+ swap constant  UNIS_REG_OUTPUT
+dup 1+ swap constant  UNIS_REG_FREQUENCY
+dup 1+ swap constant  UNIS_REG_AMPLITUDE
+dup 1+ swap constant  UNIS_REG_PHASE
+UNIS_BASE_DATA_REG - constant UNIS_NUM_DATA_REGS
+
+8 constant UNIS_BASE_FIFO_REG
+4 constant UNIS_NUM_FIFO_REGS
+
+UNIS_BASE_DATA_REG UNIS_NUM_DATA_REGS ALLOC.RBASE#  DataRBase
+
+ALLOC.OUTPUT  Output
+	UNIS_REG_OUTPUT UNIS_BASE_DATA_REG - DataRBase Output BIND.RESOURCE
+
+ALLOC.IMEM  Phase
+	UNIS_REG_PHASE UNIS_BASE_DATA_REG - DataRBase Phase BIND.RESOURCE
+
+$ 7FFF KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 Amplitude
+	UNIS_REG_AMPLITUDE UNIS_BASE_DATA_REG - DataRBase Amplitude BIND.RESOURCE
+
+$ 8000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 Frequency
+	UNIS_REG_FREQUENCY UNIS_BASE_DATA_REG - DataRBase Frequency BIND.RESOURCE
+
+\ allocate a FIFO then bind registers to it
+ALLOC.INFIFO  InFIFO
+UNIS_BASE_FIFO_REG UNIS_NUM_FIFO_REGS ALLOC.RBASE#  FIFORBase
+	DRSC_FIFO_OSC InFIFO FIFORBase BIND.RESOURCE
+
+20 ALLOC.TICKS     \ !!! Determine real value.
+
+	DataRBase UNIS_BASE_DATA_REG _RBASE#
+	FIFORBase UNIS_BASE_FIFO_REG _RBASE#
+	_JSR:	SubSampler
+}ins.main
+
+\ ===================== SUBUNISAMPLER =================================
+ins.shared{
+DFID_SUB_SAMPLER dspp-function-id ! \ !!!
+
+\ This version uses fixed point frequency that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ Phase contains the fractional phase as a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+
+_EXPORT _LABEL: SubSampler
+\ interpolate new value
+\ old*(frac-1)	= old*frac-old
+	UNIS_REG_PHASE _reg
+		UNIS_BASE_FIFO_REG FIFO_CURRENT + _reg
+		UNIS_BASE_FIFO_REG FIFO_CURRENT + _reg _*-
+	UNIS_BASE_FIFO_REG FIFO_NEXT + _reg
+		UNIS_REG_PHASE _reg ACCUME _*-
+\ set phase for OSC
+	UNIS_BASE_FIFO_REG FIFO_PHASE + _reg   UNIS_REG_PHASE _reg _MOVE
+\ advance oscillator by writing to FREQ register
+  	UNIS_BASE_FIFO_REG FIFO_FREQ  + _reg   UNIS_REG_FREQUENCY _reg _MOVE
+\ scale output to desired amplitude
+   	UNIS_REG_OUTPUT _reg _= ACCUME UNIS_REG_AMPLITUDE _reg _*
+\ save phase for next time
+	UNIS_REG_PHASE _reg   UNIS_BASE_FIFO_REG FIFO_PHASE + _reg  _MOVE
+	_RTS
+
+	_ENDEXT
+}ins.shared
+}ins.file
+}dspp

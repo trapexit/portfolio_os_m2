@@ -1,0 +1,115 @@
+\ @(#) halfstereosample.ins 95/11/16 1.8
+\ $Id: halfstereosample.ins,v 1.5 1995/01/20 21:27:52 peabody Exp $
+\ half sample rate, 16 bit stereophonic sample player
+\
+\ 2 States
+\    0  => get new 16 bit word,  interpolated prev -> new
+\    1  => play new
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+
+\\\	NOAUTODOC -private -class DSP -name halfstereosample.dsp
+\\\	OBSOLETE - Play a stereophonic sample at 22,050 Hertz.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a stereophonic sample at 22,050 Hertz.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    LeftOutput
+\\\
+\\\	    RightOutput
+\\\
+\\\	  Input FIFOS -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 36
+\\\
+\\\	    Code: 44 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Caveats
+\\\
+\\\	    The left/right channels are likely to be reversed from what you expect due
+\\\	    to an unexpected hardware/software interaction. Please test the stereo
+\\\	    output carefully, if this matters, and reconnect the outputs of this
+\\\	    instrument appropriately. Only 16-bit stereo players are effected by this.
+\\\
+\\\	  See Also
+\\\
+\\\	    fixedstereosample.dsp
+\\\
+
+include? DFID_HALFSTEREOSAMPLE function_ids.j
+
+anew task-halfstereosample.ins
+dspp-echo off
+_RED
+dspp{
+ins{
+
+DFID_HALFSTEREOSAMPLE dspp-function-id !
+$" halfstereosample.dsp" ins-name !
+
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    Toggle       \ are we on or between samples
+ALLOC.IMEM    PrevLeftSample   \ previous for interpolation
+ALLOC.IMEM    NewLeftSample    \ hold sample from FIFO
+ALLOC.IMEM    PrevRightSample  \ previous for interpolation
+ALLOC.IMEM    NewRightSample   \ hold sample from FIFO
+ALLOC.OUTPUT LeftOutput
+ALLOC.OUTPUT RightOutput
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+36 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A #$ 0000 _+	\ address of FIFO status
+	_BEQ: @NODATA
+
+\ -------------------------------------------
+	Toggle _%A #$ 8000 _+   \ alternate between neg and pos
+	_BMI: @GetNewSamp
+
+\ play previous sample
+	LeftOutput _A _= NewLeftSample _A Amplitude _A _*
+	PrevLeftSample _A NewLeftSample _A _MOVE    \ save for next
+	RightOutput _A _= NewRightSample _A Amplitude _A _*
+	PrevRightSample _A NewRightSample _A _MOVE    \ save for next
+	_JUMP: @Done
+
+_LABEL: @GetNewSamp
+
+\ get new stereo 16 bit sample
+	NewLeftSample _A  _= InFIFO _A _TRL    \ get 16 bits from FIFO
+
+\ interpolate between samples
+	ACCUME 1 _>>>' _TRA             \ arithmetic shift right, new/2
+	PrevLeftSample _A #$ 4000 ACCUME _*+      \ prev/2 + new/2
+	LeftOutput _A _= ACCUME Amplitude _A _*
+
+\ get new stereo 16 bit sample
+	NewRightSample _A  _= InFIFO _A _TRL    \ get 16 bits from FIFO
+
+\ interpolate between samples
+	ACCUME 1 _>>>' _TRA             \ arithmetic shift right, new/2
+	PrevRightSample _A #$ 4000 ACCUME _*+      \ prev/2 + new/2
+	RightOutput _A _= ACCUME Amplitude _A _*
+
+_LABEL: @Done
+
+	_NOP
+_LABEL: @NODATA
+}ins
+}dspp

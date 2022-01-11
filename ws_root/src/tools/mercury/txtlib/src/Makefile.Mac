@@ -1,0 +1,115 @@
+#  Mac Makefile for the M2 Texture library
+#  Creates both PPC and 68K
+
+OBJDIR			=	:objects:Mac:
+LIBDIR			=	:::libs:Mac:
+M2TXLIB68K			= 	{LIBDIR}M2TXlib.68K.a
+M2TXLIBPPC			= 	{LIBDIR}M2TXlib.PPC.a
+CC68K = SC
+CCPPC = MRC
+
+PPCOBJS = ¶
+		{OBJDIR}filter.c.o ¶
+		{OBJDIR}M2TXbestcompress.c.o ¶
+		{OBJDIR}M2TXcompress.c.o ¶
+		{OBJDIR}M2TXDCI.c.o ¶
+		{OBJDIR}M2TXEncode.c.o ¶
+		{OBJDIR}M2TXFormat.c.o ¶
+		{OBJDIR}M2TXQuant.c.o ¶
+		{OBJDIR}M2TXDither.c.o ¶
+		{OBJDIR}M2TXHeader.c.o ¶
+		{OBJDIR}M2TXio.c.o ¶
+		{OBJDIR}M2TXLibrary.c.o ¶
+		{OBJDIR}qmem.c.o ¶
+		{OBJDIR}qstream.c.o ¶
+		{OBJDIR}M2TXattr.c.o ¶
+		{OBJDIR}cltcopy.c.o ¶
+		{OBJDIR}cltdblndattr.c.o ¶
+		{OBJDIR}clttxattr.c.o ¶
+		{OBJDIR}M2TXiff.c.o ¶
+		{OBJDIR}ReSample.c.o 
+
+68KOBJS = ¶
+		{OBJDIR}filter.o ¶
+		{OBJDIR}M2TXbestcompress.o ¶
+		{OBJDIR}M2TXcompress.o ¶
+		{OBJDIR}M2TXDCI.o ¶
+		{OBJDIR}M2TXEncode.o ¶
+		{OBJDIR}M2TXFormat.o ¶
+		{OBJDIR}M2TXQuant.o ¶
+		{OBJDIR}M2TXDither.o ¶
+		{OBJDIR}M2TXHeader.o ¶
+		{OBJDIR}M2TXio.o ¶
+		{OBJDIR}M2TXLibrary.o ¶
+		{OBJDIR}qmem.o ¶
+		{OBJDIR}qstream.o ¶
+		{OBJDIR}M2TXattr.o ¶
+		{OBJDIR}cltcopy.o ¶
+		{OBJDIR}cltdblndattr.o ¶
+		{OBJDIR}clttxattr.o ¶
+		{OBJDIR}M2TXiff.o ¶
+		{OBJDIR}ReSample.o 
+		
+MISCOBJS = ¶
+	{OBJDIR}futil.c.o ¶
+	{OBJDIR}LWToken.c.o ¶
+	{OBJDIR}page.c.o ¶
+	{OBJDIR}SDFTexBlend.c.o ¶
+	{OBJDIR}futil.o ¶
+	{OBJDIR}page.o ¶
+	{OBJDIR}LWToken.o ¶
+	{OBJDIR}SDFTexBlend.o 
+
+#####################################
+#	Default compiler and linker options
+#####################################
+IncludeFlags	=   -i ::include: -i :::ifflib:
+68KCOptions		=	-mc68020 -opt full -r -model far {IncludeFlags} -d applec -d NO_64_BIT_SCALARS
+68KLOptions		=	-model far -t MPST -c 'MPS ' -opt on -br on
+68KLibOptions	=	-mf -sym off
+
+PPCCOptions		=	{IncludeFlags} -d applec -d NO_64_BIT_SCALARS
+PPCLOptions		=	-model far -t MPST -c 'MPS ' -br on
+PPCLibOptions	=	 -xm l -sym off -mf
+
+#####################################
+#	Default build rules
+#####################################
+complete	Ä	{M2TXLIB68K} {M2TXLIBPPC} {MISCOBJS}
+
+All			Ä	complete
+
+{OBJDIR}	Ä	:
+
+.o			Ä	.c
+	echo "Compiling {Default}.c"; ¶
+	{CC68K} {68KCOptions} -o {OBJDIR}{Default}.o {DepDir}{Default}.c
+
+.c.o			Ä	.c
+	echo "Compiling {Default}.c"; ¶
+	{CCPPC} {PPCCOptions} -o {OBJDIR}{Default}.c.o {DepDir}{Default}.c
+
+{M2TXLIB68K} ÄÄ Makefile.Mac {68KOBJS}
+	Lib  ¶
+		{68KOBJS} ¶
+		{68KLibOptions} ¶
+		-o {M2TXLIB68K}; ¶
+
+{M2TXLIBPPC} ÄÄ Makefile.Mac {PPCOBJS}
+	PPCLink  ¶
+		{PPCOBJS} ¶
+		{PPCLibOptions} ¶
+		-o {M2TXLIBPPC}; ¶
+
+#####################################
+# Scrub all old objects and binaries
+#####################################
+clean			Ä
+	set exit 0;
+	delete -i {OBJDIR}Å;
+	set exit 1
+
+clobber			Ä
+	set exit 0;
+	delete -i {M2TXLIBPPC} {M2TXLIB68K};
+	set exit 1

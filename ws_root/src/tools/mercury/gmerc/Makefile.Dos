@@ -1,0 +1,119 @@
+#
+#
+#
+SHELL = /bin/sh
+
+PLATFORM = Dos
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../libs/$(PLATFORM)
+OBJDIR = objects/$(PLATFORM)
+HGRELEASEDIR = ../release/$(PLATFORM)
+
+CP = cp
+MD = mkdir
+RM = rm -f
+TEXLIBINCLUDE = ../txtlib/include
+INCLUDES = -I./ -Iincludes -Iparser \
+	-Iport -Igeo_int -I${TEXLIBINCLUDE} \
+	-I../ifflib
+CC = gcc
+IFFLIB = IFFlib.a
+M2TXLIB = M2TXlib.a
+LIBS = $(LIBDIR)/$(IFFLIB) $(LIBDIR)/$(M2TXLIB) -lm
+CCFLAGS = -ansi -DGFX_C_Bind -DEXCLUDE_SIMULATOR -DHWSIMULATION -DUSE_SHORT_FORM \
+	-DNO_64_BIT_SCALARS -DINTEL -D__WINTEL__ -DMSDOS $(INCLUDES)
+
+AUTOMAGIC_DIR = \
+	bin			\
+	$(BINDIR)		\
+	$(HGRELEASEDIR)
+
+BSDFDIR = bsdf
+BSDFOBJ = \
+	$(BSDFDIR)/bsdf_anim.o \
+	$(BSDFDIR)/bsdf_main.o \
+	$(BSDFDIR)/bsdf_write.o
+
+GEO_INTDIR = geo_int
+GEO_INTOBJ = \
+	$(GEO_INTDIR)/geointerface.o \
+	$(GEO_INTDIR)/geoitpr.o \
+	$(GEO_INTDIR)/texpage.o
+
+GFXDIR = geo
+GFXOBJ = \
+	$(GFXDIR)/tmsnake.o \
+	$(GFXDIR)/compsurf.o \
+	$(GFXDIR)/box.o \
+	$(GFXDIR)/vec.o \
+	$(GFXDIR)/geo.o \
+	$(GFXDIR)/tmutils.o
+
+PARSERDIR = parser
+PARSEROBJ = \
+	$(PARSERDIR)/enum.o \
+	$(PARSERDIR)/array.o \
+	$(PARSERDIR)/class.o \
+	$(PARSERDIR)/errors.o \
+	$(PARSERDIR)/file.o \
+	$(PARSERDIR)/parse.o \
+	$(PARSERDIR)/parserfunctions.o \
+	$(PARSERDIR)/sdfclasses.o \
+	$(PARSERDIR)/sdfsyntax.o \
+	$(PARSERDIR)/sdfvalue.o \
+	$(PARSERDIR)/tokens.o \
+	$(PARSERDIR)/memory.o \
+	$(PARSERDIR)/builtinclasses.o
+
+ANIMDIR = anim
+ANIMOBJ = \
+	$(ANIMDIR)/kf_path.o \
+	$(ANIMDIR)/kf_quat.o \
+	$(ANIMDIR)/kf_spline.o
+
+PORTDIR = port
+PORTOBJ = \
+	$(PORTDIR)/writeiff.o
+
+UNIXDIR = unix
+UNIXOBJ = \
+	$(UNIXDIR)/futil.o
+
+GMERCOBJS =  $(BSDFOBJ) $(GEO_INTOBJ) $(GFXOBJ) $(PARSEROBJ) $(ANIMOBJ) $(PORTOBJ) $(UNIXOBJ)
+
+all: $(AUTOMAGIC_DIR) $(BINDIR)/gmerc.exe $(HGRELEASEDIR)/gmerc.exe
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+depends:
+	makedepend -- $(INCLUDES)
+
+$(BINDIR)/gmerc.exe:  $(GMERCOBJS)
+	$(CC) $(CCFLAGS) -o $(BINDIR)/gmerc.exe $(GMERCOBJS) $(LIBS)
+
+$(HGRELEASEDIR)/gmerc.exe:  $(GMERCOBJS)
+	$(CC) $(CCFLAGS) -o $(HGRELEASEDIR)/gmerc.exe $(GMERCOBJS) $(LIBS)
+
+.c.o:   $*.c
+	$(CC) $(CCFLAGS) -o $*.o -c $*.c 
+
+clean:
+	$(RM) $(GMERCOBJS)
+clobber:
+	$(RM) $(BINDIR)/gmerc.exe
+	$(RM) $(HGRELEASEDIR)/gmerc.exe
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+
+
+
+
+
+
+
+
+
+
+

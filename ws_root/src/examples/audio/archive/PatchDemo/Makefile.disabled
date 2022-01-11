@@ -1,0 +1,10 @@
+# @(#) Makefile.disabled 95/04/05 1.2
+# PatchDemo examples
+
+EXAMPLE_CLASS =		Audio/PatchDemo
+TARGET_DIRECTORY =	${REMOTE_DIR}/Examples/${EXAMPLE_CLASS}
+TARGET_NAMES =		${wildcard *.patch}
+
+include ${CODEMGR_WS}/ws_root/variables/datafiles
+include ${CODEMGR_WS}/ws_root/rules/datafiles
+

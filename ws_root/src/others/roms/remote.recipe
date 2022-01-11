@@ -1,0 +1,15 @@
+// @(#) remote.recipe 96/03/12 1.1
+//
+// Recipe for building remote image.
+// Just set some defines and include "generic.recipe".
+
+#define	VOLUME_NAME		remote
+#define	FSTYPE			romdisk
+#define	VOLSIZE			40
+#define	BLOCK_SIZE		2048
+#define	DIR_BLOCK_SIZE		512
+#define	BLUEPRINT		remote.blueprint
+#define	DEVDIPIR_NAME		dipir.host
+#define	DEVDIPIR_COMPONENT_ID	DIPIRID_HOST
+
+#include "generic.recipe"

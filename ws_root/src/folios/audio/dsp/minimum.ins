@@ -1,0 +1,70 @@
+\ @(#) minimum.ins 96/03/11 1.15
+\ $Id: minimum.ins,v 1.3 1994/10/11 20:16:52 peabody Exp $
+\ minimum.ins - outputs minimum of 2 inputs.
+
+\\\	AUTODOC -class DSP -group Arithmetic -name minimum.dsp
+\\\	Picks the minimum of two input signals.
+\\\
+\\\	  Description
+\\\
+\\\	    Outputs the smaller of InputA and InputB. This can be used for clipping.
+\\\
+\\\	    By connecting Output to InputB, you can measure a historical minimum.
+\\\	    In this configuration, StartInstrument() can be used to reset the
+\\\	    historical maximum.
+\\\
+\\\	  Knobs
+\\\
+\\\	    InputA, InputB - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed value -1.0 to 1.0. Defaults to 0.0
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Signed result of MIN(InputA,InputB) in the range of -1.0 to 1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 13
+\\\
+\\\	    Code: 11 words
+\\\
+\\\	    Data: 3 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  See Also
+\\\
+\\\	    maximum.dsp(@), add.dsp(@)
+
+include? DFID_MINIMUM function_ids.j
+
+anew task-minimum.ins
+
+dspp{
+ins{
+
+DFID_MINIMUM dspp-function-id !
+$" minimum.dsp" ins-name !
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputA
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputB
+$ 7FFF DRSC_AT_START  ALLOC.OUTPUT.DEFAULT Output
+13 ALLOC.TICKS
+
+	InputA _A InputB _A _-   \ compare
+	_BLE: @DoA
+
+	Output _A InputB _A _MOVE
+	_JUMP: @Done
+
+_LABEL: @DoA
+	Output _A InputA _A _MOVE
+
+_LABEL: @Done
+_ENDEXT
+
+}ins
+}dspp

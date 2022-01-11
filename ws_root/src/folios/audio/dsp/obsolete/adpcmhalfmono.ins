@@ -1,0 +1,175 @@
+\ @(#) adpcmhalfmono.ins 95/11/16 1.11
+\ $Id: adpcmhalfmono.ins,v 1.9 1995/01/20 20:20:23 peabody Exp $
+\ Prototype for ADPCM
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+\ 940510 PLB Change Scratch to I_Scratch
+\ 940713 PLB Fixed unresolved branch to "@Done", should have been "Done"
+
+\\\	NOAUTODOC -private -class DSP -name adpcmhalfmono.dsp
+\\\	OBSOLETE - Play a compressed4 bit Intel/DVI format sample at half rate.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a sample that has been previously compressed to a 4
+\\\	    bit Intel/DVI format. Run the soundhack program to compress a sound
+\\\	    sample from 16 bits to 4 bits (Intel/DVI format). This instrument uses
+\\\	    the decodeadpcm.dsp library routine which must be loaded as an instrument
+\\\	    prior to using this instrument. This instrument plays a sample that was
+\\\	    recorded at 22050 Hertz, playing it back at 44100 Hertz with interpolated
+\\\	    values between samples to keep the sampled sound's original pitch and
+\\\	    duration.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF, defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 103
+\\\
+\\\	    Code: 71 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Caveats
+\\\
+\\\	    This instrument uses the decodeadpcm.dsp library routine which must be
+\\\	    loaded as an instrument prior to using this instrument.
+\\\
+\\\	  See Also
+\\\
+\\\	    adpcmmono.dsp, decodeadpcm.dsp, sampler.dsp
+\\\
+
+include? DFID_ADPCMHALFMONO function_ids.j
+
+anew task-adpcmhalfmono.ins
+
+_RED
+dspp{
+ins{
+
+DFID_ADPCMHALFMONO dspp-function-id !
+$" adpcmhalfmono.dsp" ins-name !
+dspp-echo off
+
+\ ADPCM stream parsing variables
+ALLOC.RBASE   MYRB
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    SampleHolder
+ALLOC.IMEM    CurState
+ALLOC.IMEM    PrevValue    \ previous for interpolation, expanded to 16 bits
+ALLOC.OUTPUT  Output
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+
+
+\ ADPCM register assignments
+4 constant  StepSize        \ initialize to 7
+6 constant  StepIndex       \ static
+7 constant  OutputSample    \ static
+
+ALLOC.IMEM  InitFlag     \ initialize if non-zero, don't move without changing DINI
+103 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A _TRA	\ address of FIFO status
+	_BEQ: Done				\ branch to be offset 940713
+
+    MYRB _RBASE                        \ set RBASE for subsequent calls
+
+\ Initialization
+	InitFlag _A _TRA
+	_BEQ:  @GoDoIt
+	StepIndex    _reg #$ 0000 _MOVE
+	OutputSample _reg #$ 0000 _MOVE
+	StepSize     _reg #$ 0007 _MOVE
+	CurState     _A #$ 0003 _MOVE
+	InFIFO _A _TRL  \ throw away first sample
+	InitFlag _A #$ 000 _MOVE  \ so we don't Init next time
+
+_LABEL: @GoDoIt
+	CurState _%A #$ 0001 _+
+\
+\ State:
+\   bit 0 = half sample interpolation
+\   bit 1-2 = ADPCM nibble select
+	ACCUME #$ 0001 _AND
+	_BEQ: @DecodeInterp
+	PrevValue _A _TRA
+	_JUMP: @ScaleOutput
+
+\ decode which nibble to decode
+_LABEL: @DecodeInterp
+	CurState _A  #$ 0004 _AND
+	_BNE: @State23
+	CurState _A  #$ 0002 _AND
+	_BNE: @State1
+
+\ State0
+	SampleHolder _A  _= InFIFO _A _TRL  \ get 16 bits from FIFO, leave in ACCUME
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State1
+	SampleHolder _A 4 _<<' _TRL
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State23
+	CurState _A #$ 0002 _AND
+	_BNE: @State3
+	_NOP
+	SampleHolder _A 8 _<<' _TRL
+	_JUMP: @DECODE_NIBBLE
+	_NOP
+\ Decode proper nibble based on state word
+_LABEL: @State3
+	SampleHolder _A 8 _<<' _TRL   \ <<12
+	ACCUME 4 _<<' _TRL
+
+_LABEL: @DECODE_NIBBLE
+	_JSR:  DecodeADPCM
+
+\ interpolate with previous value
+	I_Scratch _A _= ACCUME #$ 0000 _+
+	ACCUME 1 _>>>' _TRA         \ arithmetic shift right
+	PrevValue _A #$ 4000 ACCUME _*+   \ p/2 + h/2   \ interpolate
+	_NOP
+	PrevValue _A I_Scratch _A _MOVE
+
+_LABEL: @ScaleOutput
+	Output _A _= ACCUME Amplitude _A _*
+
+_LABEL: Done
+
+
+\ hack in an initialization table
+create dini-chunk
+here
+
+	1 , \ many
+	DINI_AT_START ,
+	0 , \ index of InitFlag
+	0 , \ reserved
+    1 ,
+
+here swap -  ofx-custom-size !
+
+	dini-chunk ofx-custom-addr !
+	$" DINI" ofx-custom-name !
+
+}ins
+}dspp

@@ -1,0 +1,104 @@
+\ @(#) delay1tap.ins 95/11/16 1.10
+\ $Id: delay1tap.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ Delay1Tap - output mono samples to a delay line.
+\
+\ Copyright 1992 3DO
+\ Phil Burk
+\
+
+\\\	NOAUTODOC -private -class DSP -name delay1tap.dsp
+\\\	OBSOLETE - Intergrated 1-tap delay.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument writes samples to an output, then reads them back on
+\\\	    another FIFO and mixes them. It has a separate "effects send" mix
+\\\	    and an output mix. It can only write to special samples created using
+\\\	    CreateDelayLine().
+\\\
+\\\	    This instrument can be thought of as an optimized composite of delaymono.dsp,
+\\\	    fixedmonosample.dsp, and submixer2x2.dsp.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Tap0Send
+\\\	        Amount of delayed signal to send back. This controls the amount of
+\\\	        recirculation or feedback. Negative is best because it reduces DC drift.
+\\\	        -0x8000..0x7FFF, defaults to -0x4000.
+\\\
+\\\	    OriginalSend
+\\\	        Amount of original signal to send to delay line. -0x8000..0x7FFF, defaults
+\\\	        to 0x3FFF.
+\\\
+\\\	    Tap0Mix
+\\\	        Amount of delayed signal to send to output. -0x8000..0x7FFF, defaults to
+\\\	        -0x4000.
+\\\
+\\\	    OriginalMix
+\\\	        Amount of original signal to send output. -0x8000..0x7FFF, defaults to
+\\\	        0x3FFF.
+\\\
+\\\	  Inputs -enumerated
+\\\
+\\\	    Input
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    Tap0
+\\\
+\\\	  Output FIFOs -enumerated
+\\\
+\\\	    OutFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 16
+\\\
+\\\	    Code: 16 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V21
+\\\
+\\\	  See Also
+\\\
+\\\	    delaymono.dsp, delaystereo.dsp, CreateDelayLine()
+\\\
+
+include? DFID_DELAY1TAP function_ids.j
+
+anew task-delay1tap.ins
+
+_RED
+dspp{
+ins{
+DFID_DELAY1TAP dspp-function-id !
+$" delay1tap.dsp" ins-name !
+
+ALLOC.OUTFIFO  OutFIFO
+ALLOC.INFIFO   Tap0
+ALLOC.IMEM     Input
+ALLOC.OUTPUT   Output
+
+$ -8000 $ 7FFF $ -4000 ALLOC.KNOB Tap0Send
+$ -8000 $ 7FFF $ 3FFF ALLOC.KNOB OriginalSend
+
+$ -8000 $ 7FFF $ -4000 ALLOC.KNOB Tap0Mix
+$ -8000 $ 7FFF $ 3FFF ALLOC.KNOB OriginalMix
+
+16 ALLOC.TICKS
+
+\ Mix for delay line
+	Tap0Send _A  Tap0 _A  _*
+	OutFIFO _A   _= OriginalSend _A  Input _A  ACCUME _CLIP _*+
+
+\ Mix Output
+	Tap0Mix _A  Tap0 FIFOREAD+ _A  _*
+	Output _A _= OriginalMix _A  Input _A  ACCUME _CLIP _*+
+
+}ins
+}dspp

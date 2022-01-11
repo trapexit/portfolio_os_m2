@@ -1,0 +1,162 @@
+#
+# @(#) Makefile.Mac 96/12/04 1.7
+#
+#  Mac Makefile for the Mercury Tools
+#  Creates FAT tools
+
+BINDIR			=	:bin:Mac:
+LIBDIR			=	::libs:Mac:
+OBJDIR			=	:objects:Mac:
+MISCOBJDIR		=   ::txtlib:src:objects:Mac:
+HGRELEASEDIR	=	::release:Mac:
+
+IFFLIB68K		= 	{LIBDIR}IFFlib.68K.a
+IFFLIBPPC		= 	{LIBDIR}IFFlib.PPC.a
+CC68K = SC
+CCPPC = MRC
+
+StdCLibsPPC		= ¶
+						"{SharedLibraries}"InterfaceLib ¶
+#						"{PPCLibraries}"MathLib.xcoff ¶
+						"{SharedLibraries}"MathLib ¶
+						"{SharedLibraries}"StdCLib ¶
+						"{PPCLibraries}"StdCRuntime.o ¶
+						"{PPCLibraries}"PPCCRuntime.o
+
+StdCLibs68K		=	¶
+						"{CLibraries}"StdClib.o ¶
+ 						"{Libraries}"MacRuntime.o ¶
+#						"{CLibraries}"Math.o ¶
+						"{Libraries}"MathLib.o ¶
+ 						"{Libraries}"Interface.o ¶
+ 						"{Libraries}"IntEnv.o
+					
+LIBRENAMES		=	-librename InterfaceLib.xcoff=InterfaceLib	¶
+					-librename StdCLib.xcoff=StdCLib			¶
+					-librename MathLib.xcoff=MathLib
+
+PPCLIBS		=	"{PPCLibraries}"PPCToolLibs.o ¶
+				{StdCLibsPPC} ¶
+				{IFFLIBPPC} 
+
+68KLIBS		=	"{Libraries}"ToolLibs.o ¶
+				{StdCLibs68K} ¶
+				{IFFLIB68K} 
+
+		
+PPCLWTOSDFOBJS = ¶
+	{OBJDIR}LWParse.c.o ¶
+	{OBJDIR}LWParseMath.c.o ¶
+	{OBJDIR}SDFMat.c.o ¶
+	{OBJDIR}LWSURF.c.o ¶
+	{OBJDIR}tri.c.o ¶
+	{OBJDIR}monotone.c.o ¶
+	{OBJDIR}misc.c.o ¶
+	{OBJDIR}xlines.c.o ¶
+	{OBJDIR}texmap.c.o ¶
+	{OBJDIR}construct.c.o ¶
+	{MISCOBJDIR}futil.c.o ¶
+	{MISCOBJDIR}qmem.c.o ¶
+	{MISCOBJDIR}LWToken.c.o ¶
+	{MISCOBJDIR}SDFTexBlend.c.o
+
+68KLWTOSDFOBJS = ¶
+	{OBJDIR}LWParse.o ¶
+	{OBJDIR}LWParseMath.o ¶
+	{OBJDIR}SDFMat.o ¶
+	{OBJDIR}LWSURF.o ¶
+	{OBJDIR}tri.o ¶
+	{OBJDIR}monotone.o ¶
+	{OBJDIR}misc.o ¶
+	{OBJDIR}xlines.o ¶
+	{OBJDIR}texmap.o ¶
+	{OBJDIR}construct.o ¶
+	{MISCOBJDIR}futil.o ¶
+	{MISCOBJDIR}qmem.o ¶
+	{MISCOBJDIR}LWToken.o ¶
+	{MISCOBJDIR}SDFTexBlend.o
+
+		
+PPCLWSTOANIMOBJS = ¶
+	{OBJDIR}LWSceneParse.c.o ¶
+	{MISCOBJDIR}futil.c.o
+
+68KLWSTOANIMOBJS = ¶
+	{OBJDIR}LWSceneParse.o ¶
+	{MISCOBJDIR}futil.o 
+	
+	
+#####################################
+#	Default compiler and linker options
+#####################################
+IncludeFlags	=   -i ::txtlib:include: -i ::ifflib:
+68KCOptions		=	-mc68020 -r {IncludeFlags} -model far -d applec -d NO_64_BIT_SCALARS -d LW_VERSION_STRING=¶"3.1b1¶"
+68KLOptions		=	-model far -t MPST -c 'MPS ' -br on
+
+PPCCOptions		=	-opt speed {IncludeFlags} -d applec -d NO_64_BIT_SCALARS -d LW_VERSION_STRING=¶"3.1b1¶"
+PPCLOptions		=	-outputformat xcoff -d -c 'MPS ' -t MPST -main __start -mf
+
+#####################################
+#	Default build rules
+#####################################
+{OBJDIR}	Ä	:
+
+.o			Ä	.c
+	echo "Compiling 68K {Default}.c"; ¶
+	{CC68K} {68KCOptions} -o {OBJDIR}{Default}.o {DepDir}{Default}.c
+
+.c.o			Ä	.c
+	echo "Compiling PPC {Default}.c"; ¶
+	{CCPPC} {PPCCOptions} -o {OBJDIR}{Default}.c.o {DepDir}{Default}.c
+
+#####################################
+# Build all of the MPW tools
+#####################################
+complete 	Ä FATlwtosdf FATlwstoanim
+All		Ä	complete
+
+
+FATlwtosdf ÄÄ {68KLWTOSDFOBJS} {PPCLWTOSDFOBJS}
+	echo "Linking lwtosdf FAT"; 
+	PPCLink {PPCLWTOSDFOBJS} -o lwtosdf.xcoff ¶
+	{PPCLIBS} ¶
+	{PPCLOptions};
+	makePEF lwtosdf.xcoff -o {BINDIR}lwtosdf {PEFOptions};
+	Link {68KLWTOSDFOBJS} -o {BINDIR}lwtosdf ¶
+	{68KLIBS} ¶
+	{68KLOptions};
+	duplicate -y {BINDIR}lwtosdf {HGRELEASEDIR}lwtosdf ;
+	echo "Rezzing";
+	Rez -d APPNAME=¶"lwtosdf¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}lwtosdf;
+	echo "lwtosdf complete" ; ¶
+	delete -i lwtosdf.xcoff
+
+FATlwstoanim ÄÄ {68KLWSTOANIMOBJS} {PPCLWSTOANIMOBJS}
+	echo "Linking lwstoanim FAT"; 
+	PPCLink {PPCLWSTOANIMOBJS} -o lwstoanim.xcoff ¶
+	{StdCLibsPPC} ¶
+	{PPCLOptions};
+	makePEF -o {BINDIR}lwstoanim {PEFOptions} lwstoanim.xcoff;
+	Link {68KLWSTOANIMOBJS} -o {BINDIR}lwstoanim ¶
+	{StdCLibs68K} ¶
+	{68KLOptions};
+	duplicate -y {BINDIR}lwtosdf {HGRELEASEDIR}lwtosdf ;
+	echo "Rezzing";
+	Rez -d APPNAME=¶"lwstoanim¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}lwstoanim;
+	echo "lwstoanim complete" ; ¶
+	delete -i lwstoanim.xcoff
+
+
+#####################################
+# Scrub all old objects and binaries
+#####################################
+clean			Ä
+	set exit 0;
+	delete -i {OBJDIR}Å ;
+	set exit 1
+	
+clobber			Ä
+	set exit 0;
+	delete -i {BINDIR}lwtosdf;
+	delete -i {BINDIR}lwstoanim;
+	set exit 1

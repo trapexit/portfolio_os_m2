@@ -1,0 +1,222 @@
+/* @(#) pfmanual.txt 95/10/16 1.1 */
+Manual for pForth - a Portable Forth
+
+The best reference for pForth is an ANSI Forth manual. pForth
+is built on an ANSI model.  There are, however, some non-standard
+words which are documented here:
+
+{  ( i*x -- , declare local variables )
+	Local variables are only usable within a colon definition.
+	They are taken from the stack as they are defined.
+	They are self fetching.  Use -> to set them.
+	They help you avoid excessive stack dancing. 
+	Here is an example:
+
+	: SUMSQ { aa bb -- }
+		aa aa *
+		bb bb * +
+	;
+	3 4 SUMSQ . ( prints 25 )
+
+	Here is an example of using a temporary variable:
+
+	: SUMN { num | sum -- , sum up integers the dumb way }
+	    0 -> sum  \ uses -> to set local variable
+	    num 0
+	    DO  i sum +
+	        -> sum   \ write current TOS to sum
+	    LOOP
+	    sum
+	;
+
+:STRUCT  ( <name> -- , defines a 'C' like structure )
+	See end of "c_struct.fth" for an example.
+
+ANEW  ( <name> -- )
+	Forgets NAME if it is already defined.
+	Then defines NAME.  Put at beginning of file
+	so that file can be INCLUDEd multiple times
+	without redefining the contents.
+
+CASE OF ENDOF ENDCASE in the typical fashion. See "case.fth"
+ 
+CHOOSE ( range -- random , pick random number, 0...range-1 )
+
+IF ELSE THEN DO LOOP etc. can be used outside colon definitions!
+
+IF.FORGOTTEN  ( <name> -- , executes NAME if forgotten )
+	Put this at the end of a file to automatically
+	call your cleanup word if the code is forgotten.
+
+INCLUDE   ( <filename> -- , interpret from file )
+	Write your Forth programs in a file then load them
+	using INCLUDE.
+	
+		INCLUDE   myprog.fth
+		
+INCLUDE?   ( <name> <filename> -- , interpret from file if needed )
+	INCLUDE the given file only if the named word is undefined.
+	The name should be of a Forth word defined in the file.
+	See "load_pforth.fth" for an example.
+	
+		INCLUDE?  DO.MY.PROG   myprog.fth
+		
+MAP   ( -- , dumps info about dictionary )
+
+Other words
+
+FP.INIT
+FP.TERM
+F>S
+S>F
+EXISTS?
+STRINGS=     
+
+S@
+S!
+;STRUCT
+:STRUCT  
+STRUCT
+ULONG
+RPTR
+APTR
+FLPT
+USHORT  
+UBYTE
+LONG
+SHORT
+BYTE
+BYTES
+SIZEOF()        
+OB.STATS?
+OB.STATS
+OB.FINDIT       
+OB.MEMBER
+}UNION
+}UNION{
+UNION{
+OB.MAKE.MEMBER  
+MAP
+.HEX    
+.DEC
+.BIN
+ARRAY
+WARRAY
+BARRAY
+-2SORT  
+2SORT
+WCHOOSE
+CHOOSE
+RANDOM
+RAND-SEED       
+MSEC
+MSEC-DELAY
+VALUE
+->      
+TO
+
+-- strings --
+TEXTROM
+$ROM
+$APPEND.CHAR
+INDEX
+$MATCH?
+TEXT=?
+TEXT=   
+$=
+COMPARE
+$ARRAY
+
+-- case --
+ENDCASE ENDOF   RANGEOF (RANGEOF?)      OF      
+?OF     CASE    OF-DEPTH        CASE-DEPTH      
+
+TOLOWER
+@EXECUTE
+>NAME   
+CLOSEST-XT
+CLOSEST-NFA
+TAB     
+TAB-WIDTH
+.HX
+$
+CR?
+#COLS
+?PAUSE
+ABORT" 
+WARNING"
+CELL*
+<<      
+>>
+
+TASK-MISC1.FTH  .R      .       (.)     
+(NUMBER?)       
+((NUMBER?))     NUM_TYPE_DOUBLE NUM_TYPE_SINGLE 
+NUM_TYPE_BAD    >NUMBER DIGIT
+ 
+ANEW    FORGET  [FORGET]        IF.FORGOTTEN   
+
+SAVE-FORTH      
+INCLUDE?
+RI
+INCLUDE     
+$INCLUDE
+$APPEND
+LWORD
+PARSE
+PARSE-WORD      
+PLACE
+
+WHAT'S
+IS
+DEFER
+
+>NEWLINE        
+0SP
+SPACES
+SPACE
+RECURSE
+UNLOOP
+
+-- user stack --
+0USP    
+US@     US>     >US     USTACK  0STACKP STACK@  
+STACK>  >STACK  :STACK
+
+-- address storage and translation --
+A,      A@      A!      
+IF.REL->USE     IF.USE->REL
+X!      X@      
+>ABS    >REL    REL->USE        USE->REL        
+BODY>   >BODY   N>LINK  CODE>   >CODE   NAME>   
+NAMEBASE+       CODEBASE        NAMEBASE        
+N>NEXTLINK      >NAME
+PREVNAME        NAME>   
+
+
+ID.     
+
+OFF     ON
+TRACE-STACK
+TRACE-LEVEL     
+TRACE-FLAGS
+
+HEADERS-BASE    
+HEADERS-PTR
+ECHO
+CODE-BASE       
+
+POP-SOURCE-ID
+PUSH-SOURCE-ID
+SOURCE-ID       
+SET-SOURCE
+SOURCE
+
+LOADSYS
+
+FLUSHEMIT       
+FINDNFA
+BYE
+BODY_OFFSET
+BAIL    
+ARSHIFT

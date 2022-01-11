@@ -1,0 +1,379 @@
+\ @(#) basic.bms 96/03/21 1.12
+
+\\\	AUTODOC -public -class Beep  -group Machines  -name basic.bm
+\\\	Basic Beep Machine.
+\\\
+\\\	  Function
+\\\
+\\\	    Basic 32 channel sample player plus filtered noise.
+\\\
+\\\	    This beep machine provides 33 voices of two type.
+\\\	    There are 32 voices of the first type which provides 
+\\\	    sample playback with envelope control over the amplitude.
+\\\	    Each of these voices has an associated DMA channel.
+\\\	    Hardware SQS2 decompression can be turned on for any channel.  Each voice
+\\\	    also has an LFO which can be used to modulate SampleRate and Amplitude.
+\\\
+\\\	    There is 1 voice of the second type which provides a filtered noise source.
+\\\
+\\\	  Common Voice Parameters -enumerated
+\\\
+\\\	    BMVP_AMPLITUDE - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Amplitude of voice.  Note that an envelope is used to smooth
+\\\	        amplitude changes to avoid pops. The amplitude of the voice
+\\\	        will thus move smoothly to this value at the rate
+\\\	        specified using BMVP_AMPLITUDE_RATE.
+\\\	        Range is -1.0 to 1.0. Defaults to 0.0.
+\\\
+\\\	    BMVP_AMPLITUDE_RATE - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Controls envelope rate at which the amplitude will change from
+\\\	        its current value to the value last specified using BMVP_AMPLITUDE.
+\\\	        A value of 1.0 will allow the Amplitude to change
+\\\	        almost instantaneously.
+\\\	        Range is 0.0 to 1.0. Defaults to 0.002.
+\\\
+\\\	        Rate = 1.0 / (44100.0 * Time_In_Seconds)
+\\\
+\\\	    BMVP_LEFT_GAIN - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	    BMVP_RIGHT_GAIN - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Control the amount of this voice to appear in the left
+\\\	        or right audio output channel.  This controls an internal
+\\\	        mixer. There is no envelope to smooth out changes of these
+\\\	        parameters so a sudden change in value could cause an
+\\\	        audible pop.  An application must set these gains
+\\\	        carefully.  If you set these too low, the audio
+\\\	        in the title will be very quiet.  If you set them
+\\\	        too high then the combined out put of the voices
+\\\	        could exceed the maximum limit and be clipped.
+\\\	        Clipping would cause harsh noise whenever the
+\\\	        sound is loud.  The total signal level in either the
+\\\	        left or right side cannot exceed +/- 1.0.
+\\\	        Range is -1.0 to 1.0. Defaults to 0.125.
+\\\
+\\\	    BMVP_LFO_RATE - AUDIO_SIGNAL_TYPE_OSC_FREQ
+\\\	        Controls the frequency of the voices LFO.
+\\\	        Range is -2756.0 to +2756.0 Hz. Default is 1.0.
+\\\
+\\\	    BMVP_AMP_MOD_DEPTH - AUDIO_SIGNAL_GENERIC_SIGNED
+\\\	        Controls the amount that the LFO modulates the Amplitude.
+\\\	        mixer. Range is -1.0 to 1.0. Defaults to 0.0.
+\\\
+\\\	  Parameters specific to Sample Player Voices #0 to 31  -enumerated
+\\\
+\\\	    BMVP_SAMPLE_RATE  - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        Controls the playback rate for audio data on the associated
+\\\	        channel.  Range is 0.0 to 88200.0.  Default is 44100.0.
+\\\
+\\\	    BMVP_FREQ_MOD_DEPTH - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        Controls the amount that the LFO modulates the SampleRate.
+\\\	        Range is Range is -44100.0 to 44100.0.  Default is 0.0.
+\\\
+\\\	  Parameters specific to Filtered Noise Voice #32  -enumerated
+\\\
+\\\	    BMVP_FREQ_MOD_DEPTH - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        Controls the amount that the LFO modulates the Filter Cutoff.
+\\\	        Range is -1.0 to 1.0.  Default is 0.0.
+\\\
+\\\	    BMVP_FILTER_CUTOFF - AUDIO_SIGNAL_GENERIC_SIGNED
+\\\	        Controls the filter cutoff frequency.  Range is -1.0 to 1.0.
+\\\	        Defaults to 0.25.  See the svfilter.dsp(@) Frequency knob for
+\\\	        more information.
+\\\
+\\\	    BMVP_CUTOFF_MOD_DEPTH - AUDIO_SIGNAL_GENERIC_SIGNED
+\\\	        Controls the amount that the LFO modulates the Filter Cutoff.
+\\\	        Range is -1.0 to 1.0.  Default is 0.0.
+\\\
+\\\	    BM_NUM_CHANNELS  (32)
+\\\
+\\\	    BM_NUM_VOICES    (33)
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    LoadBeepMachine()
+\\\
+
+include? dspp{ dspp_asm.fth
+include? DSPI_CLOCK dspp_addresses.j
+include? beep.file{  beep_maker.fth
+
+decimal
+anew task-basic.bms
+
+_BULLDOG
+echo off
+dspp-echo off
+
+$" basic.bm" iff-filename !
+
+beep{
+
+0 constant IF_LFO_SINE   \ experiment with sine wave based LFO
+
+32 constant BM_NUM_CHANNELS
+bm_num_channels 1+ constant BM_NUM_VOICES
+8 1- constant BM_CONTROL_FRAMES_MASK  \ do control frame after every 8 audio frames
+
+\ use global for Lowpass for one voice
+gMisc1 constant svfLowPass
+
+20 constant  CHANNEL_SIZE
+4 constant   CHANNEL_CONTROL_REG
+8 constant   CHANNEL_CONTROL_OFFSET   \ address offset for control registers
+
+\ create data for VCDO chunk
+	BM_NUM_VOICES 0
+	DO
+		CHANNEL_SIZE  bm.alloc.voice
+	LOOP
+	
+\ Set Beep Machine Info for this machine.
+BMID_BASIC      bm-info s! bminfo_ID
+BULLDOG_VERSION bm-info s! bminfo_SiliconVersion
+BM_NUM_CHANNELS bm-info s! bminfo_NumChannelsAssigned
+BM_NUM_VOICES   bm-info s! bminfo_NumVoices
+
+\ Registers 0-7 are shared by Audio and Control Rate Code
+\ Registers 4-15 are local to either audio OR control rate
+
+\ These are needed by audio rate code and shared with control code
+\ must be below register 8.
+-1
+1+ dup constant VPG_AMP_REQUEST
+1+ dup constant VPG_AMP_RATE
+1+ dup constant VPG_AMP_CURRENT
+1+ dup constant VPG_FREQUENCY_CURRENT
+dup CHANNEL_CONTROL_REG > abort" Audio Rate Channel Parameters interfere with control regs."
+1+ dup constant VPA_LEFT_GAIN
+1+ dup constant VPA_RIGHT_GAIN
+1+ dup dup constant CHAN_PHASE_CURRENT       constant VPA_FILTER_RESONANCE
+1+ dup constant VPA_SVF_BANDPASS
+drop
+
+\ These are only needed by the control rate code and can go above 12
+CHANNEL_CONTROL_REG
+   dup constant  VPC_ENV_PHASE
+1+ dup constant  VPC_ENV_SOURCE
+1+ dup constant  VPC_ENV_TARGET
+1+ dup constant  VPC_FREQUENCY
+1+ dup constant  VPC_LFO_PHASE 
+1+ dup constant  VPC_LFO_RATE 
+1+ dup constant  VPC_LFO_FREQ_DEPTH
+1+ dup constant  VPC_LFO_AMP_DEPTH
+1+ dup constant  VPC_LFO_OUTPUT
+dup 15 > abort" Control registers past 15"
+
+\ ----------------------------------------------------------------
+\ Declare parameters for .h file
+
+$" machine.h" $log{
+  bm.name: basic.bm
+  gAmplitude           KNOB_TYPE_RAW_SIGNED   1 bm.param: BMGP_AMPLITUDE
+  VPA_FILTER_RESONANCE KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_FILTER_RESONANCE
+  VPG_AMP_RATE         KNOB_TYPE_RAW_SIGNED   8 bm.param: BMVP_AMPLITUDE_RATE
+  VPA_LEFT_GAIN        KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_LEFT_GAIN
+  VPA_RIGHT_GAIN       KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_RIGHT_GAIN
+  VPG_AMP_REQUEST      KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_AMPLITUDE
+  VPG_AMP_CURRENT      KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_ENV_CURRENT
+
+: CREG>OFF  ( reg -- offset , calculate offset from voice data start )
+	CHANNEL_CONTROL_REG -	CHANNEL_CONTROL_OFFSET +
+;
+  VPC_FREQUENCY        CREG>OFF KNOB_TYPE_SAMPLE_RATE  1 bm.param: BMVP_SAMPLE_RATE
+  VPC_FREQUENCY        CREG>OFF KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_FILTER_CUTOFF
+  VPC_LFO_RATE         CREG>OFF KNOB_TYPE_OSC_FREQ     8 bm.param: BMVP_LFO_RATE
+  VPC_LFO_FREQ_DEPTH   CREG>OFF KNOB_TYPE_SAMPLE_RATE  1 bm.param: BMVP_FREQ_MOD_DEPTH
+  VPC_LFO_AMP_DEPTH    CREG>OFF KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_AMP_MOD_DEPTH
+  VPC_ENV_PHASE        CREG>OFF KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_ENV_PHASE
+  VPC_ENV_TARGET       CREG>OFF KNOB_TYPE_RAW_SIGNED   1 bm.param: BMVP_ENV_TARGET
+  VPC_LFO_PHASE        CREG>OFF KNOB_TYPE_RAW_SIGNED   1 bm.make.param.id constant BMVP_LFO_PHASE
+  BM_NUM_CHANNELS  bm.define:  BM_NUM_CHANNELS
+  BM_NUM_VOICES    bm.define:  BM_NUM_VOICES
+}log
+
+\ create INIT chunk
+create BMCP-INITs
+	BMVP_SAMPLE_RATE        0 BM_NUM_CHANNELS  $ 8000 bm.init,
+	BMVP_AMPLITUDE          0 BM_NUM_VOICES    0 bm.init,
+	BMVP_AMPLITUDE_RATE     0 BM_NUM_VOICES    32767 100 / bm.init,
+	BMVP_LFO_RATE           0 BM_NUM_VOICES    12 bm.init,
+	BMVP_LEFT_GAIN          0 BM_NUM_VOICES    $ 1000 bm.init,
+	BMVP_RIGHT_GAIN         0 BM_NUM_VOICES    $ 1000 bm.init,
+	BMVP_ENV_PHASE          0 BM_NUM_VOICES    0 bm.init,
+	BMVP_ENV_TARGET         0 BM_NUM_VOICES    0 bm.init,
+	BMVP_FILTER_CUTOFF      BM_NUM_CHANNELS 1  $ 2000 bm.init,
+	BMVP_FILTER_RESONANCE   BM_NUM_CHANNELS 1  $ 800 bm.init,
+IF_LFO_SINE [if]
+	BMVP_LFO_PHASE          0 BM_NUM_VOICES    $ 7FFF bm.init,
+[then]
+	bmcp-inits bm-init-ptr !
+
+\ ----------------------------------------------------------------
+	_NOP                    \ put this here so we can replace with branch if needed
+	gAmplitude _A _=  $ 8000 _# _--  \ set initial amplitude to $7FFF
+
+_LABEL: HeadMainLoop            \ jumped to from tail
+	gBenchStart _A DSPI_CLOCK _A _-   \ compute time executing batch
+	gTicksUsed _A _= ACCUME gTickAccum _A _-  \ subtract time spent waiting
+
+	gBenchStart _A DSPI_CLOCK _A _MOVE   \ record time at start
+	gTickAccum _A 0 _# _MOVE
+
+\ Begin audio rate loop ----------------------------
+_LABEL: HeadSubLoop
+
+\ Wait for room in buffer
+	gSaveClock _A DSPI_CLOCK _A _MOVE   \ record tick counter
+
+_LABEL: @WaitForRoom
+        DSPI_OUTPUT_STATUS _A 7 _# _-   \ is buffer full?
+        _BGE: @WaitForRoom        \ if no room, stall
+
+	gSaveClock _A DSPI_CLOCK _A _-   \ ticks elapsed waiting for room
+	gTickAccum _%A ACCUME _+
+
+\ Write accumulated output to OutPut FIFO
+        DSPI_OUTPUT0 _A _= gMixLeft _A gAmplitude _A _*
+        DSPI_OUTPUT1 _A _= gMixRight _A gAmplitude _A _*
+
+\ Advance Frame Pointer
+        DSPI_OUTPUT_CONTROL _A 1 _# _MOVE \ send this frame
+
+\ clear signal accumulators
+	gMixLeft _A 0 _# _MOVE                \ Clear Mixer
+	gMixRight _A 0 _# _MOVE
+	
+\ Do full rate audio calculations.
+	BM_NUM_CHANNELS 0
+	do
+		i bm.voice>addr _RBase0
+		i dspi.chan>fifo _Rbase12    \ FIFO
+		_JSR: BasicVoice
+	loop
+\ call noise voice
+	BM_NUM_VOICES 1-  bm.voice>addr _RBase0
+	_JSR: NoiseVoice
+
+\ Advance Frame Count which is used for synching 1/8 rate code.
+        gFrameCount _%A #$ 0001 _+
+\ FIXME	_NOP \ ??
+	ACCUME BM_CONTROL_FRAMES_MASK _# _AND
+	_BNE: HeadSubLoop
+
+\ Do 1/8th rate control calculations
+	BM_NUM_VOICES 0
+	do
+		i bm.voice>addr _RBase0
+		i bm.voice>addr CHANNEL_CONTROL_OFFSET + _RBase4
+		i bm.voice>addr CHANNEL_CONTROL_OFFSET + 4 + _RBase8
+		_JSR: ControlVoice
+	loop
+	_NOP
+	
+	_JUMP:  HeadMainLoop
+	_NOP
+	
+\ ---------------------------------------------------------------
+_LABEL: BasicVoice
+	
+\ restore phase for OSC
+	FIFO_PHASE 12 + _reg  CHAN_PHASE_CURRENT _reg _MOVE
+\ Interpolate next sample
+	CHAN_PHASE_CURRENT _reg
+	FIFO_CURRENT 12 + _reg
+	FIFO_CURRENT 12 + _reg _*-		\ old*(frac-1)	= old*frac-old
+	
+	FIFO_NEXT 12 + _reg
+	CHAN_PHASE_CURRENT _reg ACCUME _*-	\ interpolate new value
+	gScratch _A _= ACCUME VPG_AMP_CURRENT _reg _*
+
+	FIFO_FREQ 12 + _reg VPG_FREQUENCY_CURRENT _reg _MOVE            \ advance oscillator
+	
+\ Mix with other output ---------------------------------
+	ACCUME      VPA_LEFT_GAIN  _reg  gMixLeft  _%A  _CLIP _*+
+	gScratch _A VPA_RIGHT_GAIN _reg  gMixRight _%A  _CLIP _*+
+\ save phase of OSC
+	CHAN_PHASE_CURRENT _reg  FIFO_PHASE 12 + _reg  _MOVE
+	_RTS
+
+\ ---------------------------------------------------------------
+_LABEL: NoiseVoice	
+\ apply LFO clipped to -1.0 to 1.0
+	VPG_FREQUENCY_CURRENT _reg _= VPC_LFO_OUTPUT _reg VPC_LFO_FREQ_DEPTH _reg 
+		VPC_FREQUENCY _CLIP _*+
+\ Filter noise and apply amplitude envelope.
+	ACCUME  VPA_SVF_BANDPASS _reg svfLowPass _%A _CLIP _*+   \ LowPass=SVFFreq*BandPass+LowPass
+	VPA_FILTER_RESONANCE _reg VPA_SVF_BANDPASS _reg ACCUME _CLIP _*+             \ SVFQ*BandPass+A
+	DSPI_NOISE _A $ 2000 _# ACCUME _CLIP _*-                                     \ HighPass=InSamp-A
+	VPG_FREQUENCY_CURRENT _reg ACCUME VPA_SVF_BANDPASS _%reg _CLIP _*+          \ BandPass=SVFFreq*A+BandPass
+	gScratch _A _= svfLowPass _A VPG_AMP_CURRENT _reg _*
+
+\ Mix with other output ---------------------------------
+	ACCUME VPA_LEFT_GAIN  _reg  gMixLeft  _%A  _CLIP _*+
+	gScratch _A VPA_RIGHT_GAIN _reg  gMixRight _%A  _CLIP _*+
+	_RTS
+
+_LABEL: ControlVoice
+\ -------------- envelope -----------------------------------
+\ Compare Current and Requested Target
+	VPG_AMP_REQUEST _reg VPC_ENV_TARGET _reg _-
+	_BNE: @UpdateEnvTarget
+
+\ Calculate new phase, phase ranges from 0-0.9999
+	 VPC_ENV_PHASE _%reg VPG_AMP_RATE _reg _CLIP _+
+
+\ sample = new*frac + old*(1-frac)  ; crossfade interpolation
+\        = new*frac - old*(frac-1)
+\        = new*frac - (old*frac-old)
+	ACCUME VPC_ENV_SOURCE _reg VPC_ENV_SOURCE _reg _*-
+	VPG_AMP_CURRENT _reg _= VPC_ENV_TARGET _reg VPC_ENV_PHASE _reg ACCUME	_*-
+	_JUMP: @EnvDone
+
+_LABEL: @UpdateEnvTarget
+	VPC_ENV_SOURCE _reg VPG_AMP_CURRENT _reg _MOVE
+	VPC_ENV_PHASE _reg #$ 0000 _MOVE
+	VPC_ENV_TARGET _reg VPG_AMP_REQUEST _reg _MOVE
+_LABEL: @EnvDone
+
+\ ------------- LFO ----------------------------------------
+IF_LFO_SINE [if]
+\ Perform Sine/Cosine calculation
+	VPC_LFO_RATE _reg VPC_LFO_PHASE _reg 2 _<<' _*
+	ACCUME VPC_LFO_OUTPUT _%reg _CLIP _+   \ b = (a*f) + b
+	VPC_LFO_RATE _reg ACCUME 2 _<<' _*
+	VPC_LFO_PHASE _%reg ACCUME _CLIP _-	                    \ a = a - (f*b)
+[else]
+\ Generate a sawtooth wave then use phase conversion to get a triangle.
+\  sawtooth   => triangle
+\    -1.0     => -1.0
+\     0.0     =>  0.9999
+\     0.9999  => -1.0
+	VPC_LFO_PHASE _%reg VPC_LFO_RATE _reg _+     \ calculate next sawtooth
+	_BMI:	@TriRising
+\ Convert 0>1 into falling 1>-1
+	#$ 4000 ACCUME _-       \ t = (0.5-s)*2
+	VPC_LFO_OUTPUT _reg _= ACCUME 1 _<<' _--
+	_JUMP: @TriDone
+
+_LABEL: @TriRising  \ if negative, calc rising portion of triangle
+\ Convert -1>0 into rising -1>1
+	VPC_LFO_OUTPUT _reg _= #$ 4000 ACCUME 1 _<<' _+       \ t = (0.5+s)*2
+_LABEL: @TriDone
+[then]
+
+\ apply vibrato to unsigned frequency
+	VPC_FREQUENCY _reg  $ 8000 _# _-   \ freq now ranges from -1 to 1
+	VPC_LFO_OUTPUT _reg VPC_LFO_FREQ_DEPTH _reg 
+		ACCUME _CLIP _*+
+	VPG_FREQUENCY_CURRENT _reg _= ACCUME  $ 8000 _#  _+  \ restore 0-2 range
+	
+\ add tremelo to envelope
+	VPG_AMP_CURRENT _reg _= VPC_LFO_OUTPUT _reg VPC_LFO_AMP_DEPTH _reg 
+		VPG_AMP_CURRENT _reg _CLIP _*+
+	_RTS
+
+}beep
+

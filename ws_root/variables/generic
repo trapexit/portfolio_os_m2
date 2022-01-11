@@ -1,0 +1,53 @@
+# @(#) generic 96/07/09 1.29
+
+ifndef VAR_GENERIC_INCLUDED
+VAR_GENERIC_INCLUDED =		yes
+
+# {{{ Which HOST, HOSTOS?
+
+REALHOSTOS :=		${shell /bin/uname -s}
+ifndef HOSTOS
+HOSTOS =		${REALHOSTOS}
+endif
+
+ifeq (${HOSTOS}, IRIX)
+HOST :=			${shell /usr/bsd/hostname}
+else
+HOST :=			${shell /bin/hostname}
+endif
+
+# }}}
+# {{{ Destined for UNIX, PC, or Mac development?
+
+ifndef RELEASE_PLATFORM
+RELEASE_PLATFORM =	mac
+endif
+
+# }}}
+# {{{ Calculate BUILD_TYPE
+
+include ${CODEMGR_WS}/ws_root/variables/options
+
+ifndef BUILD_TYPE
+ifeq (${HOSTOS}, IRIX)
+
+BUILD_TYPE =		${HOSTOS}
+
+else
+ifdef BUILD_DIRECTORY
+BUILD_TYPE = ${BUILD_DIRECTORY}
+else
+BUILD_TYPE = ${OPTIONS_PATH}
+endif
+endif
+endif
+
+# }}}
+
+include ${CODEMGR_WS}/ws_root/variables/version
+include ${CODEMGR_WS}/ws_root/variables/fileinfo
+include ${CODEMGR_WS}/ws_root/variables/commands
+include ${CODEMGR_WS}/ws_root/variables/defines
+
+
+endif

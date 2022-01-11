@@ -1,0 +1,137 @@
+\ @(#) dcsqxdvarmono.ins 95/11/16 1.10
+\ $Id: dcsqxdvarmono.ins,v 1.5 1995/01/20 21:27:52 peabody Exp $
+\ DCSQXHALFDMONO.INS
+\ DeCompress SQuare eXact/Delta MONOphonic sample, variable sample rate
+\
+\ By: Phil Burk, with Steve Hayes
+\ Copyright 3DO 1992
+
+\\\	NOAUTODOC -private -class DSP -name dcsqxdvarmono.dsp
+\\\	OBSOLETE - Play a variable-rate SQuare/eXact/Delta monophonic compressed sample.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a SQuare/eXact/Delta monophonic compressed sample at
+\\\	    a variable rate. This is a 2:1 compression. The compression is done by
+\\\	    SquashSnd or SoundHack.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Frequency
+\\\	        Frequency in fixed point phase increment in the range of 0..0x8000. 0x8000
+\\\	        equals the normal sample rate, with 1 sample per frame. Defaults to 0x2000
+\\\	        which is 1/4 normal rate.
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 59
+\\\
+\\\	    Code: 56 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  Notes
+\\\
+\\\	    Unlike other variable-rate sample player instruments this one doesn't
+\\\	    support playing the sample above the system sample rate.
+\\\
+\\\	  See Also
+\\\
+\\\	    dcsqxdmono.dsp, dcsqxdstereo.dsp, adpcmvarmono.dsp, sampler.dsp
+\\\
+
+include? DFID_DCSQXDVARMONO function_ids.j
+
+anew task-dcsqxdvarmono.ins
+
+_RED
+dspp{
+ins{
+
+DFID_DCSQXDVARMONO dspp-function-id !
+$" dcsqxdvarmono.dsp" ins-name !
+
+dspp-echo off
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    dc_accum  \ accumulate sample,
+ALLOC.IMEM    dc_toggle \ are we on odd or even byte
+ALLOC.IMEM    dc_hold   \ hold sample from FIFO
+ALLOC.IMEM    dc_byte   \ byte shifted hi
+ALLOC.IMEM    dc_square  \ x*ABS(x)
+ALLOC.IMEM    OldVal    \ previous for interpolation, expanded to 16 bits
+ALLOC.IMEM    Phase
+ALLOC.OUTPUT Output
+$ 2000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 Amplitude
+59 ALLOC.TICKS
+
+dc_accum  DINI_AT_START    0  INIT.RESOURCE  dc_accum_NAME
+Phase  DINI_AT_START    0  INIT.RESOURCE  Phase_NAME
+OldVal  DINI_AT_START    0  INIT.RESOURCE  OldVal_NAME
+dc_toggle  DINI_AT_START    $ 4000  INIT.RESOURCE  toggle_NAME
+
+	InFIFO FIFOSTATUS+ _A _TRA	\ address of FIFO status
+	_BEQ: @NODATA			\ branch to be offset
+
+\ Calculate phase increment
+	Phase _%A Frequency _A _+
+\ Determine whether to decompress another samples
+	_BPL:	@Interpolate
+
+	Phase _%A #$ 8000	_-		\ wrap back to positive phase
+	OldVal _A dc_accum _A	_MOVE		\ save for interpolation
+
+\ -------------------------------------------
+	dc_toggle _%A #$ 8000 _+   \ alternate between neg and pos
+	_BMI: @GetNewSamp
+\ Process held sample
+	dc_byte _A _= dc_hold _A 8 _<<' _TRL  \ shift into high position
+	_JUMP: @Decode
+
+_LABEL: @GetNewSamp
+	dc_hold _A _= InFIFO _A _TRL    \ get 16 bits from FIFO \ 930420
+	dc_byte _A _= ACCUME #$ FF00 _AND    \ mask off high byte
+
+_LABEL: @Decode
+	ACCUME _TRA  \ take absolute value
+	_BGE: @PosByte
+	_NOP         \ needed cuz next instruction is one word
+	ACCUME _NEG  \ negate if negative
+
+_LABEL: @PosByte
+	dc_square _A _= ACCUME dc_byte _A _*  \ square data value
+	dc_byte _A #$ 0100 _AND               \ odd or even ?
+	_BEQ: @ExactMode
+
+\ Delta mode, use previous_sample + x*|x| as the next sample
+	dc_square _A   dc_accum _%A   _CLIP _+
+	_JUMP: @Interpolate
+
+\ Exact mode, use x*|x| as the next sample
+_LABEL: @ExactMode
+	dc_accum _A dc_square _A _MOVE
+	_NOP
+\ ------------------------------------------
+_LABEL: @Interpolate
+	Phase _A OldVal _A OldVal _A _*-	\ old*(frac-1)	= old*frac-old
+	dc_accum _A Phase _A ACCUME _*-		\ interpolate output value
+
+	Output _A _= ACCUME Amplitude _A _*	\  scale output
+_LABEL: @NODATA
+
+_ENDEXT
+}ins
+}dspp

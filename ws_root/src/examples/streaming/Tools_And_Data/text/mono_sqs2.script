@@ -1,0 +1,35 @@
+#
+# @(#) mono_sqs2.script 96/02/20 1.3
+#
+# To create the mono_sqs2.stream:
+#	¥	hilight the squashsnd command to compress the audio file
+#		using sqs2, 2:1 compression. 
+# 	¥	hilight the AudioChunkifier command and press enter to chunkify the
+#		audio file.
+#	¥	hilight the weaver script and press enter.
+#
+# Compress the audio file using sqs2 2:1 compression which is
+# compatible with 3DO M2 hardware
+squashsnd -sqs2 -i mono.aiff -o mono.sqs2.aifc
+
+# To produce mono.sqs2.saudio, run AudioChunkifier using
+# mono.sqs2.aifc raw audio file:
+ AudioChunkifier -i mono.sqs2.aifc -o mono.sqs2.saudio
+
+#
+# weavescript for bach_m.stream
+#
+set WeaveScript 						¶
+  'mediablocksize 2048					¶n¶
+	streamblocksize 32768				¶n¶
+	streambuffers 8						¶n¶
+	streamstarttime 0					¶n¶
+	streamerdeltapri -10				¶n¶
+	dataacqdeltapri -9					¶n¶
+	subscriber SNDS 11					¶n¶
+	audioclockchan 0					¶n¶
+	enableaudiomask 0x1					¶n¶
+	preloadinstrument SA_44K_16B_M_SQS2	¶n¶
+	writestreamheader					¶n¶
+	file mono.sqs2.saudio 1 0			¶n'
+echo "{WeaveScript}" | weaver -o "{3doremote}"examples:streaming:playsa:mono_sqs2.stream

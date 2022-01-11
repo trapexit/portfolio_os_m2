@@ -1,0 +1,23 @@
+#!/bin/sh
+# @(#) dir.flp.disabled 96/02/19 1.7
+# libmusic.a FLP. Adds libmusic.a include files and error text installer
+# to list of things to bringover and putback.
+
+# Include all include/audio/*.h except audio.h.
+#
+echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/includes/audio"
+find $CODEMGR_WS_ROOT/ws_root/src/includes/audio -name 's.*.h' ! -name 's.audio.h' ! -name 's.patch.h' -print | grep '/SCCS/s\.'
+
+# Include error text
+#
+echo 1>&2 "Also examining $CODEMGR_WS_ROOT/ws_root/src/errors/LMu.errs.c"
+echo $CODEMGR_WS_ROOT/ws_root/src/errors/SCCS/s.LMu.errs.c
+
+# Default action: everything beneath here.
+#
+find `pwd` -name 's.*' -print | grep '/SCCS/s\.'
+
+# If find doesn't find anything it will exit 1 and bringover
+# and putback will stop.  Always exit 0 here.
+#
+exit 0

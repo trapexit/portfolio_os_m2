@@ -1,0 +1,88 @@
+\ @(#) cubic_amplifier.ins 96/05/10 1.12
+\ Instrument Template for cubic_amplifier
+\
+\ Phil Burk
+\ Copyright 3DO 1995
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Effects -name cubic_amplifier.dsp
+\\\	Non-linear amplifier (distortion effect).
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument amplifies an incoming signal using a cubic function that
+\\\	    results in distortion similar to a guitar fuzz box. For low level signals,
+\\\	    the gain is approximately 3X.
+\\\
+\\\	    The gain function is:
+\\\
+\\\	    if (Input < 0.0) Output = Amplitude * ((Input + 1.0)**3 - 1.0);
+\\\
+\\\	    else Output = Amplitude * ((Input - 1.0)**3 + 1.0);
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Amplitude of output signal in the range of -1.0 to +1.0. Defaults to 1.0.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signal to process.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Distored signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 19
+\\\
+\\\	    Code: 19 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    line_in.dsp(@), multiply.dsp(@), svfilter.dsp(@)
+
+include? DFID_CUBIC_AMPLIFIER function_ids.j
+
+anew task-cubic_amplifier.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_CUBIC_AMPLIFIER dspp-function-id !
+$" cubic_amplifier.dsp" ins-name !
+
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+ALLOC.INPUT Input
+ALLOC.OUTPUT Output
+_IMPORT ALLOC.VARIABLE gScratch1   \ Input after swapping negative and positive halves
+_IMPORT ALLOC.VARIABLE gScratch2   \ Bias to swap negative and positive halves of Input
+19 ALLOC.TICKS
+
+\ compute bias to swap negative and positive halves:
+\ use $ 7FFF for positive input
+\ use $ 8000 for negative input
+	Input _A   16 _>>' _TRA                 \ drag sign bit across ACCUME
+	gScratch2 _A  _=  ACCUME  $ 8000 _#  _XNOR
+
+	gScratch1 _A  _=  Input _A  ACCUME  _-  \ swap negative and positive halves
+	_NOP                                    \ wait for gScratch to settle
+
+	ACCUME  gScratch1 _A  _*                \ square
+	ACCUME  gScratch1 _A  gScratch2 _A  _*+ \ cube, swap negative and positive halves
+
+	Output _A  _=  ACCUME  Amplitude _A  _*
+
+}ins
+}dspp

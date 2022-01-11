@@ -1,0 +1,5 @@
+#!/bin/sh
+# This file was generated automatically by configure.  Do not edit.
+# This directory was configured as follows:
+.././configure --host=sparc-sun-sunos4.1.3_U1 --target=powerpc-ibm-eabi --with-gnu-as --with-gnu-ld --norecursion 
+# using "xhost-mkfrag"

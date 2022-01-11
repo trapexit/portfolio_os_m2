@@ -1,0 +1,74 @@
+#
+# @(#) Makefile.Dos 96/11/19 1.7
+#
+SHELL = /bin/sh
+
+PLATFORM = Dos
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../../libs/$(PLATFORM)
+OBJDIR = ../../txtlib/src/objects/$(PLATFORM)
+HGRELEASEDIR = ../../release/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+
+M2TXLIB = M2TXlib.a
+IFFLIB = IFFlib.a
+LIBS = $(LIBDIR)/$(M2TXLIB) $(LIBDIR)/$(IFFLIB) -lm
+INCLUDES = -I../../txtlib/include  -I../../ifflib -I./
+CC = gcc
+CCFLAGS = -ansi -DINTEL -DTEXTOOLS_VERISION='"3.1b1"' $(INCLUDES)
+
+
+
+AUTOMAGIC_DIR = \
+	bin     \
+	$(BINDIR)
+
+TOOLS = \
+	$(BINDIR)/utfpipcat.exe \
+	$(BINDIR)/utfpipsub.exe \
+	$(BINDIR)/utfquantmany.exe \
+	$(BINDIR)/utfsplit.exe \
+	$(BINDIR)/utfunpage.exe \
+	$(BINDIR)/utfcat.exe \
+	$(HGRELEASEDIR)/utfpipcat.exe \
+	$(HGRELEASEDIR)/utfpipsub.exe \
+	$(HGRELEASEDIR)/utfquantmany.exe \
+	$(HGRELEASEDIR)/utfsplit.exe \
+	$(HGRELEASEDIR)/utfunpage.exe \
+	$(HGRELEASEDIR)/utfcat.exe
+
+all: ${AUTOMAGIC_DIR} $(TOOLS) $(BINDIR)/utfpage.exe $(HGRELEASEDIR)/utfpage.exe
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+$(BINDIR)/%.exe: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(HGRELEASEDIR)/%.exe: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(BINDIR)/utfpage.exe: $(UTFPAGEOBJS) utfpage.c
+	$(CC) $(CCFLAGS) -o $@ utfpage.c $(UTFPAGEOBJS) ${LIBS}
+
+$(HGRELEASEDIR)/utfpage.exe: $(UTFPAGEOBJS) utfpage.c
+	$(CC) $(CCFLAGS) -o $@ utfpage.c $(UTFPAGEOBJS) ${LIBS}
+
+UTFPAGEOBJS = \
+	$(OBJDIR)/futil.o \
+	$(OBJDIR)/LWToken.o \
+	$(OBJDIR)/page.o \
+	$(OBJDIR)/SDFTexBlend.o
+	
+depends:
+	makedepend -- $(INCLUDES)
+
+clean:
+
+clobber:
+	$(RM) $(TOOLS) $(BINDIR)/utfpage.exe $(HGRELEASEDIR)/utfpage.exe
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

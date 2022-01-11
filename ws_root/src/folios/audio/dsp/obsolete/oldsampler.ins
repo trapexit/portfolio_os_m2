@@ -1,0 +1,90 @@
+\ @(#) sampler.ins 95/06/02 1.6
+\ $Id: sampler.ins,v 1.10 1995/01/20 20:20:23 peabody Exp $
+\ Instrument Template for Sample Player
+\ Call the DSP routine for a variable rate mono 16 bit sample.
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	NOAUTODOC -private -class DSP -name sampler.dsp
+\\\	OBSOLETE - Variable-rate sample player.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is a variable-rate 16-bit mono sample player. It is
+\\\	    identical to varmono16.dsp, except that you should use sampler.dsp if you
+\\\	    are short on memory.
+\\\
+\\\	    The instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Frequency
+\\\	        Phase increment. 0..0xFFFF (nearly double the normal rate), defaults to
+\\\	        0x8000, which equals the normal sample rate, with 1 sample per frame.
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF, defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 36
+\\\
+\\\	    Code: 11 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    varmono16.dsp, fixedmonosample.dsp
+\\\
+
+include? PhaseInc OscUpDownFP.j
+include? DFID_SAMPLER function_ids.j
+
+anew task-sampler.ins
+
+\ From OscUpDownFP.j,v 1.2 1994/05/12 00:01:00 peabody Exp $
+
+\ Register assignments for OscUpDownFP
+\ ARIA does not support includes, and certainly not
+\ conditional includes, so use these "unique" names
+4 constant FIFOPtr4Sampler
+8 constant PhaseInc4Sampler
+
+_RED
+dspp{
+ins{
+
+DFID_SAMPLER dspp-function-id !
+$" sampler.dsp" ins-name !
+
+ALLOC.RBASE MYRB   \ allocate a register base for a block of 8 registers
+ALLOC.INFIFO  InFIFO
+ALLOC.OUTPUT Output
+0 $ FFFF $ 8000 ALLOC.KNOB Frequency
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+36 ALLOC.TICKS
+
+    MYRB _RBASE                         \ set RBASE for subsequent calls
+    FIFOPtr4Sampler _reg InFIFO _# _MOVE        \ put FIFO address in register indirect
+    PhaseInc4Sampler _reg Frequency _A _MOVE    \ get frequency from knob
+    _JSR:   OscUpDownFP                 \ call external reference
+    Output _A _= ACCUME Amplitude _A _* \ scale loudness
+
+}ins
+}dspp

@@ -1,0 +1,26 @@
+# @(#) Makefile.mac 96/08/13 1.1
+
+CFLAGS	=
+
+
+all ÄÄ		makeimage
+
+.o Ä .c
+     	c -p {default}.c
+ 
+makeimage ÄÄ makeimage.c
+		c -p makeimage.c
+		Link {SymOptions} -w -c 'MPS ' -t MPST makeimage.c.o  ¶
+			-sn STDIO=Main ¶
+			-sn INTENV=Main ¶
+			-sn %A5Init=Main ¶
+			"{Libraries}"Stubs.o ¶
+			"{CLibraries}"StdCLib.o ¶
+			"{Libraries}"Interface.o ¶
+			"{Libraries}"Runtime.o ¶
+			"{Libraries}"ToolLibs.o ¶
+			-o makeimage
+
+clean ÄÄ
+		rm -f makeimage *.o
+

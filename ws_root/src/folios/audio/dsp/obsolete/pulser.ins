@@ -1,0 +1,109 @@
+\ @(#) pulser.ins 95/06/02 1.6
+\ $Id: pulser.ins,v 1.8 1994/08/18 20:01:44 peabody Exp $
+\ Instrument Template for Triangle wave driving Pulse Wave
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	NOAUTODOC -private -class DSP -name pulser.dsp
+\\\	OBSOLETE - Triangle wave modulating frequency of a pulse wave.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is a triangle wave modulating the frequency of a pulse
+\\\	    wave, to produce a siren sound.
+\\\
+\\\	  Knobs
+\\\
+\\\	    LFORate - $0  =>  $0100, default $0010
+\\\
+\\\	    LFODepth - $0  =>  $1000, default $0300
+\\\
+\\\	    PulseWidth - $0  =>  $7FFF, default $1000
+\\\
+\\\	    Frequency - $0  =>  $2000, default $0600
+\\\
+\\\	    Amplitude - $0  =>  $7FFF, default $7000
+\\\
+\\\	  Inputs
+\\\
+\\\	    None
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks = 32
+\\\
+\\\	    N memory = 33 words
+\\\
+
+\ #$ 8000  equivalent to  $ 8000 _#
+\ A$ 0100  equivalent to  $ 0100 _A
+include? DFID_PULSER function_ids.j
+
+anew task-pulser.ins
+
+_RED         \ which hardware version, could be _RED
+dspp{         \ init assembler, ORG to 0
+ins{
+
+DFID_PULSER dspp-function-id !
+$" pulser.dsp" ins-name !
+          \ clears OFX file stuff
+
+\ Declare DSPP resources needed by instrument
+ALLOC.IMEM  TriPhase         \ internal I memory variable
+ALLOC.IMEM  PulsePhase
+ALLOC.OUTPUT Output          \ connects to mixer
+
+\ ALLOC.KNOB ( min max default <name> -- , allocate EI location )
+0 $ 0100 $ 0010 ALLOC.KNOB LFORate
+0 $ 1000 $ 0300 ALLOC.KNOB LFODepth
+0 $ 7FFF $ 1000 ALLOC.KNOB PulseWidth
+0 $ 2000 $ 0600 ALLOC.KNOB Frequency
+CALC_DIVIDE_SR 0 0 Frequency set.knob.calc
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+32 ALLOC.TICKS
+
+\ _A - memory operand type
+\ _%A - writeback memory operand type
+	TriPhase _%A LFORate _A _+    \    @Triphase+LFORate
+	_BMI:  @TriRising             \    BMI TriRising  , @ means local
+	_NOP
+	#$ 4000 ACCUME  1 _<<' _-     \    #$4000-A<<'1
+	_JUMP: @TriDone               \    JUMP  TriDone
+	_NOP
+_LABEL: @TriRising
+	#$ 4000 ACCUME  1 _<<' _+
+	_NOP
+_LABEL: @TriDone
+\ calc modulated freq
+	ACCUME   LFODepth   _A Frequency _A _*+  \  A*LFODepth+Frequency
+	_NOP
+	PulsePhase _%A ACCUME _+			\ accumulate phase
+	PulseWidth _A ACCUME _-				\ comparator
+	_BGE: @PulseHigh
+	_NOP
+	#$ 8000 _TRL                         \  $#8000   Transfer Logical
+	_JUMP: @PulseDone
+	_NOP
+_LABEL: @PulseHigh
+	#$ 7FF0 _TRL
+_LABEL: @PulseDone
+	Output _A _= ACCUME Amplitude _A _*    \ Output=A*Loudness
+
+}ins     \ writes the instrument to "output.ofx" from static
+}dspp    \ doesn't do much

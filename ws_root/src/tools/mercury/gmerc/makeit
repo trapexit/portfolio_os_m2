@@ -1,0 +1,31 @@
+set exit 0; ¶
+
+If "`Exists -d ":bin:"`" == ""
+    newfolder :bin:
+End
+If "`Exists -d ":bin:Mac:"`" == ""
+    newfolder :bin:Mac:
+End
+If "`Exists -f ":bin:Mac:gmerc"`" != ""
+	echo "deleting :bin:Mac:gmerc:"
+    delete :bin:Mac:gmerc
+End
+If "`Exists -f "gmerc"`" != ""
+	echo "deleting :gmerc:"
+    delete gmerc
+End
+if "{1}" == "clean"
+	echo "Cleaning gmerc"
+	make -f gmerc.make clean > makeout; ¶
+	makeout; ¶
+	delete makeout; ¶
+	set exit 1; ¶
+end
+
+	make -f gmerc.make {1} {2} > makeout; ¶
+	makeout; ¶
+	delete makeout; ¶
+	set exit 1; ¶
+
+set exit 1; ¶
+exit 0

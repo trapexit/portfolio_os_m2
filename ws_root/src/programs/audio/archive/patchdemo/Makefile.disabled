@@ -1,0 +1,15 @@
+# @(#) Makefile.disabled 95/10/12 1.10
+# PatchDemo
+
+TARGET_DIRECTORY =	${REMOTE_DIR}/System.m2/Programs
+LINK_LIBS =		music file eventbroker c
+# !!! temporarily removed: audiodemo
+MODULES =		audio.privfolio
+NO_CHDIR_MODULE =	1
+
+# !!! patched for no GUI
+CDEFINES +=		-DPATCHDEMO_NO_GUI
+
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/linkexec
+

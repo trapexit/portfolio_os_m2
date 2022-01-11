@@ -1,0 +1,100 @@
+\ @(#) mixer4x2.ins 95/11/16 1.8
+\ $Id: mixer4x2.ins,v 1.9 1995/01/20 20:20:23 peabody Exp $
+\ 4x2 Mixer
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\ 930617 PLB Added clipping.
+
+\\\	NOAUTODOC -private -class DSP -name mixer4x2.dsp
+\\\	OBSOLETE - Four-channel stereo mixer.
+\\\
+\\\	  Function
+\\\
+\\\	    This is a four-channel stereo mixer. The total gain on a side should not
+\\\	    not exceed 0x7FFF. Its output is added to the output of the other mixers
+\\\	    at the end of each frame and then sent to the DAC FIFO.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    LeftGain0, LeftGain1, LeftGain2, LeftGain3
+\\\	        Left channel gain for each channel in the range of 0..0x7FFF. Defaults to
+\\\	        0.
+\\\
+\\\	    RightGain0, RightGain1, RightGain2, RightGain3
+\\\	        Right channel gain for each channel in the range of 0..0x7FFF. Defaults
+\\\	        to 0.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input0, Input1, Input2, Input3
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 32
+\\\
+\\\	    Code: 32 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    directout.dsp, mixer2x2.dsp, mixer8x2.dsp, mixer12x2.dsp, submixer4x2.dsp
+\\\
+
+decimal
+
+$ 106 constant MixLeft
+$ 107 constant MixRight
+include? DFID_MIXER4X2 function_ids.j
+
+anew task-mixer4x2.f
+
+_RED
+dspp{
+ins{
+
+DFID_MIXER4X2 dspp-function-id !
+$" mixer4x2.dsp" ins-name !
+
+
+
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain0
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain1
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain2
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain3
+
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain0
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain1
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain2
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain3
+
+ALLOC.IMEM Input0
+ALLOC.IMEM Input1
+ALLOC.IMEM Input2
+ALLOC.IMEM Input3
+32 ALLOC.TICKS
+
+\ left side
+	LeftGain0 _A  Input0 _A  _*
+	LeftGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	LeftGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	LeftGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	_NOP
+	MixLeft _%A ACCUME _CLIP _+
+
+\ right side
+	RightGain0 _A  Input0 _A  _*
+	RightGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	RightGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	RightGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	_NOP
+	MixRight _%A ACCUME _CLIP _+
+
+}ins
+}dspp
+

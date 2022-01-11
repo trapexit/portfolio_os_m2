@@ -1,0 +1,98 @@
+\ @(#) rednoise_lfo.ins 96/03/11 1.8
+\ Instrument Template for RedNoise LFO
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Control_Signal -name rednoise_lfo.dsp
+\\\	Red noise LFO generator.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument interpolates straight line segments between pseudo-random
+\\\	    numbers to produce "red" noise. It is useful as a slowly changing random
+\\\	    control generator for natural sounds. This is a low-frequency version of
+\\\	    rednoise.dsp(@).
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency - AUDIO_SIGNAL_TYPE_LFO_FREQ
+\\\	        Frequency in Hertz. Ranges from -86.1 Hz to +86.1 Hz. Default is 17.2
+\\\	        Hz. Controls how frequently a new random value is chosen.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -1.0 to +1.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 33
+\\\
+\\\	    Code: 34 words
+\\\
+\\\	    Data: 7 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    noise.dsp(@), randomhold.dsp(@), rednoise.dsp(@), triangle_lfo.dsp(@)
+
+\ 960104 PLB fixed pops by checking twice for carry set
+
+include? DFID_REDNOISE_LFO function_ids.j
+
+anew task-rednoise_lfo.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_REDNOISE_LFO dspp-function-id !
+$" rednoise_lfo.dsp" ins-name !
+
+$ 8000 2 10 */ KNOB_TYPE_LFO_FREQ ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+DRSC_TYPE_HW_NOISE CONNECT.HARDWARE  HardNoise
+\ set initial phase to highest value so it will read noise immediately
+$ FFFF DRSC_AT_START ALLOC.VARIABLE.DEFAULT PhaseHigh
+$ FF00 DRSC_AT_START ALLOC.VARIABLE.DEFAULT PhaseLow
+$ 0000 DRSC_AT_START ALLOC.VARIABLE.DEFAULT OldNoise
+$ 0000 DRSC_AT_START ALLOC.VARIABLE.DEFAULT NewNoise
+_IMPORT ALLOC.VARIABLE gScratch1   \ fractional phase
+ALLOC.OUTPUT Output
+33 ALLOC.TICKS
+
+\ use double precision math for phase accumulator
+	Frequency _A 8 _<<' _TRA                    \ extract low bits
+	PhaseLow _%A ACCUME _+                      \ add low phase
+	PhaseHigh _A _+C                            \ carry bit
+	_BCS:	@NewNoiseAdd                        \ check here to eliminate pops
+	PhaseHigh _A _= Frequency _A $ 0080 _#   ACCUME  _*+
+	_BCS:	@NewNoise
+
+	gScratch1 _A _= ACCUME 1 _>>' _TRL    \ logical right shift, U2/
+	ACCUME OldNoise _A OldNoise _A _*-   \ old*(frac-1)	= old*frac-old
+	NewNoise _A gScratch1 _A ACCUME	_*-  \ new*frac - (old*frac-old)
+	Output _A _= ACCUME Amplitude _A _*
+	_JUMP: @Done
+
+_LABEL: @NewNoiseAdd
+	PhaseHigh _A _= Frequency _A $ 0080 _#   ACCUME  _*+
+
+_LABEL: @NewNoise
+	OldNoise _A NewNoise _A _MOVE    \ leave ACCUME untouched
+	NewNoise _A HardNoise _A _MOVE   \ get new Noise target
+
+_LABEL: @Done
+
+}ins
+}dspp

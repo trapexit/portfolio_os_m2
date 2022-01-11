@@ -1,0 +1,81 @@
+\ @(#) sampler_8_v2.ins 96/03/11 1.12
+
+\ variable rate monophonic sample player
+\ based on M2 FIFO/OSC hardware
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992-1995
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_8_v2.dsp
+\\\	Variable-rate stereo 8-bit sample player.
+\\\
+\\\	  Description
+\\\
+\\\	    Variable-rate stereophonic 8-bit sample player.
+\\\
+\\\	    This instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up.
+\\\
+\\\	  Knobs
+\\\
+\\\	    SampleRate - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        SampleRate in Hertz. Range is 0.0 to 88200.0. Default is 44100.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 2 parts
+\\\	        Stereo output.
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 47
+\\\
+\\\	    Code: 46 words
+\\\
+\\\	    Data: 9 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  Caveats
+\\\
+\\\	    8-bit audio sounds inherently BAD because there is very little information
+\\\	    in each sample. Use one of the compressed data formats such as SQS2 for mono
+\\\	    samples, or CBD2 for stereo samples, for better quality. The only reason to
+\\\	    use 8-bit audio is if you don't have the 16-bit original recording.
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_8_v1.dsp(@), sampler_cbd2_v2.dsp(@)
+
+include? DFID_SAMPLER_8_V2 function_ids.j
+
+anew task-sampler8_v2.ins
+
+dspp-echo off
+_BULLDOG
+
+dspp{
+ins{
+DFID_SAMPLER_8_V2 dspp-function-id !
+$" sampler_8_v2.dsp" ins-name !
+
+DRSC_INFIFO_SUBTYPE_8BIT ALLOC.INFIFO.SUBTYPE  InFIFO
+
+\ Yes, use 16 bit player cuz the DMA does the decompression to 16 bits!
+	include sampler_16_v2.j
+
+}ins
+}dspp

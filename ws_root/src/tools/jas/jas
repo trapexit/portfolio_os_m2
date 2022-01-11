@@ -1,0 +1,74 @@
+# @(#) jas 96/01/16 1.13
+
+USAGE="usage: `basename $0` [-Ddefine] [-Iincludespath] [-X] [-d] [-l] [-r] [-o outfile] infile"
+if [ $# -eq 0 ]
+then
+    echo "$USAGE" >&2
+    exit 2
+fi
+AFLAGS=
+CFLAGS=
+O=a.out	# Default output filename.
+ALLOWDBL=
+NUKEUSF=true
+NUKELST=true
+while getopts D:I:Xdlo:r f
+do
+    case $f in
+        D) CFLAGS="$CFLAGS -D$OPTARG";;
+        I) CFLAGS="$CFLAGS -I$OPTARG";;
+	X) AFLAGS="$AFLAGS -X";;
+	d) ALLOWDBL=-;;
+        l) NUKELST=false
+	    AFLAGS="$AFLAGS -L";;
+        o) O=$OPTARG;;
+	r) NUKEUSF=false;;
+        \?) echo "$USAGE" >&2
+            exit 2;;
+    esac
+done
+shift `expr $OPTIND - 1`
+if [ $# -ne 1 ]
+then
+    echo 'Too many parameters (flags after source file?).' >&2
+    exit 1
+fi
+
+
+# Assume the remaining arg is the source file.
+S=`basename $1`
+SRCDIR=`dirname $1`
+ODIR=`dirname $O`
+UTMP=$ODIR/`basename $1 .s`.jas
+#U=$SRCDIR/_$S
+
+/usr/lib/cpp -undef -B $CFLAGS $1 | $B/asp1 | m4 | $B/asp2 $ALLOWDBL > $UTMP
+if [ $? -ne 0 ]
+then
+    echo jas error, aborting >&2
+    exit 1
+fi
+
+if [ -z "$DIABLIB" ]
+then
+    echo 'DIABLIB variable not set'
+    exit 1
+fi
+
+# Perform assembly.
+if $NUKELST
+then
+LN=/dev/null
+else
+LN=$ODIR/`basename $S .s`.lst
+fi
+if $DIABLIB/bin/das -o $O $AFLAGS $UTMP > $LN
+then
+    if $NUKEUSF
+    then
+	/bin/rm -f $UTMP
+    fi
+    exit 0
+fi
+/bin/rm -f $O	# In case the assembler left it around.
+exit 1

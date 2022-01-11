@@ -1,0 +1,47 @@
+\ @(#) romtail.ins 95/04/14 1.6
+\ $Id: romtail.ins,v 1.5 1994/09/02 18:12:09 limes Exp $
+\ TAIL - ending code for run time execution
+\ for ROM add output scaling
+
+include? EO_BenchMark dspp_map.j
+include? DFID_ROMTAIL function_ids.j
+
+anew task-romtail.ins
+
+$ 0EC constant SEMAPHORE_STATUS
+$ 0ED constant SEMAPHORE_DATA_READ
+$ 3EC constant SEMAPHORE_ACK
+$ 3ED constant SEMAPHORE_DATA_WRITE
+
+dspp{
+ins{
+
+DFID_ROMTAIL dspp-function-id !
+$" romtail.dsp" ins-name !
+
+
+0 $ FFFF 0 ALLOC.KNOB IMemWriteAddr \ address to write to in I Memory
+0 $ FFFF 0 ALLOC.KNOB IMemReadAddr \ address to read from Memory
+20 ALLOC.TICKS \ guess %Q
+
+\ write a single I memory location, and read from another
+	SEMAPHORE_STATUS _A #$ 0008 _AND  \ check ARM write bit
+	_BEQ: @NeverMind
+	IMemWriteAddr _[A]  SEMAPHORE_DATA_READ _A  _MOVE
+	SEMAPHORE_DATA_WRITE _A  IMemReadAddr _[A] _MOVE
+_LABEL: @NeverMind
+
+\ ROM ONLY
+	EI_IfScaleOutput _A _TRA
+	_BEQ: @NoScaling
+	I_MixLeft _%A EI_OutputScalar _A _*
+	I_MixRight _%A EI_OutputScalar _A _*
+_LABEL: @NoScaling
+
+
+	EO_BenchMark _A _= I_Bench _A DSPPCLK _A  _-
+
+	_SLEEP
+	_NOP
+}ins
+}dspp

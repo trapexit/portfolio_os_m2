@@ -1,0 +1,70 @@
+\ @(#) delay4.ins 96/05/16 1.10
+\ Delay a sample 4 time units.
+\
+\ Copyright 1996 3DO
+\ Phil Burk
+
+\\\	AUTODOC -class DSP -group Effects -name delay4.dsp
+\\\	Delays an input signal by up to 4 frames.
+\\\
+\\\	  Description
+\\\
+\\\	    Delays an input signal by up to 4 frames. This can be used to implement a
+\\\	    FIR or IIR filter by connecting the output array to the inputs of a mixer.
+\\\
+\\\	    The final output of this input can be connected to the input of another
+\\\	    delay4.dsp(@) to make a chain of arbitrary length. For very long delays you
+\\\	    should use delay_f1.dsp(@) which uses main memory instead of the more
+\\\	    precious DSP data mamory.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signal to delay.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 4 parts
+\\\	        Output part 0 is delayed one frame from the Input; Output part 1, two
+\\\	        frames; and so on.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 10
+\\\
+\\\	    Code: 10 words
+\\\
+\\\	    Data: 4 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V28
+\\\
+\\\	  See Also
+\\\
+\\\	    Mixer(@), delay_f1.dsp(@)
+
+include? DFID_DELAY4 function_ids.j
+
+anew task-delay4.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_DELAY4 dspp-function-id !
+$" delay4.dsp" ins-name !
+
+\ ************************************************************************************
+ALLOC.INPUT  Input
+4 ALLOC.OUTPUT.ARRAY Output
+
+10 ALLOC.TICKS
+
+	Output 3 PART+ _A Output 2 PART+ _A _MOVE
+	Output 2 PART+ _A Output 1 PART+ _A _MOVE
+	Output 1 PART+ _A Output 0 PART+ _A _MOVE
+	Output 0 PART+ _A Input _A _MOVE
+
+}ins
+}dspp

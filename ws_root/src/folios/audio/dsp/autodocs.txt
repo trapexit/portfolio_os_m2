@@ -1,0 +1,183 @@
+*******************************************************************************
+**
+**  @(#) autodocs.txt 96/03/26 1.7
+**
+**  Miscellaneous lonely DSP autodocs.
+**
+*******************************************************************************
+
+|||	AUTODOC -class DSP -name --DSP-Instrument-Overview--
+|||	Overview of DSP Instrument documentation.
+|||
+|||	  Instrument Categories
+|||
+|||	    All DSP instruments are grouped into one of the following categories:
+|||
+|||	    Accumulator
+|||	        Instruments which perform a mathematical operation on their inputs and
+|||	        the DSP accumulator, and then leave their results in the DSP accumulator
+|||	        (e.g., add_accum.dsp(@)). These instrument templates may only be used
+|||	        within a patch template. They may not be used as stand-alone instruments.
+|||
+|||	    Arithmetic
+|||	        Instruments which perform a mathematical operation on their inputs (e.g.,
+|||	        add.dsp(@)). All of these instruments produce static results for static
+|||	        inputs.
+|||
+|||	    Control_Signal
+|||	        Instruments which output a time-variant signal which may be used to
+|||	        control other signals. This set includes low-frequency oscillators
+|||	        (e.g., triangle_lfo.dsp(@)), signal analysis instruments (e.g.,
+|||	        envfollower.dsp(@)), and other miscellaneous time-variant operations.
+|||
+|||	    Diagnostic
+|||	        Instruments which may be useful during development of an title, but are
+|||	        not intended for use in a released title.
+|||
+|||	    Effects
+|||	        Instruments which operate on an audio signal to produce some special
+|||	        sound effect (e.g., cubic_amplifier.dsp(@), svfilter.dsp(@),
+|||	        delay_f1.dsp(@)).
+|||
+|||	    Line_In_And_Out
+|||	        Instruments which provide access to the audio Line In and Line Out
+|||	        connections (e.g., line_out.dsp(@)).
+|||
+|||	    Sampled_Sound
+|||	        Instruments which play sampled sounds (represented by Sample(@) items)
+|||	        by reading from a DMA channel (e.g., sampler_16_v1.dsp(@)).
+|||
+|||	    Sound_Synthesis
+|||	        Instruments which artificially create audio waveforms. There is a
+|||	        fairly conventional set of analog-style oscillators (e.g.,
+|||	        sawtooth.dsp(@), pulse.dsp(@)) and a few less conventional sound
+|||	        sources.
+|||
+|||	  Ports
+|||
+|||	    Instrument ports are documented by port type in the following sections:
+|||
+|||	    AF_PORT_TYPE_INPUT - Inputs
+|||	        Unless otherwise noted, all of these are
+|||	        AUDIO_SIGNAL_TYPE_GENERIC_SIGNED, single-part, and have a default value
+|||	        of 0.0.
+|||
+|||	    AF_PORT_TYPE_OUTPUT - Outputs
+|||	        Unless otherwise noted, all of these are
+|||	        AUDIO_SIGNAL_TYPE_GENERIC_SIGNED and single-part.
+|||
+|||	    AF_PORT_TYPE_KNOB - Knobs
+|||	        Unless otherwise noted all of these are single-part. The signal types
+|||	        and default value of these vary depending on function, therefore this
+|||	        information is always indicated.
+|||
+|||	    AF_PORT_TYPE_IN_FIFO - Input FIFOs
+|||
+|||	    AF_PORT_TYPE_OUT_FIFO - Output FIFOs
+|||
+|||	    AF_PORT_TYPE_TRIGGER - Triggers
+|||
+|||	    AF_PORT_TYPE_ENVELOPE - Envelope Hooks
+|||
+|||	  Resources
+|||
+|||	    DSP resource usage is noted in the Resources section of each instrument's
+|||	    documentation. Unless otherwise noted, the amount quoted is per instrument.
+|||	    Some instruments take advantage of shared code and data, and therefore only
+|||	    the first allocation of such an instrument requires allocation of the shared
+|||	    code and data. This is noted where applicable.
+|||
+|||	    Tick usage amounts are per frame. Full-rate instruments will consume eight
+|||	    times the quoted number of ticks from each eight-frame batch. Half-rate
+|||	    instruments consume four times the quoted number of ticks from each
+|||	    eight-frame batch. Eighth-rate instruments consume just the quoted number of
+|||	    ticks from each eight-frame batch.
+|||
+|||	    Note: Resource information is listed to help you choose instruments based on
+|||	    their impact on the available DSP resources. We reserve the right to reduce
+|||	    the amount of resources required by any instrument in future releases of the
+|||	    Portfolio operating system.
+|||
+|||	  See Also
+|||
+|||	    LoadInsTemplate(), CreateMixerTemplate(), CreatePatchTemplate(),
+|||	    Template(@), PatchCmd(@), --Audio-Port-Types--(@), --Audio-Signal-Types--(@)
+
+
+|||	AUTODOC -class DSP -name Mixer
+|||	General description of custom mixer Template(@)s built by CreateMixerTemplate().
+|||
+|||	  Description
+|||
+|||	    Mixes DSP audio signals in a manner similar to an audio mixing board.
+|||	    Because of the enormous range of possible configurations, there isn't any
+|||	    way to satisfy everyone with a set of statically defined mixer instruments.
+|||	    So mixers are constructed on demand based on a simple set of parameters:
+|||
+|||	    - Number of Inputs
+|||
+|||	    - Number of Outputs
+|||
+|||	    - Whether there should be a master Amplitude knob
+|||
+|||	    - Whether to connect directly to line out or to an Output port
+|||
+|||	    This information is packed into a 32-bit MixerSpec (defined in
+|||	    <audio/audio.h>) using the macro MakeMixerSpec().
+|||
+|||	    Mixers can also be viewed as a matrix multiplication of the form:
+|||
+|||	        Output[m] = Amplitude * (Input[0]*Gain[0,m] + Input[1]*Gain[1,m] + ... )
+|||
+|||	    where:
+|||	        n is in the range of 0..numInputs-1
+|||
+|||	        m is in the range of 0..numOutputs-1
+|||
+|||	    The following is the generic documentation for all mixers where numInputs
+|||	    is the number of inputs, and numOutputs is the number of outputs.
+|||
+|||	  Knobs
+|||
+|||	    Gain - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED, numInputs*numOutput parts
+|||	        The Gain knob is a two-dimensional matrix of gain coefficients indexed
+|||	        by input channel number and output channel number. Use the macro
+|||	        CalcMixerGainPart() to translate a two-dimensional gain knob reference
+|||	        to a one-dimensional knob part suitable for SetKnobPart().
+|||
+|||	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+|||	        This is global amplitude knob which affects all output channels after
+|||	        they have been mixed via the Gain knob parts. This knob is present only
+|||	        when AF_F_MIXER_WITH_AMPLITUDE is set.
+|||
+|||	  Inputs
+|||
+|||	    Input - numInput parts
+|||
+|||	  Outputs
+|||
+|||	    Output - numOutput parts
+|||	        This port is present only when AF_F_MIXER_WITH_LINE_OUT is not
+|||	        specified. When AF_F_MIXER_WITH_LINE_OUT is specified the mixer's
+|||	        output is automatically routed to the DAC just as if the Output had been
+|||	        connected to line_out.dsp(@).
+|||
+|||	  Resources
+|||
+|||	    Ticks: variable
+|||
+|||	    Code: variable
+|||
+|||	    Data: variable
+|||
+|||	  Implementation
+|||
+|||	    V28
+|||
+|||	  Associated Files
+|||
+|||	    <audio/audio.h>
+|||
+|||	  See Also
+|||
+|||	    MakeMixerSpec(), CreateMixerTemplate(), line_out.dsp(@)

@@ -1,0 +1,34 @@
+
+;******************************************************************************
+;*
+;*  @(#) helicopter.mp 96/01/08 1.2
+;*
+;*  Tutorial 6: Filtered noise modulated using triangle wave.
+;*
+;******************************************************************************
+
+Instrument noise rednoise.dsp
+Instrument tri triangle_lfo.dsp
+Instrument svf svfilter.dsp
+Instrument mod1 timesplus.dsp   ; for mixing control signals
+
+Knob Amplitude 1 Signed 0.6
+Knob Frequency 1 OscFreq 2019.0
+Knob Resonance 1 Signed 0.25
+Knob LFORate 1 LFOFreq 10.5     ; svf modulation rate
+Knob LFODepth 1 Signed 0.07     ; svf modulation amount
+Knob FilterFreq 1 Signed 0.024  ; svf frequency offset
+
+Output Output 2 Signed ; stereo out
+
+Connect   .     Amplitude       0  noise Amplitude 0
+Connect   .     Frequency       0  noise Frequency 0
+Connect   .     Resonance       0  svf   Resonance 0
+Connect   .     LFORate         0  tri   Frequency 0
+Connect   tri   Output          0  mod1  InputA    0
+Connect   .     LFODepth        0  mod1  InputB    0
+Connect   .     FilterFreq      0  mod1  InputC    0
+Connect   mod1  Output          0  svf   Frequency 0  ; modulation destination
+Connect   noise Output          0  svf   Input     0
+Connect   svf   BandPass        0  .     Output    0
+Connect   svf   Output          0  .     Output    1

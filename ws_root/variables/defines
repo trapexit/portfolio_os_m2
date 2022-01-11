@@ -1,0 +1,173 @@
+# @(#) defines 96/07/09 1.113
+# various values to be used to generate '-D' options
+# for compilation and assembly
+
+# {{{ Starting Values
+
+ifeq (${HOSTOS}, SunOS)
+
+ifeq (${NO_OPTIMIZER}, 1)
+OPTIMIZER_OPTIONS=
+else
+OPTIMIZER_OPTIONS=	-XO -Xunroll=1 -Xtest-at-bottom -Xinline=5
+endif
+
+# We'd like to use this to get dependencies ...
+#	-H 2>$@.stderr
+
+CCOPTIONS =		-Xstring-align=1 -Ximport -Xstrict-ansi -Xlint \
+			-Xstrings-in-text -Xstmw-fast \
+			-Xforce-prototypes ${OPTIMIZER_OPTIONS}
+
+CXXOPTIONS = ${CCOPTIONS}
+
+# This option will override -XO and will disable many optisations
+ifdef SRCDEBUG
+CCOPTIONS	+=	-g
+else
+CCOPTIONS	+=	-Xtrace-table=0
+endif
+
+ifdef NO_RELOCS
+LFLAGS = -D
+else
+ifdef LINK_MAP
+LFLAGS = -D -r -m2 > ${@:%=${OBJDIR}/${notdir $@}.map}
+else
+LFLAGS = -D -r
+endif
+endif
+
+ifdef SRCDEBUG
+LFLAGS += -g
+else
+LFLAGS += -s
+endif
+else
+LFLAGS = -r -D -n
+endif
+
+ifndef EXPORT_SYMBOLS
+LFLAGS += -d
+endif
+
+ifndef UNCOMPRESSED_MODULE
+LFLAGS += -C
+endif
+
+HOSTCCOPTIONS =		-funsigned-char
+AR_OPTIONS =		cq
+
+ifeq (${HOSTOS}, IRIX)
+CCOPTIONS =		-g -fullwarn -ansi
+CXXOPTIONS = -g
+LFLAGS =
+HOSTCCOPTIONS =		${CCOPTIONS}
+AR_OPTIONS =		cq
+endif
+
+PLATFLAGS = ${OPTIONS_FLAGS}
+C_PLATFLAGS =
+ASM_PLATFLAGS =
+
+# }}}
+
+# {{{ Generate version info (WHATSTRING)
+
+ifndef PREVENT_WHATSTRING
+
+# By default, the whatstring is the last two components of the
+# workspace name, followed by the username and the hostname doing the
+# build (example: "wses/golden builder@rhett"). If the WHATSTRING
+# environment variable is set, however, its value is used
+# instead.
+ifndef WHATSTRING
+CMPT =			${notdir ${CODEMGR_WS}}
+CMPH =			${dir ${CODEMGR_WS}}
+CMPHT =			${notdir ${CMPH:%/=%}}
+WHATSTRING =		${CMPHT}/${CMPT}
+endif
+
+WFLAGS =		-DWHATSTRING='"${WHATSTRING}"'
+
+# WHATCSRC is the standard template file that provides the whatstring
+# data to libraries and executables.
+#
+WHATCSRC :=		${firstword ${wildcard ${SRC}/includes/whatstring.c} ${REFERENCE_SRC}/includes/whatstring.c}
+
+# WHATXOBJ is the name to be used for the object file containing
+# whatstring information when creating a single executable
+#
+WHATXOBJ =		${OBJDIR}/${TARGET_NAME}.what.co
+BUILD_WHATXOBJ =	${CC} -c -o ${WHATXOBJ} ${CFLAGS} ${WFLAGS} ${WHATCSRC}
+
+# WHATMOBJ is the name of the object to be used when doing a
+# multilink; it is expanded inside a pattern-matching rule where the %
+# matches the root basename of the thing being created.
+#
+WHATMOBJ =		${OBJDIR}/$*.what.co
+BUILD_WHATMOBJ =	${CC} -c -o ${WHATMOBJ} ${CFLAGS} ${WFLAGS} ${WHATCSRC}
+
+# WHATLOBJ is the name of the object to be used when building a link
+# library; it is derived from the TARGET name. NOTE: when compiling
+# the template for a library, we munge the name of the symbol to
+# include the name of the library (example: "libc_whatstring").
+#
+LIBBASE =		${notdir ${TARGET}}
+LIBROOT =		${LIBBASE:lib%.a=%}
+WHATLOBJ =		${OBJDIR}/${LIBROOT}.what.co
+WLFLAGS =		${WFLAGS} ${LIBROOT:%=-Dwhatstring=lib%_whatstring}
+BUILD_WHATLOBJ =	${CC} -c -o ${WHATLOBJ} ${CFLAGS} ${WLFLAGS} ${WHATCSRC}
+
+endif
+
+# }}}
+
+# {{{ Include directories
+
+ifeq (${HOSTOS}, AIX)
+STDINCDIRS =		${HEADER_DIR}
+endif
+
+ifeq (${HOSTOS}, SunOS)
+STDINCDIRS =		${HEADER_DIR}
+endif
+
+ifeq (${HOSTOS}, IRIX)
+# compiling on IRIX? ignore Portfolio headers, thanks.
+STDINCDIRS =		/var/3do/include
+endif
+
+ALLINCDIRS = ${INCDIRS} ${STDINCDIRS}
+
+# if you grok these two, you're better than me (and I wrote the thing!)
+ALLCINCDIRS_FIXED = $(foreach dir, ${INCDIRS}, $(firstword $(wildcard ${dir}) $(patsubst ${ROOT}/%, ${REFERENCE_ROOT}/%, ${dir})))
+ALLAINCDIRS_FIXED = $(foreach dir, ${ALLINCDIRS}, $(firstword $(wildcard ${dir}) $(patsubst ${ROOT}/%, ${REFERENCE_ROOT}/%, ${dir})))
+HINCDIRS_FIXED   = $(foreach dir, ${HINCDIRS}, $(firstword $(wildcard ${dir}) $(patsubst ${ROOT}/%, ${REFERENCE_ROOT}/%, ${dir})))
+AINCDIRS_FIXED   = $(foreach dir, ${AINCDIRS}, $(firstword $(wildcard ${dir}) $(patsubst ${ROOT}/%, ${REFERENCE_ROOT}/%, ${dir})))
+
+INCFLAGS =		${ALLCINCDIRS_FIXED:%=-I%}
+HINCFLAGS =		${HINCDIRS_FIXED:%=-I%}
+
+AINCDIRS =		$(ALLAINCDIRS_FIXED)
+AINCLUDES =		${AINCDIRS_FIXED:%=-I%}
+
+# }}}
+# {{{ Combine in boiling water, stir, cook until done
+
+SFLAGS =		$(AINCLUDES) ${PLATFLAGS} $(ASM_PLATFLAGS) $(ADEFINES)
+CFLAGS =		$(CINCLUDES) $(INCFLAGS) ${PLATFLAGS} $(C_PLATFLAGS) $(CCOPTIONS) $(CDEFINES)
+CXXFLAGS =		$(CINCLUDES) $(INCFLAGS) ${PLATFLAGS} $(C_PLATFLAGS) $(CXXOPTIONS) $(CDEFINES)
+
+HOSTCFLAGS =		${HDEFINES} $(HINCFLAGS) ${HOSTCCOPTIONS}
+MDFLAGS =		${filter -I%,${CFLAGS} ${HOSTCFLAGS}} ${filter -D%,${CFLAGS} ${HOSTCFLAGS}} -I${HEADER_DIR}
+
+LOADERTOOL_STDFLAGS =	\
+	-Htime=${firstword ${LOADERTOOL_TIME} now}		\
+	-Hsubsys=${firstword ${LOADERTOOL_SUBSYS} 1}		\
+	-Hversion=${OS_VERSION} -Hrevision=${OS_REVISION}	\
+	-Hosversion=${OS_VERSION} -Hosrevision=${OS_REVISION}	\
+	-Hname=${firstword ${LOADERTOOL_NAME} ${notdir $@}}	\
+	-Htype=5 -Hstack=4096
+
+# }}}

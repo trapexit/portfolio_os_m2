@@ -1,0 +1,112 @@
+\ @(#) filter_3d.ins 96/03/11 1.9
+
+\\\	AUTODOC -class DSP -group Effects -name filter_3d.dsp
+\\\	Sound spatialization filter.
+\\\
+\\\	  Description
+\\\
+\\\	    Used in the 3DSound code in the music library to simulate the head-related
+\\\	    transfer function (HRTF) normally used in three-dimensional sound
+\\\	    spatialization. The filter is a combination lowpass and notch, with the
+\\\	    equation:
+\\\
+\\\	        y(n) = Feed*x(n) + Beta*x(n-3) + Alpha*y(n-1)
+\\\
+\\\	    where y(n) is output, y(n-1) is the previous output, x(n) is the current
+\\\	    input and x(n-3) is the input three iterations ago. Alpha and Beta can be
+\\\	    used to control a "lowpass" and "notch" characteristic somewhat
+\\\	    independently. Feed should be set to (1.0 - Alpha - Beta), and controls the
+\\\	    amount of the original input to mix into the output. The notch filter is
+\\\	    centered at (sample rate)/4, about 11 Khz.
+\\\
+\\\	    When used with the 3DSound code, two such filters are used: one for each
+\\\	    ear of the observer. The filter coefficients are set based on distance and
+\\\	    angle of the observer to the sound. The lowpass character is maximised for
+\\\	    sounds on the opposite side of the head from the ear or directly behind the
+\\\	    observer, and is increased with distance. The notch charcter is maximised
+\\\	    as sounds move directly in front or behind the observer.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Alpha - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Lowpass filter coefficient, -1.0 to 1.0.
+\\\
+\\\	    Beta - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Notch filter coefficient, -1.0 to 1.0.
+\\\
+\\\	    Feed - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Feed-forward coefficient, should normally be set to (1.0 - Alpha - Beta)
+\\\	        for a stable filter.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Filter output.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 18
+\\\
+\\\	    Code: 18 words
+\\\
+\\\	    Data: 7 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    svfilter.dsp(@), filter_1o1z.dsp(@), Create3DSound()
+
+\ 3D Filter
+\
+\ This filter may be used in conjunction with other processors to simulate
+\ the HRTF used in 3D spatialization.  It's an update to the old
+\ sampler3d.ins.
+\
+\ The filter is a combination lowpass and notch filter.
+\ Y(n) = Feed*X(n) + Beta*X(n-3) + Alpha*Y(n-1)
+\ Feed = (1-Alpha-Beta)
+\ The notch filter is centered at SR/4.
+\ The low pass filter is at maximum on opposite side and behind head.
+\ The notch filter peaks in front and behind.
+\ Low pass increases with distance.
+\
+\ Copyright 1996 3DO
+\ Robert Marsanyi
+
+include? DFID_FILTER_3D function_ids.j
+
+anew task-filter_3d.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_FILTER_3D dspp-function-id !
+$" filter_3d.dsp" ins-name !
+
+\ ************************************************************************************
+ALLOC.INPUT  Input
+ALLOC.OUTPUT Output
+
+3 ALLOC.VARIABLE.ARRAY DelayedInput
+0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Alpha
+0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Beta
+0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Feed
+
+18 ALLOC.TICKS
+	Input _A Feed _A _*                           \ (1-a-b)*x(n)
+	Beta _A DelayedInput 2 PART+ _A ACCUME _*+    \ + Beta*x(n-3)
+	Output _A _= Output _A Alpha _A ACCUME _*+    \ + Alpha*y(n-1)
+	DelayedInput 2 PART+ _A DelayedInput 1 PART+ _A _MOVE
+	DelayedInput 1 PART+ _A DelayedInput 0 PART+ _A _MOVE
+	DelayedInput 0 PART+ _A Input _A _MOVE
+
+}ins
+}dspp

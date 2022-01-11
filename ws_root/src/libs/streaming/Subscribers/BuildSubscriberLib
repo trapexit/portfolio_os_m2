@@ -1,0 +1,164 @@
+#####################################
+##
+##	@(#) BuildSubscriberLib 96/04/05 1.17
+##
+#####################################
+#
+#   File:       BuildSubscriberLib
+#
+#	Contains:	Script for building the Subscriber library
+#
+#####################################
+#
+#####################################
+#		Symbol definitions
+#####################################
+	set	LIBRARIAN	"dar"	# archive maintainer
+
+# Note: This creates library file from scratch. To replace files have
+# been updated, use the -rcu option.  Using -rcu option may be slower
+# than creating the library from scratch.
+	set LibOptions  "-cq"	# Quickly appends files and don't display
+                            # any message when a new archive name
+                            # is created.
+
+	set	Library		"libsubscriber"
+		
+	set	ObjectDir	":Objects:"
+	
+set gCBaseOptions "-c"									# MANDATORY only run the c compiler, don't exec the linker
+set gCBaseOptions "{gCBaseOptions} -Xstring-align=1"	# RECOMMENDED n-byte align strings
+set gCBaseOptions "{gCBaseOptions} -Ximport"			# RECOMMENDED include headers only once
+set gCBaseOptions "{gCBaseOptions} -Xstrict-ansi"		# RECOMMENDED unless you are building code to be released, then it's MANDATORY ;-)
+set gCBaseOptions "{gCBaseOptions} -Xunsigned-char"		# RECOMMENDED treat plain char as unsigned char
+set gCBaseOptions "{gCBaseOptions} -Xforce-prototypes"	# RECOMMENDED warn if a function is called without a previous prototype declaration
+set gCBaseOptions "{gCBaseOptions} -Xlint"				# RECOMMENDED warn about questionable or non-portable code
+set gCBaseOptions "{gCBaseOptions} -Xtrace-table=0"		# Don't generate traceback tables (like macsbug names)
+
+# Compiler optimization options
+#	-XO					# => optimizations on heavy, -Xtest-at-both, -Xinline=40, ...
+#	-Xunroll=1			# unroll small loops n times
+#	-Xtest-at-bottom	# use 1 loop test at the bottom of a loop
+#	-Xinline=5			# inline fcns with < n parse nodes
+#	#-Xsize-opt			# OPTIONAL: optimize for space over time when there's a choice
+set gCOptimizeOptions " -XO -Xunroll=1 -Xtest-at-bottom -Xinline=5 "
+
+#
+# For symbolic debugging.
+# Using the -g compile option will generate debugging symbols including source-object mapping tables.
+# Defining DEBUG will turn on debugging code.
+	set gCSymOption	' -g -DDEBUG '
+	
+#####################################
+# Save exit status so we can 
+# restore it when done
+#####################################
+	set OldExit {Exit}
+	set Exit 0
+	
+#####################################
+#	Delete all object files for a 
+#   "clean" build completely from source
+#####################################
+	If "{1}" == "clean"
+		# Delete subscriber library
+		delete -y -i "{Library}.a"
+
+		# Create library file from scratch.
+    	unset LibOptions
+    	set LibOptions "-qc"
+
+		# Delete object files in each directory.
+		Begin
+				For SubsDir in `Files -d`
+				Delete -y -i "{SubsDir}"Å.o
+			End
+		End ·· Dev:Null
+	End
+
+#####################################
+#	Build the Subscriber found in 
+#   each of the folders
+#####################################
+
+	For SubsDir in `Files -d`
+	
+		# Get the Subscriber name
+	
+		(Evaluate "{SubsDir}" =~ /Å:(Å)¨1:/ ) ·· Dev:Null
+		Set SubsName "{¨1}"
+	
+		# Build the Subscribers and utilities
+	
+		If "{SubsName}" != "Objects"
+		
+			Directory "{SubsDir}"
+			If `exists "{SubsName}".make ³³ Dev:Null`
+				Echo "Building {SubsName} ..."
+		
+				make {SubsName} -f {SubsName}.make 				¶
+					-d gCOptimizeOptions="{gCOptimizeOptions}"	¶
+					-d gCSymOption="{gCSymOption}"	¶
+					-d gCBaseOptions="{gCBaseOptions}" > {SubsName}.makeout
+				{SubsName}.makeout
+
+				# Exit if any error occurred. 
+				If ({status} != 0)
+					# Delete -i {SubsName}.makeout
+					Directory "::"
+					exit
+				End
+
+				Delete -i {SubsName}.makeout
+
+			End #If make file exists
+			
+			# Reset directory	
+			Directory "::"
+			
+		End # if "{SubsName}" != "Objects"
+	End
+
+#####################################
+#		Build a makefile to 
+#		construct the library
+#####################################
+
+	# build a list of object files to be librarified
+
+	Echo "Building Subscriber Library ..."
+
+	echo DESTINATION	= '{3doLibs}{M2LibRelease}:'			> {Library}.a.make
+
+	echo -n OBJECTS		=										>> {Library}.a.make
+	
+	For ObjFiles in `Files -f -s {ObjectDir}Å.o`
+		echo "	" {ObjFiles} "						"'¶'		>> {Library}.a.make
+	End
+
+	echo  "		"												>> {Library}.a.make
+	echo  "		"												>> {Library}.a.make
+	
+	echo {Library}.a		Ä	'"{DESTINATION}"'{Library}.a 	>> {Library}.a.make
+	echo '"{DESTINATION}"'{Library}.a		Ä	'{OBJECTS}' 	>> {Library}.a.make
+
+echo "	" delete -i '{Targ}'									>> {Library}.a.make
+echo "	" {LIBRARIAN} {LibOptions} '{Targ}' '{OBJECTS}'			>> {Library}.a.make
+
+	make {Library}.a -f {Library}.a.make 						> {Library}.a.makeout
+
+	{Library}.a.makeout
+	Delete -i "{Library}.a.make"
+	Delete -i "{Library}.a.makeout"
+
+#####################################
+# Restore exit status
+#####################################
+	set Exit {OldExit}
+
+#####################################
+# Say we're finished
+#####################################
+	echo "BuildSubscriberLib finished."
+	beep -1F,30 e,30 C,60
+

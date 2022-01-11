@@ -1,0 +1,7 @@
+#!/bin/sh
+# This file was generated automatically by configure.  Do not edit.
+# This directory was configured as follows:
+chmod +x ./configure ./config.sub ./config.guess ./move-if-change
+chmod +x gas/configure gas/config.status
+./configure --host=sparc-sun-sunos4.1.3_U1 --target=powerpc-ibm-eabi --norecursion 
+# 

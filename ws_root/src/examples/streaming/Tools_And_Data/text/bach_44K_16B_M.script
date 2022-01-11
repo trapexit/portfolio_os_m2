@@ -1,0 +1,30 @@
+# 
+# @(#) bach_44K_16B_M.script 96/02/20 1.2
+#
+# To create the bach_m.stream:
+# 	¥	hilight the AudioChunkifier command and press enter to chunkify the
+#		audio file.
+#	¥	hilight the weaver script and press enter.
+#
+
+# To produce bach_44K_16B_M.saudio, run AudioChunkifier using
+# bach_44K_16B_M.aiff raw audio file:
+ AudioChunkifier -i bach_44K_16B_M.aiff -o bach_44K_16B_M.saudio
+
+#
+# weavescript for bach_m.stream
+#
+set WeaveScript 						¶
+  'mediablocksize 2048					¶n¶
+	streamblocksize 32768				¶n¶
+	streambuffers 8						¶n¶
+	streamstarttime 0					¶n¶
+	streamerdeltapri -10				¶n¶
+	dataacqdeltapri -9					¶n¶
+	subscriber SNDS 11					¶n¶
+	audioclockchan 0					¶n¶
+	enableaudiomask 0x1					¶n¶
+	preloadinstrument SA_44K_16B_M		¶n¶
+	writestreamheader					¶n¶
+	file bach_44K_16B_M.saudio 1 0	¶n'
+echo "{WeaveScript}" | weaver -o "{3doremote}"examples:streaming:playsa:bach_m.stream

@@ -1,0 +1,132 @@
+\ @(#) adpcmmono.ins 95/11/16 1.10
+\ $Id: adpcmmono.ins,v 1.7 1995/01/20 20:20:23 peabody Exp $
+\ Prototype for ADPCM
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+\ 940824 PLB Use new INIT.RESOURCE to replace old DINI hack
+\            Removed unused "Done" label.
+
+\\\	NOAUTODOC -private -class DSP -name adpcmmono.dsp
+\\\	OBSOLETE - Play a compressed4-bit Intel/DVI format sample.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a sample that has been previously compressed to a
+\\\	    4-bit Intel/DVI format. Run the SoundHack program to compress a sound
+\\\	    sample from 16 bits to 4 bits (Intel/DVI format). This instrument plays
+\\\	    this compressed sample, and it uses the decodeadpcm.dsp library routine to
+\\\	    do the necessary decompression.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF, defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 91
+\\\
+\\\	    Code: 51 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Caveats
+\\\
+\\\	    This instrument uses the decodeadpcm.dsp library routine which must be
+\\\	    loaded as an instrument prior to using this instrument.
+\\\
+\\\	  See Also
+\\\
+\\\	    adpcmvarmono.dsp, decodeadpcm.dsp, sampler.dsp
+\\\
+
+include? DFID_ADPCMMONO function_ids.j
+
+anew task-adpcmmono.ins
+
+_RED
+dspp{
+ins{
+
+DFID_ADPCMMONO dspp-function-id !
+$" adpcmmono.dsp" ins-name !
+
+\ ADPCM stream parsing variables
+ALLOC.RBASE   MYRB
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    SampleHolder
+ALLOC.IMEM    CurState
+ALLOC.OUTPUT  Output
+0 $ 7FFF $ 6000 ALLOC.KNOB Amplitude
+
+
+\ ADPCM register assignments
+4 constant  StepSize        \ initialize to 7
+6 constant  StepIndex       \ static
+7 constant  OutputSample    \ static
+
+ALLOC.IMEM  InitFlag     \ initialize if non-zero
+91 ALLOC.TICKS
+
+InitFlag  DINI_AT_START    1  INIT.RESOURCE  InitFlag_NAME \ 940824
+
+    MYRB _RBASE                        \ set RBASE for subsequent calls
+
+\ Initialization
+	InitFlag _A _TRA
+	_BEQ:  @GoDoIt
+	StepIndex    _reg #$ 0000 _MOVE
+	OutputSample _reg #$ 0000 _MOVE
+	StepSize     _reg #$ 0007 _MOVE
+	CurState     _A #$ 0003 _MOVE
+	InFIFO _A _TRL  \ throw away first sample
+	InitFlag _A #$ 000 _MOVE  \ so we don't Init next time
+
+_LABEL: @GoDoIt
+	CurState _A #$ 0001 _+
+	CurState _A _= ACCUME #$ 0003 _AND
+	_NOP
+\ $ 308 _A CurState _A _MOVE  \ debug
+	_BEQ: @State0
+	ACCUME #$ 0001 _-
+	_BEQ: @State1
+	CurState _A #$ 0002 _-
+	_BEQ: @State2
+	_NOP
+\ State3, <<12
+	SampleHolder _A 8 _<<' _TRL
+	ACCUME 4 _<<' _TRL
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State0
+	SampleHolder _A  _= InFIFO _A _TRL  \ get 16 bits from FIFO, leave in ACCUME
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State1
+	SampleHolder _A 4 _<<' _TRL
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State2
+	SampleHolder _A 8 _<<' _TRL
+
+_LABEL: @DECODE_NIBBLE
+	_JSR:  DecodeADPCM
+	Output _A _= ACCUME Amplitude _A _*
+
+
+}ins
+}dspp

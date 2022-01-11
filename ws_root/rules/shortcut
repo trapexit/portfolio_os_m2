@@ -1,0 +1,432 @@
+# @(#) shortcut 96/09/17 1.5
+#
+# This file looks best if viewed with EMACS
+# using the "folding" package, which provides
+# an outline-mode based on the triple curlies.
+
+# We also use the triple-open-curlies to provide
+# the list of shortcuts.
+
+# To prevent interaction with possible "real" target names,
+# this file is only included by the topmost Makefile.
+
+# {{{ helper targets:
+# {{{ 	shortcuts
+
+.PHONY: shortcuts
+shortcuts:
+	-@echo 'available shortcut targets:'
+	-@grep  '^# {{{' < ${ROOT}/rules/shortcut		| \
+	  sed 's/^# {{{ /    /'
+# }}}
+# }}}
+# {{{ top level objects:
+# {{{ 	monitor
+
+.PHONY: monitor
+monitor:
+	${MAKE} -C ${SRC}/tools/debugger
+
+# }}}
+# {{{ 	bootcode
+
+.PHONY: bootcode
+bootcode:
+	${MAKE} -C ${SRC}/others/bootcode
+
+# }}}
+# {{{ 	dipir
+
+.PHONY: dipir
+dipir:
+	${MAKE} -C ${SRC}/others/dipir
+
+# }}}
+# {{{ 	kernel
+
+.PHONY: kernel
+kernel:
+	${MAKE} -C ${SRC}/folios/kernel
+
+# }}}
+# {{{ 	operator
+
+.PHONY: operator
+operator:
+	${MAKE} -C ${SRC}/devices/operator
+
+# }}}
+# {{{ 	filesystem
+
+.PHONY: filesystem
+filesystem:
+	${MAKE} -C ${SRC}/folios/file
+
+# }}}
+# }}}
+# {{{ tasks:
+# {{{ 	shell
+
+.PHONY: shell
+shell:
+	${MAKE} -C ${SRC}/tasks/shell
+
+# }}}
+# {{{ 	eventbroker
+
+.PHONY: eventbroker
+eventbroker:
+	${MAKE} -C ${SRC}/tasks/eventbroker
+
+# }}}
+# }}}
+# {{{ folios:
+# {{{ 	audiofolio
+
+.PHONY: audiofolio
+audiofolio:
+	${MAKE} -C ${SRC}/folios/audio
+
+# }}}
+# {{{ 	compressionfolio
+
+.PHONY: compressionfolio
+compressionfolio:
+	${MAKE} -C ${SRC}/folios/compression
+
+# }}}
+# {{{ 	graphicsfolio
+
+.PHONY: graphicsfolio
+graphicsfolio:
+	${MAKE} -C ${SRC}/folios/graphics
+
+# }}}
+# {{{ 	internationalfolio
+
+.PHONY: internationalfolio
+internationalfolio:
+	${MAKE} -C ${SRC}/folios/international
+
+# }}}
+# {{{ 	jstringfolio
+
+.PHONY: jstringfolio
+jstringfolio:
+	${MAKE} -C ${SRC}/folios/jstring
+
+# }}}
+# }}}
+# {{{ target groups:
+# {{{ 	tools
+
+.PHONY: tools
+tools:
+	${MAKE} -C ${SRC}/tools
+
+# }}}
+# {{{ 	libs
+
+.PHONY: libs
+libs:
+	${MAKE} -C ${SRC}/libs
+
+# }}}
+# {{{ 	others
+
+.PHONY: others
+others:
+	${MAKE} -C ${SRC}/others
+
+# }}}
+# {{{ 	devices
+
+.PHONY: devices
+devices:
+	${MAKE} -C ${SRC}/devices
+
+# }}}
+# {{{ 	drivers
+
+.PHONY: drivers
+drivers:
+	${MAKE} -C ${SRC}/drivers
+
+# }}}
+# {{{ 	examples
+
+.PHONY: examples
+examples:
+	${MAKE} -C ${SRC}/examples
+
+# }}}
+# {{{ 	folios
+
+.PHONY: folios
+folios:
+	${MAKE} -C ${SRC}/folios
+
+# }}}
+# {{{ 	programs
+
+.PHONY: programs
+programs:
+	${MAKE} -C ${SRC}/programs
+
+# }}}
+# {{{ 	quicklook
+
+.PHONY: quicklook
+quicklook:
+	${MAKE} -C ${SRC}/quicklook
+
+# }}}
+# {{{ 	scripts
+
+.PHONY: scripts
+scripts:
+	${MAKE} -C ${SRC}/scripts
+
+# }}}
+# {{{ 	tasks
+
+.PHONY: tasks
+tasks:
+	${MAKE} -C ${SRC}/tasks
+
+# }}}
+# {{{ 	tests
+
+.PHONY: tests
+tests:
+	${MAKE} -C ${SRC}/tests
+
+# }}}
+# }}}
+# {{{ build tools:
+# {{{ 	dmnum
+
+.PHONY: dmnum
+dmnum:
+	${MAKE} -C ${SRC}/tools/dmnum
+
+# }}}
+# {{{ 	filters
+
+.PHONY: filters
+filters:
+	${MAKE} -C ${SRC}/tools/filters
+
+# }}}
+# {{{ 	internationaltools
+
+.PHONY: internationaltools
+internationaltools:
+	${MAKE} -C ${SRC}/tools/international
+
+# }}}
+# {{{ 	unixscripts
+
+.PHONY: unixscripts
+unixscripts:
+	${MAKE} -C ${SRC}/tools/unixscripts
+
+# }}}
+# }}}
+# {{{ libraries:
+# {{{ 	libc
+
+.PHONY: libc
+libc:
+	${MAKE} -C ${SRC}/libs/c
+
+# }}}
+# {{{ 	libeventbroker
+
+.PHONY: libeventbroker
+libeventbroker:
+	${MAKE} -C ${SRC}/libs/eventbroker
+
+# }}}
+# {{{ 	libspmath
+
+.PHONY: libspmath
+libspmath:
+	${MAKE} -C ${SRC}/libs/spmath
+
+# }}}
+# {{{ 	libloader
+
+.PHONY: libloader
+libloader:
+	${MAKE} -C ${SRC}/libs/loader
+
+# }}}
+# {{{ 	libmusic
+
+.PHONY: libmusic
+libmusic:
+	${MAKE} -C ${SRC}/libs/music
+
+# }}}
+# {{{ 	libsuper
+
+.PHONY: libsuper
+libsuper:
+	${MAKE} -C ${SRC}/libs/super
+
+# }}}
+# }}}
+# {{{ other stuff:
+# {{{ 	romapplauncher
+
+.PHONY: romapplauncher
+romapplauncher:
+	${MAKE} -C ${SRC}/others/romapplauncher
+
+# }}}
+# }}}
+# {{{ header files:
+# {{{ 	includes
+
+.PHONY: includes
+includes:
+	${MAKE} -C ${SRC}/includes
+
+# }}}
+# }}}
+# {{{ drivers:
+# {{{ 	eventbrokerdrivers
+
+.PHONY: eventbrokerdrivers
+eventbrokerdrivers:
+	${MAKE} -C ${SRC}/drivers/eventbroker
+
+# }}}
+# {{{ 	languages
+
+.PHONY: languages
+languages:
+	${MAKE} -C ${SRC}/drivers/languages
+
+# }}}
+# }}}
+# {{{ language drivers:
+# {{{ 	da
+
+.PHONY: da
+da:
+	${MAKE} -C ${SRC}/drivers/languages/da
+
+# }}}
+# {{{ 	de
+
+.PHONY: de
+de:
+	${MAKE} -C ${SRC}/drivers/languages/de
+
+# }}}
+# {{{ 	es
+
+.PHONY: es
+es:
+	${MAKE} -C ${SRC}/drivers/languages/es
+
+# }}}
+# {{{ 	fr
+
+.PHONY: fr
+fr:
+	${MAKE} -C ${SRC}/drivers/languages/fr
+
+# }}}
+# {{{ 	it
+
+.PHONY: it
+it:
+	${MAKE} -C ${SRC}/drivers/languages/it
+
+# }}}
+# {{{ 	ja
+
+.PHONY: ja
+ja:
+	${MAKE} -C ${SRC}/drivers/languages/ja
+
+# }}}
+# {{{ 	nl
+
+.PHONY: nl
+nl:
+	${MAKE} -C ${SRC}/drivers/languages/nl
+
+# }}}
+# {{{ 	pt
+
+.PHONY: pt
+pt:
+	${MAKE} -C ${SRC}/drivers/languages/pt
+
+# }}}
+# }}}
+# {{{ programs:
+# {{{ 	fileprograms
+
+.PHONY: fileprograms
+fileprograms:
+	${MAKE} -C ${SRC}/programs/file
+
+# }}}
+# {{{ 	intlprograms
+
+.PHONY: intlprograms
+intlprograms:
+	${MAKE} -C ${SRC}/programs/intl
+
+# }}}
+# {{{ 	iostress
+
+.PHONY: iostress
+iostress:
+	${MAKE} -C ${SRC}/programs/iostress
+
+# }}}
+# {{{ 	items
+
+.PHONY: items
+items:
+	${MAKE} -C ${SRC}/programs/items
+
+# }}}
+# {{{ 	syncstress
+
+.PHONY: syncstress
+syncstress:
+	${MAKE} -C ${SRC}/programs/syncstress
+
+# }}}
+# }}}
+# {{{ tests:
+# {{{ 	eventbrokertests
+
+.PHONY: eventbrokertests
+eventbrokertests:
+	${MAKE} -C ${SRC}/tests/eventbroker
+
+# }}}
+# {{{ 	filetests
+
+.PHONY: filetests
+filetests:
+	${MAKE} -C ${SRC}/tests/file
+
+# }}}
+# {{{ 	internationaltests
+
+.PHONY: internationaltests
+internationaltests:
+	${MAKE} -C ${SRC}/tests/international
+
+# }}}
+# }}}
+

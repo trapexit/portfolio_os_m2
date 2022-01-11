@@ -1,0 +1,20 @@
+// @(#) cart.recipe 96/07/02 1.6
+//
+// Recipe for building cartridge image.
+// Just set some defines and include "generic.recipe".
+
+#define	VOLUME_NAME		CART
+#define	FSTYPE			romdisk
+#define	VOLSIZE			3072
+#define	BLOCK_SIZE		4
+#define	DIR_BLOCK_SIZE		512
+#define	BLUEPRINT		cart.blueprint
+#define	DEVDIPIR_NAME		dipir.cart
+#define	DEVDIPIR_COMPONENT_ID	DIPIRID_CART
+#define	APPBANNER_NAME		AppBanner
+
+#define	BOOTABLE		1
+#define	OSFLAGS			OS_NORMAL
+#define	DEVICEPERMS		0xFFFFFFFF
+
+#include "generic.recipe"

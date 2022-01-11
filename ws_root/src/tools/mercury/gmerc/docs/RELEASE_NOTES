@@ -1,0 +1,57 @@
+Gcomp for Mercury Release Notes **********************
+
+8/19/96 version 1.1a2
+
+* The tool usage updates.
+    1. -f option is added. It will create an object name chunk for the sdf object.
+    2. -h option is added. It will create a header file which define the sdf object name and its id.
+    3. -s option is added. A sdf "triangle" primitive will be interpreted as a faceted surface in pod geometry.
+
+
+* New pod geometry cases:
+	1. DynLitEnvCase.
+	2. DynLitTransEnvCase.
+	3. DynLitSpecEnvCase.
+	4. PreLitEnvCase.
+	5. PreLitTransEnvCase.
+
+* Faced surface is supported. A sdf triangle primitive will be interpreted as a faceted surface.
+
+* object instancing bug is fixed.
+
+5/15/96 version 1.0a2
+
+* The tool usage updates.
+    1. -s option is removed. The snake option is applied to every pod.
+    2. -c options is added. It will collapse the leaf animation node.
+	3. -a option is added to output a separate animation file. All of the 
+	   animation data is in the animation file. If the option is not specidied,
+	   the animation file will be part of the geometry file.
+
+* The tool outputs the following pod geometry cases:                     
+	1. DynLitCase.
+	2. DynLitTexCase.
+	3. DynLitTransCase.
+	4. DynLitTransTexCase.
+	5. DynLitSpecCase.
+	6. DynLitSpecTexCase.
+	7. DynLitTransSpecCase.
+	8. PreLitCase.
+	9. PreLitTexCase.
+	10. PreLitTransCase.
+	11. PreLitTransTexCase.
+
+
+4/19/96 version 1.0a1
+
+* The tool runs on both Mac (MPW) and SGI. The MPW tool is a fat version.
+* The lighting information is not processed in the current tool. One should 
+remove the lighting information in the sdf file. Please refer to each 
+converter's usage and do not output lighting information. Or one can delete 
+lighting information by editing the sdf file.
+* The Mac version will crash on Quadra 700.
+
+12/1/96 version 3.1b1
+* Several memory leaks have been fixed.
+* Crashes that occured when compiling an SDF file with lighting information have been fixed.
+* Multiple model references within an animation are now handled correctly.

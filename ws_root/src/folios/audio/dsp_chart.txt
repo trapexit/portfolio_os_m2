@@ -1,0 +1,118 @@
+/* @(#) dsp_chart.txt 96/08/21 1.3 */
+---- DSPP Register Set, Pass 2 Silicon ------
+DSPP_BASE                       0x00060000
+DSPX_CODE_MEMORY                0x60000
+DSPX_DATA_MEMORY                0x61000
+
+DSPI_OUTPUT0                    0x02E0
+DSPI_OUTPUT1                    0x02E1
+DSPI_OUTPUT2                    0x02E2
+DSPI_OUTPUT3                    0x02E3
+DSPI_OUTPUT4                    0x02E4
+DSPI_OUTPUT5                    0x02E5
+DSPI_OUTPUT6                    0x02E6
+DSPI_OUTPUT7                    0x02E7
+DSPI_INPUT0                     0x02F0
+DSPI_INPUT1                     0x02F1
+
+DSPI_FIFO_OSC_BASE              0x0300
+    DSPI_FIFO_OSC_OFFSET_CURRENT    +0      /* read current value w/o removing from FIFO */
+    DSPI_FIFO_OSC_OFFSET_NEXT       +1      /* read next value w/o removing from FIFO */
+    DSPI_FIFO_OSC_OFFSET_FREQUENCY  +2
+    DSPI_FIFO_OSC_OFFSET_PHASE      +3
+    DSPI_FIFO_OFFSET_DATA           +4      /* R/W data, advance FIFO pointer */
+    DSPI_FIFO_OFFSET_CONTROL        +5      /* R: status, W: control */
+    DSPI_FIFO_OSC_SIZE             0x8
+
+DSPI_INPUT_CONTROL              0x03D6
+DSPI_OUTPUT_CONTROL             0x03D7
+DSPI_INPUT_STATUS               0x03DE
+DSPI_OUTPUT_STATUS              0x03DF
+DSPI_PC                         0x03EE
+DSPI_CPU_INT                    0x03E6
+
+DSPI_AUDLOCK                    0x03F6
+DSPI_CLOCK                      0x03F7
+DSPI_NOISE                      0x03FF
+
+DSPX_INTERRUPT_SET              0x64000     /* Interrupts */
+DSPX_INTERRUPT_CLR              0x64004
+DSPX_INTERRUPT_ENABLE           0x64008
+DSPX_INTERRUPT_DISABLE          0x6400C
+    DSPX_FLD_INT_SOFT_MASK      0xffff0000
+    DSPX_F_INT_TIMER            0x00000100
+    DSPX_F_INT_INPUT_UNDER      0x00000080
+    DSPX_F_INT_INPUT_OVER       0x00000040
+    DSPX_F_INT_OUTPUT_UNDER     0x00000020
+    DSPX_F_INT_OUTPUT_OVER      0x00000010
+    DSPX_F_INT_UNDEROVER        0x00000008
+    DSPX_F_INT_CONSUMED         0x00000002
+    DSPX_F_INT_DMANEXT          0x00000001
+
+DSPX_INT_DMANEXT_SET            0x64010
+DSPX_INT_DMANEXT_CLR            0x64014
+DSPX_INT_DMANEXT_ENABLE         0x64018     /* BDA2+ */
+DSPX_INT_CONSUMED_SET           0x64020
+DSPX_INT_CONSUMED_CLR           0x64024
+DSPX_INT_CONSUMED_ENABLE        0x64028
+DSPX_INT_CONSUMED_DISABLE       0x6402C
+DSPX_INT_UNDEROVER_SET          0x64030
+DSPX_INT_UNDEROVER_CLR          0x64034
+DSPX_INT_UNDEROVER_ENABLE       0x64038
+DSPX_INT_UNDEROVER_DISABLE      0x6403C
+
+DSPX_DMA_STACK_ADDRESS          0x65000     /* DMA */
+DSPX_DMA_STACK                  0x65000
+    DSPX_DMA_ADDRESS_OFFSET          +0
+    DSPX_DMA_COUNT_OFFSET            +1
+    DSPX_DMA_NEXT_ADDRESS_OFFSET     +2
+    DSPX_DMA_NEXT_COUNT_OFFSET       +3
+    DSPX_DMA_STACK_CHANNEL_SIZE    0x10
+
+DSPX_DMA_STACK_CONTROL          0x65200
+    DSPX_DMA_CONTROL_CURRENT_OFFSET  +0
+    DSPX_DMA_CONTROL_NEXT_OFFSET     +8
+    DSPX_DMA_STACK_CONTROL_SIZE    0x10
+
+    DSPX_F_SHADOW_SET_ADDRESS_COUNT 0x80000000
+    DSPX_F_SHADOW_SET_DMANEXT   0x00040000
+    DSPX_F_SHADOW_SET_FOREVER   0x00020000
+    DSPX_F_SHADOW_SET_NEXTVALID 0x00010000
+    DSPX_F_INT_DMANEXT_EN       0x0004
+    DSPX_F_DMA_GO_FOREVER       0x0002
+    DSPX_F_DMA_NEXTVALID        0x0001
+
+DSPX_CHANNEL_ENABLE             0x66000     /* Channel */
+DSPX_CHANNEL_DISABLE            0x66004
+DSPX_CHANNEL_DIRECTION_SET      0x66008
+DSPX_CHANNEL_DIRECTION_CLR      0x6600C
+    DSPX_DIR_RAM_TO_DSPP              0
+    DSPX_DIR_DSPP_TO_RAM              1
+DSPX_CHANNEL_8BIT_SET           0x66010
+DSPX_CHANNEL_8BIT_CLR           0x66014
+DSPX_CHANNEL_SQXD_SET           0x66018
+DSPX_CHANNEL_SQXD_CLR           0x6601C
+DSPX_CHANNEL_RESET              0x66030
+DSPX_CHANNEL_STATUS             0x6603C
+
+DSPX_FRAME_DOWN_COUNTER         0x66040     /* Clock */
+DSPX_FRAME_UP_COUNTER           0x66044
+
+AUDIO_CONFIG                    0x66050     /* ADIO */
+AUDIN_CONFIG                    0x66060
+AUDOUT_CONFIG                   0x66068
+DSPX_CONTROL                    0x66070
+    DSPX_F_SNOOP                0x0008
+    DSPX_F_STEP_PC              0x0004
+    DSPX_F_STEP_CYCLE           0x0002
+    DSPX_F_GWILLING             0x0001
+DSPX_RESET                      0x66074
+    DSPX_F_RESET_OUTPUT         0x0004
+    DSPX_F_RESET_INPUT          0x0002
+    DSPX_F_RESET_DSPP           0x0001
+
+DSPX_NMEM                       0x67000     /* DSPP Trace */
+DSPX_DMEMRD                     0x67008
+DSPX_DMEMWR                     0x67010
+DSPX_RBASE                      0x67018
+DSPX_ACC                        0x6701C

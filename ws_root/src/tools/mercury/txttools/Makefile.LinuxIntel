@@ -1,0 +1,150 @@
+#
+# @(#) Makefile.LinuxIntel 96/11/19 1.9
+#
+SHELL = /bin/sh
+
+PLATFORM = LinuxIntel
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../libs/$(PLATFORM)
+OBJDIR = ../txtlib/src/objects/$(PLATFORM)
+HGRELEASEDIR = ../release/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+
+M2TXLIB = M2TXlib.a
+IFFLIB = IFFlib.a
+LIBPPM = libppm.a
+LIBPBM = libpbm.a
+LIBPGM = libpgm.a
+LIBTIFF = $(LIBDIR)/libtiff.a
+
+INCLUDES = -I../txtlib/include -I../ifflib/ -I.
+
+LIBS = $(LIBDIR)/$(M2TXLIB) $(LIBDIR)/$(IFFLIB) -lm
+PPMLIBS = $(LIBDIR)/$(LIBPPM) $(LIBDIR)/$(LIBPBM) $(LIBDIR)/$(LIBPGM)
+
+CC = gcc
+
+CCFLAGS = -g -ansi -DINTEL -DTEXTOOLS_VERISION='"3.1b1"' $(INCLUDES)
+
+
+AUTOMAGIC_DIR = \
+	bin     \
+	$(BINDIR)	\
+	$(HGRELEASEDIR)
+
+TOOLS = \
+	$(BINDIR)/psdtoutf \
+	$(BINDIR)/quantizer \
+	$(BINDIR)/quanttopip \
+	$(BINDIR)/sgitoutf \
+	$(BINDIR)/utfaclean \
+	$(BINDIR)/utfaddlod \
+	$(BINDIR)/utfapip \
+	$(BINDIR)/utfcompress \
+	$(BINDIR)/utfinfo \
+	$(BINDIR)/utffit \
+	$(BINDIR)/utfflip \
+	$(BINDIR)/utflitdown \
+#	$(BINDIR)/utfmakeheader \
+	$(BINDIR)/utfmakelod \
+	$(BINDIR)/utfmakepip \
+	$(BINDIR)/utfmakesame \
+	$(BINDIR)/utfmerge \
+	$(BINDIR)/utfmipcat \
+	$(BINDIR)/utfmodpip \
+	$(BINDIR)/utfoptpip \
+	$(BINDIR)/utfpopfine \
+	$(BINDIR)/utframpalpha \
+	$(BINDIR)/utfresize \
+	$(BINDIR)/utfstrip \
+	$(BINDIR)/utfuncompress \
+	$(BINDIR)/utfunmip \
+	$(BINDIR)/utfunpip \
+	$(HGRELEASEDIR)/psdtoutf \
+	$(HGRELEASEDIR)/quantizer \
+	$(HGRELEASEDIR)/quanttopip \
+	$(HGRELEASEDIR)/sgitoutf \
+	$(HGRELEASEDIR)/utfaclean \
+	$(HGRELEASEDIR)/utfaddlod \
+	$(HGRELEASEDIR)/utfapip \
+	$(HGRELEASEDIR)/utfcompress \
+	$(HGRELEASEDIR)/utfinfo \
+	$(HGRELEASEDIR)/utffit \
+	$(HGRELEASEDIR)/utfflip \
+	$(HGRELEASEDIR)/utflitdown \
+#	$(HGRELEASEDIR)/utfmakeheader \
+	$(HGRELEASEDIR)/utfmakelod \
+	$(HGRELEASEDIR)/utfmakepip \
+	$(HGRELEASEDIR)/utfmakesame \
+	$(HGRELEASEDIR)/utfmerge \
+	$(HGRELEASEDIR)/utfmipcat \
+	$(HGRELEASEDIR)/utfmodpip \
+	$(HGRELEASEDIR)/utfoptpip \
+	$(HGRELEASEDIR)/utfpopfine \
+	$(HGRELEASEDIR)/utframpalpha \
+	$(HGRELEASEDIR)/utfresize \
+	$(HGRELEASEDIR)/utfstrip \
+	$(HGRELEASEDIR)/utfuncompress \
+	$(HGRELEASEDIR)/utfunmip \
+	$(HGRELEASEDIR)/utfunpip
+
+all: ${AUTOMAGIC_DIR} $(TOOLS) \
+	$(BINDIR)/utfatmod $(BINDIR)/tifftoutf \
+	$(BINDIR)/ppmtoutf $(BINDIR)/utftoppm \
+	$(HGRELEASEDIR)/utfatmod $(HGRELEASEDIR)/tifftoutf \
+	$(HGRELEASEDIR)/ppmtoutf $(HGRELEASEDIR)/utftoppm
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+$(BINDIR)/%: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(HGRELEASEDIR)/%: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(BINDIR)/ppmtoutf: ppmtoutf.c
+	$(CC) -DSYSV -o $@ ppmtoutf.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+$(BINDIR)/utftoppm: utftoppm.c
+	$(CC) -DSYSV -o $@ utftoppm.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+$(HGRELEASEDIR)/ppmtoutf: ppmtoutf.c
+	$(CC) -DSYSV -o $@ ppmtoutf.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+$(HGRELEASEDIR)/utftoppm: utftoppm.c
+	$(CC) -DSYSV -o $@ utftoppm.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+ATMODOBJS = \
+	$(OBJDIR)/futil.o \
+	$(OBJDIR)/LWToken.o \
+	$(OBJDIR)/SDFTexBlend.o
+
+$(BINDIR)/utfatmod: $(ATMODOBJS) utfatmod.c
+	$(CC) $(CCFLAGS) -o $@ utfatmod.c $(ATMODOBJS) ${LIBS}
+
+$(BINDIR)/tifftoutf: tifftoutf.c
+	$(CC) $(CCFLAGS) -o $@ tifftoutf.c ${LIBS} $(LIBTIFF)
+
+$(HGRELEASEDIR)/utfatmod: $(ATMODOBJS) utfatmod.c
+	$(CC) $(CCFLAGS) -o $@ utfatmod.c $(ATMODOBJS) ${LIBS}
+
+$(HGRELEASEDIR)/tifftoutf: tifftoutf.c
+	$(CC) $(CCFLAGS) -o $@ tifftoutf.c ${LIBS} $(LIBTIFF)
+
+depends:
+	makedepend -- $(INCLUDES)
+
+clean:
+
+clobber:
+	$(RM) $(TOOLS) \
+	$(BINDIR)/utfatmod $(BINDIR)/ppmtoutf \
+	$(BINDIR)/utftoppm $(BINDIR)/tifftoutf \
+	$(HGRELEASEDIR)/utfatmod $(HGRELEASEDIR)/ppmtoutf \
+	$(HGRELEASEDIR)/utftoppm $(HGRELEASEDIR)/tifftoutf
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

@@ -1,0 +1,82 @@
+#!/bin/sh
+B=/usr/software/bin
+# @(#) jas.debug 95/09/01 1.11
+
+USAGE="usage: `basename $0` [-Ddefine] [-Iincludespath] [-X] [-d] [-l] [-r] [-o outfile] infile"
+if [ $# -eq 0 ]
+then
+    echo "$USAGE" >&2
+    exit 2
+fi
+AFLAGS="-L"
+CFLAGS=
+O=a.out	# Default output filename.
+ALLOWDBL=
+while getopts D:I:Xdlo:r f
+do
+    case $f in
+        D) CFLAGS="$CFLAGS -D$OPTARG";;
+        I) CFLAGS="$CFLAGS -I$OPTARG";;
+	X) AFLAGS="$AFLAGS -X";;
+        d) ALLOWDBL=-;;
+        l) true;;
+        o) O=$OPTARG;;
+	r) true;;
+        \?) echo "$USAGE" >&2
+            exit 2;;
+    esac
+done
+shift `expr $OPTIND - 1`
+if [ $# -ne 1 ]
+then
+    echo 'Too many parameters (flags after source file?).' >&2
+    exit 1
+fi
+
+
+# Assume the remaining arg is the source file.
+S=`basename $1`
+SRCDIR=`dirname $1`
+U=$SRCDIR/_$S
+
+abort()
+{
+    echo Abort in stage $1 while processing $2. >&2
+    exit 1
+}
+
+/usr/lib/cpp -undef -B $CFLAGS $1 > $SRCDIR/A.jas.$S.cpp
+if [ $? -ne 0 ]
+then
+    abort cpp $S
+fi
+$B/asp1 < $SRCDIR/A.jas.$S.cpp > $SRCDIR/B.jas.$S.asp1
+if [ $? -ne 0 ]
+then
+    abort asp1 $SRCDIR/A.jas.$S.cpp
+fi
+m4 $SRCDIR/B.jas.$S.asp1 > $SRCDIR/C.jas.$S.m4
+if [ $? -ne 0 ]
+then
+    abort m4 $SRCDIR/B.jas.$S.asp1
+fi
+$B/asp2 $ALLOWDBL < $SRCDIR/C.jas.$S.m4 > $U
+if [ $? -ne 0 ]
+then
+    abort asp2 $SRCDIR/C.jas.$S.m4
+fi
+
+if [ -z "$DIABLIB" ]
+then
+    echo 'DIABLIB variable not set'
+    exit 1
+fi
+
+# Perform assembly.
+LN=$SRCDIR/`basename $S .s`.lst
+if $DIABLIB/bin/das -o $O $AFLAGS $U > $LN
+then
+    exit 0
+fi
+/bin/rm -f $O	# In case the assembler left it around.
+exit 1

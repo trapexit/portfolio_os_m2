@@ -1,0 +1,69 @@
+# @(#) datafiles 96/09/17 1.8
+# Rules for multiple binary and text data files.
+
+# Input variables supplied by Makefile
+#       TARGET_DIRECTORY
+#       DO_NOT_BUILD
+#
+# Input variables supplied by variables/datafiles
+#       TARGET_NAMES
+
+default.datafiles: default.generic
+
+ifndef TARGET_DIRECTORY
+BUILD_INTO =		${OBJDIR}
+else
+BUILD_INTO =		${TARGET_DIRECTORY}
+endif
+
+# Use relative symlink if both BUILD_INTO and ABSPATH are both under ROOT.
+# Otherwise do absolute symlink.
+# !!! winds up using absolute symlink when BUILD_INTO isn't an absolute path
+#     name (e.g. when it defaults to OBJDIR)
+# @@@ no longer used
+#empty:=
+#space:=${empty} ${empty}
+#ifneq (,${filter ${ROOT}%,${ABSPATH}})
+#  ifneq (,${filter ${ROOT}%,${BUILD_INTO}})
+#    # get relative path name from ROOT to BUILD_INTO (either empty, or a name with a trailing slash)
+#    RELATIVE_BUILD_INTO_PATH = ${patsubst ${ROOT}/%.,%,${BUILD_INTO}/.}
+#    ifneq (${RELATIVE_BUILD_INTO_PATH},)
+#      # get relative path name from BUILD_INTO to ROOT (either empty, or a series of ../)
+#      INVERSE_RELATIVE_BUILD_INTO_PATH = ${subst ${space},/,${patsubst %,..,${subst /,${space},${RELATIVE_BUILD_INTO_PATH}}}}/
+#    endif
+#    # get relative path name from BUILD_INTO to src directory
+#    RELATIVE_TARGET_TO_SRC_PATH = ${INVERSE_RELATIVE_BUILD_INTO_PATH}${RELATIVE_PATH}
+#  endif
+#endif
+#ifndef RELATIVE_TARGET_TO_SRC_PATH
+#  # use absolute name if both paths aren't under ROOT.
+#  RELATIVE_TARGET_TO_SRC_PATH = ${ABSPATH}
+#endif
+
+# all binary files stored as .R64
+${BUILD_INTO}/%: %.R64
+	${R64DEC} < $< > $@
+
+# music.lib score player PIMaps: text, but currently requires Mac EOL sequences at runtime.
+# !!! retire
+${BUILD_INTO}/%.pimap: %.pimap
+	${FIXCOPYR} < $< | ${FIXEOL} > $@
+
+FILTERED_TARGETS =	${filter-out ${DO_NOT_BUILD},${TARGET_NAMES}}
+TARGETS =		${FILTERED_TARGETS:%=${BUILD_INTO}/%}
+
+ifdef TARGET_DIRECTORY
+FTP_TRANSFER +=		${TARGETS}
+endif
+
+all.post: ${TARGETS}
+
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+clean: clean.datafiles
+clean.datafiles:
+	${RM} ${TARGETS}
+
+unlink: unlink.datafiles
+unlink.datafiles:
+	-@${RM} ${TARGETS}

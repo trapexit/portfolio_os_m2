@@ -1,0 +1,13 @@
+# @(#)subtree 95/08/10 1.6
+#
+
+default.subtree: default
+default.here: all.here
+default.post: all.post
+
+ifndef	SUBDIRS
+SUBDIRS_TS :=		${dir ${wildcard */Makefile}}
+SUBDIRS :=		${BUILD_IN_FIRST} ${filter-out ${BUILD_IN_FIRST} ${BUILD_IN_LAST} ${DO_NOT_BUILD_IN}, ${SUBDIRS_TS:%/=%}} ${BUILD_IN_LAST}
+endif
+
+include ${CODEMGR_WS}/ws_root/variables/generic

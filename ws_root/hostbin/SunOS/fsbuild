@@ -1,0 +1,119 @@
+#!/usr/local/bin/perl
+
+@sccsid = split(" ", "@(#) fsbuild 96/08/05 1.4");
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+
+print("\nfsbuild\n");
+print("Version 2, revision $revision \n");
+print("By Drew Shell\n");
+print("The 3DO Company - 1996\n");
+print("\n");
+
+$blocksize = "4";
+$dirblocksize = "2048";
+$layoutdir = "/usr/local/armbin";
+$layoutlog = "layout.log";
+$mapfile = "filemap.out";
+$outputfile = "fsimage";
+$maximagesize = "2148";
+$filesystype = "romdisk";
+$volumelabel = "rom";
+$numromtags = "0";
+$volflags = "";
+
+if (!($sourcetree = shift)) {
+	print("Usage: fsbuild sourcetree [options...]\n");
+	print("\n");
+	print("Supported options, plus (default value) :\n");
+	print("  [-b blocksize]     File system block size            ($blocksize)\n");
+	print("  [-d dirblocksize]  Directory block size              ($dirblocksize)\n");
+	print("  [-f volumeflags]   Volume flags                      ($volflags)\n");
+	print("  [-l layoutdir]     Path to layout tool               ($layoutdir)\n");
+	print("  [-L layoutlog]     Name of output log file           ($layoutlog)\n");
+	print("  [-M mapfile]       Name of mapfile                   ($mapfile)\n");
+	print("  [-o outputfile]    Name of output file system image  ($outputfile)\n");
+	print("  [-r numromtags]    Size of RomTag table              ($numromtags)\n");
+	print("  [-s maximagesize]  Maximum image size in KBytes      ($maximagesize)\n");
+	print("  [-t filesystype]   File system type                  ($filesystype)\n");
+	print("  [-v volumelabel]   File system volume label          ($volumelabel)\n");
+	die("\n");
+}
+
+die("fsbuild: Error, cannot read sourcetree\n") if !(-d $sourcetree);
+
+while ($arg = shift) {
+	if ($arg eq "-b") {
+		$blocksize = shift;
+	} elsif ($arg eq "-d") {
+		$dirblocksize = shift;
+	} elsif ($arg eq "-f") {
+		$volflags = shift;
+	} elsif ($arg eq "-l") {
+		$layoutdir = shift;
+	} elsif ($arg eq "-L") {
+		$layoutlog = shift;
+	} elsif ($arg eq "-M") {
+		$mapfile = shift;
+	} elsif ($arg eq "-o") {
+		$outputfile = shift;
+	} elsif ($arg eq "-r") {
+		$numromtags = shift;
+	} elsif ($arg eq "-s") {
+		$maximagesize = shift;
+	} elsif ($arg eq "-t") {
+		$filesystype = shift;
+	} elsif ($arg eq "-v") {
+		$volumelabel = shift;
+	} else {
+		$! = 1;
+		die("fsbuild: Error, bad command line option: $arg\n");
+	}
+}
+
+$launchdir = `pwd`;
+chop($launchdir);
+$sourcetree = join("/", $launchdir, $sourcetree);
+$outputfile = join("/", $launchdir, $outputfile);
+$layoutlog = join("/", $launchdir, $layoutlog);
+
+print("Sourcetree    = $sourcetree\n");
+print("Filesystype   = $filesystype\n");
+print("Volumelabel   = $volumelabel\n");
+print("Blocksize     = $blocksize\n");
+print("Dirblocksize  = $dirblocksize\n");
+print("Maximagesize  = $maximagesize\n");
+print("Outputfile    = $outputfile\n");
+print("Mapfile       = $mapfile\n");
+print("Layoutdir     = $layoutdir\n");
+print("Layoutlog     = $layoutlog\n");
+
+push(@stringlist, "set takedirectory $sourcetree\n");
+push(@stringlist, "set fstype $filesystype\n");
+push(@stringlist, "set label $volumelabel\n");
+push(@stringlist, "set blocksize $blocksize\n");
+push(@stringlist, "set directorysize $dirblocksize\n");
+push(@stringlist, "set kilobytes $maximagesize\n");
+push(@stringlist, "set imagefile $outputfile\n");
+push(@stringlist, "set numromtags $numromtags\n");
+if (!($volflags eq "")) {
+	push(@stringlist, "set volflags $volflags\n");
+}
+#push(@stringlist, "set outputmapfilename $mapfile\n");
+push(@stringlist, "if {0 == [catch {doit} result]} then {echo \"Exit: Succeeded\"} else {echo \"Exit: Failed\"; echo \$result}\n");
+
+$string = join("", @stringlist);
+chdir($layoutdir);
+$layout = join("/", $layoutdir, "layout");
+print("\nBuilding image, please wait...\n\n");
+`echo "$string" | $layout > $layoutlog`;
+if (`fgrep Succeeded $layoutlog`) {
+	print("Layout successful\n");
+} else {
+	$! = 1;
+	die("fsbuild: Layout failed, see $layoutlog for more info\n");
+}
+print("\n");
+

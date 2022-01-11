@@ -1,0 +1,62 @@
+\ @(#) noise.ins 96/03/11 1.15
+\ $Id: noise.ins,v 1.8 1995/01/20 20:20:23 peabody Exp $
+\ Instrument Template for noise
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\\\	AUTODOC -class DSP -group Sound_Synthesis -name noise.dsp
+\\\	White noise generator.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument uses a pseudo-random number generator to produce white
+\\\	    noise. A new random number is generated every frame.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -1.0 to 1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    rednoise.dsp(@), randomhold.dsp(@)
+
+include? DFID_NOISE function_ids.j
+
+anew task-noise.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_NOISE dspp-function-id !
+$" noise.dsp" ins-name !
+
+ALLOC.OUTPUT Output
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+DRSC_TYPE_HW_NOISE CONNECT.HARDWARE  HardNoise
+6 ALLOC.TICKS
+
+	Output _A _= HardNoise _A Amplitude _A _*
+
+}ins
+}dspp

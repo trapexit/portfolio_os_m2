@@ -1,0 +1,31 @@
+! @(#) linkexec.x 96/08/21 1.8
+!
+MAGIC 14
+EXPORTS 0=PixelAddress
+EXPORTS 1=ModifyGraphicsItem
+EXPORTS 2=SuperModifyGraphicsItem
+EXPORTS 3=AddViewToViewList
+EXPORTS 4=SuperAddViewToViewList
+EXPORTS 5=RemoveView
+EXPORTS 6=SuperRemoveView
+EXPORTS 7=OrderViews
+EXPORTS 8=SuperOrderViews
+EXPORTS 9=LockDisplay
+EXPORTS 10=SuperLockDisplay
+EXPORTS 11=UnlockDisplay
+EXPORTS 12=SuperUnlockDisplay
+EXPORTS 13=SuperInternalCompile
+EXPORTS 14=InternalPixelAddr
+EXPORTS 15=SuperInternalMarkView
+!XPORTS 16=unimplemented
+EXPORTS 17=QueryGraphics
+EXPORTS 18=NextViewTypeInfo
+EXPORTS 19=NextProjector
+EXPORTS 20=ActivateProjector
+EXPORTS 21=SuperActivateProjector
+EXPORTS 22=DeactivateProjector
+EXPORTS 23=SuperDeactivateProjector
+EXPORTS 24=SetDefaultProjector
+EXPORTS 25=SuperSetDefaultProjector
+EXPORTS 26=SuperInternalSetRendCallBack
+EXPORTS 27=SuperInternalSetDispCallBack

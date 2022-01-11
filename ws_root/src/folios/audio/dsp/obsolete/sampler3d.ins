@@ -1,0 +1,173 @@
+\ @(#) sampler3d.ins 95/07/07 1.7
+\ $Id: sampler3d.ins,v 1.8 1994/08/18 19:50:06 peabody Exp $
+\ DSP Instrument for 3D audio spatial locator
+\
+\ The filter is a combination lowpass and notch filter.
+\ Y(n) = Feed*X(n) + Beta*X(n-3) + Alpha*Y(n-1)
+\ Feed = (1-Alpha-Beta)
+\ The notch filter is centered at SR/4.
+\ The low pass filter is at maximum on opposite side and behind head.
+\ The notch filter peaks in front and behind.
+\ The low pass filter is increased with distance.
+\
+\ Copyright 1992 3DO
+\ Phil Burk
+\
+\ 930323 PLB Changed ALLOC.EO to ALLOC.EOMEM
+\ 930420 PLB Fix reference to LeftInFIFO, was FIFOIn0 !!
+
+decimal
+include? AUDLOCK DSPP.j
+decimal
+include? DFID_SAMPLER3D function_ids.j
+
+anew task-sampler3d.ins
+
+\ register used in oscupdownfp
+4 constant FIFOPtr \ R4
+5 constant Phase
+6 constant OldVal
+7 constant NewVal
+8 constant PhaseInc
+9 constant SampCount
+\ 10 11
+_RED
+dspp{
+ins{
+
+DFID_SAMPLER3D dspp-function-id !
+$" sampler3d.dsp" ins-name !
+
+ALLOC.RBASE LeftRBASE
+ALLOC.RBASE RightRBASE
+ALLOC.INFIFO  LeftInFIFO
+ALLOC.INFIFO  RightInFIFO
+ALLOC.OUTPUT OutputLeft
+ALLOC.OUTPUT OutputRight
+ALLOC.IMEM LeftZ0
+ALLOC.IMEM LeftZ1
+ALLOC.IMEM LeftZ2
+ALLOC.IMEM LeftZ3
+ALLOC.IMEM LeftFeedback
+ALLOC.IMEM RightZ0
+ALLOC.IMEM RightZ1
+ALLOC.IMEM RightZ2
+ALLOC.IMEM RightZ3
+ALLOC.IMEM RightFeedback
+ALLOC.EOMEM EO_LeftCount
+ALLOC.EOMEM EO_RightCount
+\ 0 $ FFFF $ 8000 ALLOC.KNOB Frequency
+\ 0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+
+0 $ FFFF $ 8000 ALLOC.KNOB LeftFreq
+0 $ FFFF $ 8000 ALLOC.KNOB RightFreq
+\ 0 $ FFFF $ 0000 ALLOC.KNOB IfInit
+0 $ 7FFF $ 7FFF ALLOC.KNOB LeftVolume
+0 $ 7FFF $ 7FFF ALLOC.KNOB RightVolume
+
+0 $ 7FFF $ 0000 ALLOC.KNOB LeftAlpha
+0 $ 7FFF $ 0000 ALLOC.KNOB LeftBeta
+0 $ 7FFF $ 7FFF ALLOC.KNOB LeftFeed
+0 $ 7FFF $ 0000 ALLOC.KNOB RightAlpha
+0 $ 7FFF $ 0000 ALLOC.KNOB RightBeta
+0 $ 7FFF $ 7FFF ALLOC.KNOB RightFeed
+122 ALLOC.TICKS
+
+0 if \ disable cuz no double RBASE references yet %Q
+	IfInit _A #$ 0000 _+
+	_BEQ: JustDoIt
+\ Initialization
+	LeftRBASE _RBASE
+	SampCount _reg #$ 0000 _MOVE    \ %Q do this using DINI init method
+	RightRBASE _RBASE
+	SampCount _reg #$ 0000 _MOVE
+	_BEQ: AllDone
+	_NOP
+
+_LABEL: JustDoIt
+then
+\ -------------------------------------------------------------
+
+	LeftRBASE _RBASE
+	FIFOPtr _reg LeftInFIFO _# _MOVE
+	PhaseInc _reg LeftFreq _A _MOVE
+	_JSR:	OscUpDownFP
+	EO_LeftCount _A SampCount _reg _MOVE
+\ Low Pass Notch Filter
+\ ACCUME = Signal
+	LeftZ0 _A _= ACCUME
+	LeftFeed _A ACCUME _*    \  (1-a-b)*Z(n)
+	LeftBeta _A LeftZ3 _A ACCUME _*+
+	LeftFeedback _A _=  LeftAlpha _A LeftFeedback _A ACCUME _*+
+\ shift values down delay line
+	LeftZ3 _A LeftZ2 _A _MOVE
+	LeftZ2 _A LeftZ1 _A _MOVE
+	LeftZ1 _A LeftZ0 _A _MOVE
+
+	OutputLeft _A _= ACCUME LeftVolume _A _*
+	_NOP
+\
+	RightRBASE _RBASE
+	FIFOPtr _reg RightInFIFO _# _MOVE
+	PhaseInc _reg RightFreq _A _MOVE
+	_JSR:	OscUpDownFP
+	EO_RightCount _A SampCount _reg _MOVE
+\ Low Pass Notch Filter
+\ ACCUME = Signal
+	RightZ0 _A _= ACCUME
+	RightFeed _A ACCUME _*    \  (1-a-b)*Z(n)
+	RightBeta _A RightZ3 _A ACCUME _*+
+	RightFeedback _A _=  RightAlpha _A RightFeedback _A ACCUME _*+
+\ shift values down delay line
+	RightZ3 _A RightZ2 _A _MOVE
+	RightZ2 _A RightZ1 _A _MOVE
+	RightZ1 _A RightZ0 _A _MOVE
+
+	OutputRight _A _= ACCUME RightVolume _A _*
+	_NOP
+	_JUMP: AllDone
+	_NOP
+
+\ ************************************************************************************
+_LABEL: OscUpDownFP
+\ This version uses fixed point frequency that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ R5 contains the fractional phase as a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+\ It clumps the FIFO accesses to avoid DMA collisions.
+\
+\ Calculate phase increment
+	%R5 R8 _+
+\ Determine whether to get 0,1,or 2 samples
+	_BMI:	@Once
+	_BCS:	@Twice
+	R5 R6 R6 _*-		\ old*(frac-1)	= old*frac-old
+	R7 R5 ACCUME _*-	\
+	_RTS
+	_NOP
+
+_LABEL: @Twice
+\ Get two samples
+	SampCount _%reg #$ 0002 _+       \ count two samples
+	R6 [R4]	_MOVE 	\ OldVal<-FIFO
+	R7 [R4]	_MOVE 	\ NewVal<-FIFO
+	R5 R6 R6 _*-		\ old*(frac-1)	= old*frac-old
+	R7 R5 ACCUME _*-	\
+	_RTS
+	_NOP
+
+_LABEL: @Once
+\ Get one sample
+	SampCount _%reg #$ 0001 _+       \ count one sample
+	%R5 #$ 8000	_-	\ wrap back to positive phase
+	R6 R7	_MOVE		\ OldVal<-newval
+	R7 [R4] _MOVE		\ NewVal<-FIFO
+	R5 R6 R6 _*-		\ old*(frac-1)	= old*frac-old
+	R7 R5 ACCUME _*-	\
+	_RTS
+	_NOP
+_LABEL: AllDone
+	_NOP
+}ins
+}dspp
+

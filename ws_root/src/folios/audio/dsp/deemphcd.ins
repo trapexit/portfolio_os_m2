@@ -1,0 +1,85 @@
+\ @(#) deemphcd.ins 96/03/11 1.14
+\ $Id: deemphcd.ins,v 1.5 1994/10/18 19:55:55 peabody Exp $
+\ DSP Instrument for CD de-emphasis
+\
+\ Copyright 1992 3DO
+\ Phil Burk
+\
+\ Pole 3.18KHz 50us
+\ Zero 10.5KHz 15us
+
+\\\	AUTODOC -class DSP -group Effects -name deemphcd.dsp
+\\\	CD de-emphasis filter.
+\\\
+\\\	  Description
+\\\
+\\\	    This filter is a standard "feed-forward, feed-back" filter designed by
+\\\	    Ayabe-san of MEI for CD de-emphasis.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signal to process.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Processed signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 17
+\\\
+\\\	    Code: 17 words
+\\\
+\\\	    Data: 7 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+
+\ This filter is a standard "feed-forward, feed-back" filter designed by
+\ Ayabe-san of MEI for CD de-emphasis.
+\
+\ Y = X*Alpha + X(Z-1)*Beta + Y(Z-1)*Gamma
+\
+\ Alpha =  0.4609375 = 15104
+\ Beta  = -0.0625    = -2048
+\ Gamma =  0.5957031 = 19250
+
+decimal
+include? DFID_DEEMPHCD function_ids.j
+
+decimal
+
+anew task-deemphcd.ins
+
+_BULLDOG
+dspp{
+ins{
+DFID_DEEMPHCD dspp-function-id !
+$" deemphcd.dsp" ins-name !
+
+\ allocate variables
+ALLOC.INPUT      Input
+ALLOC.VARIABLE   DelayZ1
+ALLOC.VARIABLE   Feedback   \ Output of filter for feedback.
+ALLOC.OUTPUT     Output
+
+\ filter coefficients
+15104 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Alpha
+-2048 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Beta
+19250 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Gamma
+
+$ 7FFF 19250 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+
+17 ALLOC.TICKS
+
+	Input _A Alpha _A _*
+	DelayZ1 _A Beta _A ACCUME _*+
+	Feedback _A _=  Gamma _A Feedback _A ACCUME _CLIP _*+
+	DelayZ1 _A Input _A _MOVE
+	Output _A _= ACCUME Amplitude _A _*
+}ins
+}dspp
+

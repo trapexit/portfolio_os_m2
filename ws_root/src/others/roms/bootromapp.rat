@@ -1,0 +1,6 @@
+# @(#) bootromapp.rat 96/07/02 1.2
+# RomApps.txt file for a bootromapp cartridge.
+# The apps here with priority 2 override the
+# apps in the system ROM with priority 1.
+
+"audio.romapp audio" audio 2 

@@ -1,0 +1,61 @@
+# Makefile Reddy 
+#
+#
+
+PLATFORM = Dos
+RM = rm -f
+MD = mkdir
+AR = ar cur
+LIBS = -lm
+INCLUDES = -I.
+CC = gcc 
+CPLUSPLUS = g++
+CFLAGS = -DINTEL -ansi
+CPLUSPLUSFLAGS = $(CFLAGS)
+OBJDIR = objects/$(PLATFORM)
+BINDIR = bin/$(PLATFORM)
+
+SRCS = \
+       mpwmain3ds.cc \
+       TlA3dsfile.cc \
+       TlBasicTypes.cc \
+       TlCharacter.cc \
+       TlFacetList.cc \
+       TlGroup.cc\
+       TlMaterial.cc \
+       TlModel.cc \
+       TlSurface.cc \
+       TlLight.cc \
+       TlTexture.cc \
+       TlTransform.cc \
+       TlPrimitives.cc \
+       TlVtxList.cc
+
+AUTOMAGIC_DIR = \
+	objects			\
+	objects/$(PLATFORM)	\
+	bin			\
+	bin/$(PLATFORM)
+
+all: $(AUTOMAGIC_DIR) $(BINDIR)/3dstosdf.exe
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+OBJS    =   $(SRCS:%.cc=$(OBJDIR)/%.co)
+
+${OBJDIR}/%.co: %.cc
+	${CPLUSPLUS} -c -o $@ $(CFLAGS) $(INCLUDES) $<
+
+$(BINDIR)/3dstosdf.exe: $(OBJS)
+	$(CPLUSPLUS) -o $@ $(OBJS) $(LIBS)
+
+depends:
+	makedepend -- $(INCLUDES) -- $(SRCS)
+
+
+clean:
+	$(RM) $(OBJS)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

@@ -1,0 +1,290 @@
+#
+# @(#) Makefile.Mac 96/12/04 1.15
+#
+#  Mac Makefile for the Mercury Tools
+#  Creates FAT tools
+
+BINDIR			=	:bin:Mac:
+LIBDIR			=	::libs:Mac:
+OBJDIR			=	:objects:Mac:
+UTFPAGEOBJDIR	=   ::txtlib:src:objects:Mac:
+HGRELEASEDIR	=	::release:Mac:
+
+M2TXLIB68K		= 	{LIBDIR}M2TXlib.68K.a
+M2TXLIBPPC		= 	{LIBDIR}M2TXlib.PPC.a
+IFFLIB68K		= 	{LIBDIR}IFFlib.68K.a
+IFFLIBPPC		= 	{LIBDIR}IFFlib.PPC.a
+LIBPPM			=	{LIBDIR}libppm.a
+LIBPBM			=	{LIBDIR}libpbm.a
+LIBPGM			=	{LIBDIR}libpgm.a
+LIBTIFF 		= 	{LIBDIR}libtiff.a
+
+CC68K = SC
+CCPPC = MRC
+
+# MPW 2.0 
+#				"{PPCLibraries}"MathLib.xcoff ¶
+
+StdCLibsPPC		= ¶
+				"{SharedLibraries}"InterfaceLib ¶
+				"{SharedLibraries}"MathLib ¶
+				"{SharedLibraries}"StdCLib ¶
+				"{PPCLibraries}"StdCRuntime.o ¶
+				"{PPCLibraries}"PPCCRuntime.o
+
+StdCLibs68K		=	¶
+				"{CLibraries}"StdClib.o ¶
+				"{Libraries}"MacRuntime.o ¶
+				"{Libraries}"Interface.o ¶
+				"{Libraries}"IntEnv.o
+					
+LIBRENAMES		=	-librename InterfaceLib.xcoff=InterfaceLib	¶
+					-librename StdCLib.xcoff=StdCLib			¶
+					-librename MathLib.xcoff=MathLib
+
+PPCLIBS		=	"{PPCLibraries}"PPCToolLibs.o ¶
+				{StdCLibsPPC} ¶
+				{M2TXLIBPPC} ¶
+				{IFFLIBPPC} 
+
+68KLIBS		=	"{Libraries}"ToolLibs.o ¶
+				{StdCLibs68K} ¶
+				{M2TXLIB68K} ¶
+				{IFFLIB68K} 
+
+TOOLS	= ¶
+		quantizer 		¶
+		quanttopip 		¶
+		utfaclean 		¶
+		utfaddlod 		¶
+		utfapip 		¶
+		utfflip			¶
+		utfinfo			¶
+		utflitdown		¶
+		utfmakepip		¶
+		utfmakesame		¶
+		utfmerge		¶
+		utfmodpip		¶
+		utfpopfine		¶
+		utfstrip		¶
+		utfuncompress		¶
+		utfunpip		¶
+		utfunmip
+
+TOOLSMATH = ¶
+		psdtoutf 		¶
+		sgitoutf 		¶
+		utfcompress		¶
+		utffit			¶
+		utfmakelod		¶
+		utfmipcat		¶
+		utfresize
+		
+PPCOBJS = ¶
+		{OBJDIR}psdtoutf.c.o	¶
+		{OBJDIR}sgitoutf.c.o	¶
+		{OBJDIR}quantizer.c.o	¶
+		{OBJDIR}quanttopip.c.o	¶
+		{OBJDIR}utfaclean.c.o	¶
+		{OBJDIR}utfaddlod.c.o	¶
+		{OBJDIR}utfapip.c.o	¶
+		{OBJDIR}utfcompress.c.o	¶
+		{OBJDIR}utffit.c.o	¶
+		{OBJDIR}utfflip.c.o	¶
+		{OBJDIR}utfinfo.c.o	¶
+		{OBJDIR}utflitdown.c.o	¶
+		{OBJDIR}utfmakelod.c.o	¶
+		{OBJDIR}utfmakepip.c.o	¶
+		{OBJDIR}utfmakesame.c.o	¶
+		{OBJDIR}utfmerge.c.o	¶
+		{OBJDIR}utfmipcat.c.o	¶
+		{OBJDIR}utfmodpip.c.o	¶
+		{OBJDIR}utfpopfine.c.o	¶
+		{OBJDIR}utfresize.c.o	¶
+		{OBJDIR}utfstrip.c.o	¶
+		{OBJDIR}utfuncompress.c.o	¶
+		{OBJDIR}utfunpip.c.o	¶
+		{OBJDIR}utfunmip.c.o		
+
+68KOBJS = ¶
+		{OBJDIR}tifftoutf.o	¶
+		{OBJDIR}ppmtoutf.o	¶
+		{OBJDIR}psdtoutf.o	¶
+		{OBJDIR}sgitoutf.o	¶
+		{OBJDIR}quantizer.o	¶
+		{OBJDIR}quanttopip.o	¶
+		{OBJDIR}utfaclean.o	¶
+		{OBJDIR}utfaddlod.o	¶
+		{OBJDIR}utfapip.o	¶
+		{OBJDIR}utfcompress.o	¶
+		{OBJDIR}utffit.o	¶
+		{OBJDIR}utfflip.o	¶
+		{OBJDIR}utfinfo.o	¶
+		{OBJDIR}utflitdown.o	¶
+		{OBJDIR}utfmakelod.o	¶
+		{OBJDIR}utfmakepip.o	¶
+		{OBJDIR}utfmakesame.o	¶
+		{OBJDIR}utfmerge.o	¶
+		{OBJDIR}utfmipcat.o	¶
+		{OBJDIR}utfmodpip.o	¶
+		{OBJDIR}utfpopfine.o	¶
+		{OBJDIR}utfresize.o	¶
+		{OBJDIR}utfstrip.o	¶
+		{OBJDIR}utftoppm.o	¶
+		{OBJDIR}utfuncompress.o	¶
+		{OBJDIR}utfunpip.o	¶
+		{OBJDIR}utfunmip.o		
+
+		
+PPCATMODOBJS = ¶
+	{OBJDIR}utfatmod.c.o ¶
+	{UTFPAGEOBJDIR}LWToken.c.o ¶
+	{UTFPAGEOBJDIR}SDFTexBlend.c.o ¶
+	{UTFPAGEOBJDIR}futil.c.o
+
+68KATMODOBJS = ¶
+	{OBJDIR}utfatmod.o ¶
+	{UTFPAGEOBJDIR}LWToken.o ¶
+	{UTFPAGEOBJDIR}SDFTexBlend.o ¶
+	{UTFPAGEOBJDIR}futil.o
+
+#####################################
+#	Default compiler and linker options
+#####################################
+IncludeFlags	=   -i ::txtlib:include: -i ::ifflib: -i :
+68KCOptions		=	-mc68020 -model far -r {IncludeFlags} -d applec -d NO_64_BIT_SCALARS -d TEXTOOLS_VERISION=¶"3.1¶"
+68KLOptions		=	-model far -t MPST -c 'MPS ' -br on
+
+PPCCOptions		=	-opt speed {IncludeFlags} -d applec -d NO_64_BIT_SCALARS -d TEXTOOLS_VERISION=¶"3.1¶"
+PPCLOptions		=	-outputformat xcoff -d -c 'MPS ' -t MPST -main __start -mf
+
+#####################################
+#	Default build rules
+#####################################
+{OBJDIR}	Ä	:
+
+.o			Ä	.c
+	echo "Compiling 68K {Default}.c";
+	{CC68K} {68KCOptions} -o {OBJDIR}{Default}.o {DepDir}{Default}.c
+
+.c.o			Ä	.c
+	echo "Compiling PPC {Default}.c";
+	{CCPPC} {PPCCOptions} -o {OBJDIR}{Default}.c.o {DepDir}{Default}.c
+
+#####################################
+# Build all of the MPW tools
+#####################################
+complete 	Ä tifftoutf ppmtoutf utftoppm FATutfatmod clitools clitoolsmath
+All		Ä	complete
+
+{OBJDIR}utftoppm.o	Ä	utftoppm.c
+	echo "Compiling 68K utftoppm.c"; ¶
+	{CC68K} -d __STDC__ -d SYSV {68KCOptions} -o {OBJDIR}utftoppm.o utftoppm.c
+
+{OBJDIR}ppmtoutf.o	Ä	ppmtoutf.c
+	echo "Compiling 68K ppmtoutf.c"; ¶
+	{CC68K} -d __STDC__ -d SYSV {68KCOptions} -o {OBJDIR}ppmtoutf.o ppmtoutf.c
+
+clitools ÄÄ {68KOBJS} {PPCOBJS}
+	for i in {TOOLS};
+		echo "Linking "{i}; ¶
+		PPCLink {OBJDIR}{i}.c.o -o {i}.xcoff ¶
+		{PPCLIBS} ¶
+		{PPCLOptions};
+		makePEF {i}.xcoff -o {BINDIR}{i} {PEFOptions};
+		Link {OBJDIR}{i}.o -o {BINDIR}{i} ¶
+		{68KLIBS} ¶
+		{68KLOptions};
+		echo "Rezzing";
+		Rez -d APPNAME=¶"{i}¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}{i};
+		duplicate -y {BINDIR}{i} {HGRELEASEDIR}{i};
+		echo "{i} complete" ;
+		delete -i {i}.xcoff;
+	end
+
+clitoolsmath ÄÄ {68KOBJS} {PPCOBJS}
+	for i in {TOOLSMATH};
+		echo "Linking "{i};
+		PPCLink {OBJDIR}{i}.c.o -o {i}.xcoff ¶
+		{PPCLIBS} ¶
+		{PPCLOptions};
+		makePEF {i}.xcoff -o {BINDIR}{i} {PEFOptions};
+		Link {OBJDIR}{i}.o -o {BINDIR}{i} ¶
+		{68KLIBS} "{Libraries}"MathLib.o ¶
+		{68KLOptions};
+		echo "Rezzing";
+		Rez -d APPNAME=¶"{i}¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}{i};
+		duplicate -y {BINDIR}{i} {HGRELEASEDIR}{i};
+		echo "{i} complete" ;
+		delete -i {i}.xcoff;
+	end
+
+FATutfatmod ÄÄ {68KATMODOBJS} {PPCATMODOBJS}
+	echo "Linking utfatmod FAT";
+	PPCLink {PPCATMODOBJS} -o utfatmod.xcoff ¶
+	{PPCLIBS} ¶
+	{PPCLOptions};
+	makePEF -o {BINDIR}utfatmod {PEFOptions} utfatmod.xcoff;
+	Link {68KATMODOBJS} -o {BINDIR}utfatmod ¶
+	{68KLIBS} ¶
+	{68KLOptions};
+	echo "Rezzing";
+	Rez -d APPNAME=¶"utfatmod¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}utfatmod;
+	duplicate -y {BINDIR}utfatmod {HGRELEASEDIR}utfatmod;
+	echo "utfatmod complete" ;
+	delete -i utfatmod.xcoff
+
+
+tifftoutf	Ä	{OBJDIR}tifftoutf.o
+	echo "Linking tifftoutf";
+	Link {OBJDIR}tifftoutf.o -o {BINDIR}tifftoutf ¶
+ 	{68KLIBS} {LIBTIFF} ¶
+ 	{68KLOptions} ;
+	Rez -d APPNAME=¶"tifftoutf¶" -a tools.r -o {BINDIR}tifftoutf;
+	duplicate -y {BINDIR}tifftoutf {HGRELEASEDIR}tifftoutf
+
+
+ppmtoutf	Ä	{OBJDIR}ppmtoutf.o
+	echo "Linking ppmtoutf";
+	Link {OBJDIR}ppmtoutf.o -o {BINDIR}ppmtoutf ¶
+ 	{68KLIBS} {LIBPPM} {LIBPGM} {LIBPBM} ¶
+ 	{68KLOptions} ;
+	Rez -d APPNAME=¶"ppmtoutf¶" -a tools.r -o {BINDIR}ppmtoutf;
+	duplicate -y {BINDIR}ppmtoutf {HGRELEASEDIR}ppmtoutf
+
+utftoppm	Ä	{OBJDIR}utftoppm.o
+	echo "Linking utftoppm";
+	Link {OBJDIR}utftoppm.o -o {BINDIR}utftoppm ¶
+ 	{68KLIBS} {LIBPPM} {LIBPBM} ¶
+ 	{68KLOptions} ;
+	Rez -d APPNAME=¶"utftoppm¶" -a tools.r -o {BINDIR}utftoppm;
+	duplicate -y {BINDIR}utftoppm {HGRELEASEDIR}utftoppm
+
+#####################################
+# Scrub all old objects and binaries
+#####################################
+clean			Ä
+	set exit 0;
+	delete -i {OBJDIR}Å;
+	set exit 1
+	
+clobber			Ä
+	set exit 0;
+	for i in {TOOLS};
+		delete -i {BINDIR}{i};
+		delete -i {HGRELEASEDIR}{i};
+	end;
+	for i in {TOOLSMATH};
+		delete -i {BINDIR}{i};
+		delete -i {HGRELEASEDIR}{i};
+	end;
+	delete -i {BINDIR}utfatmod;
+	delete -i {BINDIR}utftoppm;
+	delete -i {BINDIR}ppmtoutf;
+	delete -i {HGRELEASEDIR}utfatmod;
+	delete -i {HGRELEASEDIR}utftoppm;
+	delete -i {HGRELEASEDIR}ppmtoutf;
+	set exit 1
+
+
+

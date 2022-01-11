@@ -1,0 +1,35 @@
+\ $Id: filter1pole.ins,v 1.2 1994/11/15 07:03:13 phil Exp $
+\ One Pole Filter
+\
+\ y(n) = a0*x(n) - b1*y(n-1)
+\
+\ Phil Burk
+\ Copyright 1992 NTG
+include? DFID_FILTER1POLE function_ids.j
+
+anew task-filter1pole.ins
+
+_RED
+dspp{
+ins{
+
+DFID_FILTER1POLE dspp-function-id !
+$" filter1pole.dsp" ins-name !
+
+\ ************************************************************************************
+
+ALLOC.IMEM  Y(N-1)
+$ -7FFF $ 7FFF $ 0 ALLOC.KNOB Input
+ALLOC.OUTPUT Output
+
+\ Don't multiply by -8000 because (-1.0)*(-1.0) => -1 !!!
+$ -7FFF $ 7FFF $ 3FFF ALLOC.KNOB A0
+$ -7FFF $ 7FFF $ -4000 ALLOC.KNOB B1
+$ -7FFF $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+
+12 ALLOC.TICKS
+	Y(N-1) _A B1 _A _*
+	Y(N-1) _A _= Input _A A0 _A ACCUME _*-
+	Output _A _= ACCUME Amplitude _A _*
+}ins
+}dspp

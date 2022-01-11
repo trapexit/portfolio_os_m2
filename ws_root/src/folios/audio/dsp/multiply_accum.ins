@@ -1,0 +1,60 @@
+\ @(#) multiply_accum.ins 96/03/26 1.9
+\ ACCUM*A
+
+\\\	AUTODOC -class DSP -group Accumulator -name multiply_accum.dsp
+\\\	Multiplies accumulator by a signed signal.
+\\\
+\\\	  Description
+\\\
+\\\	    This is a 4-quadrant multiplication: Accum = Accum * Input.
+\\\
+\\\	    This instrument can only be used within a patch.
+\\\	    It may not be used as a stand-alone instrument.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Input - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed factor in the range of -1.0 to 1.0. Defaults to 1.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 4
+\\\
+\\\	    Code: 4 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  Caveats
+\\\
+\\\	    Multiplying -1.0 by -1.0 causes an overflow yielding a result of -1.0.
+\\\	    Thus, if you multiply a signal by -1.0, it will pop if the signal also
+\\\	    contains -1.0.
+\\\
+\\\	  See Also
+\\\
+\\\	    add_accum.dsp(@), subtract_accum.dsp(@), input_accum.dsp(@),
+\\\	    output_accum.dsp(@), multiply.dsp(@)
+
+include? DFID_MULTIPLY_ACCUM function_ids.j
+
+anew task-multiply_accum.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PATCHES_ONLY dspp-header-flags !
+
+DFID_ADD dspp-function-id !
+$" multiply_accum.dsp" ins-name !
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Input
+4 ALLOC.TICKS
+
+	ACCUME Input _A _CLIP _*
+}ins
+}dspp

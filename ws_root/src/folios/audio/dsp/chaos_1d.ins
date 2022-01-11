@@ -1,0 +1,109 @@
+\ @(#) chaos_1d.ins 96/03/11 1.11
+\ Instrument Template for chaos_1d.ins
+\
+\ Robert Marsanyi
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Sound_Synthesis -name chaos_1d.dsp
+\\\	One-dimensional chaotic function generator (the logistic map).
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument generates numbers by iterating the logistic map
+\\\	    equation:
+\\\
+\\\	        x0 = 4*Scalar*x1(1.0 - x1), 0.0 <= x0 <= 1.0
+\\\
+\\\	    where x1 is the output from last iteration, and x0 the current one.
+\\\
+\\\	    At low values of Scalar, the output is fairly constant. As Scalar
+\\\	    is increased, the output rises, until at about Scalar = 0.75 the
+\\\	    output begins to oscillate in a two-limit cycle. As Scalar is
+\\\	    increased further, the output bifurcates again into a four-limit
+\\\	    cycle, then into longer cycles and eventually into a pseudo-random
+\\\	    or chaotic sequence, with regions of stability or near-stability.
+\\\
+\\\	    The output is available in two forms, as a ramp between successive
+\\\	    values of x, and as a step function.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency - AUDIO_SIGNAL_TYPE_OSC_FREQ
+\\\	        Frequency in Hertz. Range is -22050.0 to +22050.0. Default is 440.0.
+\\\	        Controls how frequently x0 is calculated.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 1.0. Scales the value of x0.
+\\\
+\\\	    Scalar - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        0.0 to +1.0, defaults to 0.825.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        0.0 to +1.0. Outputs the latest value of x0.
+\\\
+\\\	    InterpolatedOutput
+\\\	        0.0 to +1.0. Interpolates between the current and previous values of x0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 40
+\\\
+\\\	    Code: 36 words
+\\\
+\\\	    Data: 8 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    noise.dsp(@), rednoise.dsp(@)
+
+include? DFID_CHAOS_1D function_ids.j
+
+anew task-chaos_1d.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_CHAOS_1D dspp-function-id !
+$" chaos_1d.dsp" ins-name !
+
+$ 8000 440 22050 */ KNOB_TYPE_OSC_FREQ ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+$ 7000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Scalar
+
+ALLOC.VARIABLE c1dPhase
+ALLOC.VARIABLE c1dOld
+$ 1234 DRSC_AT_START ALLOC.VARIABLE.DEFAULT c1dNew  \ needs a non-0 seed
+DRSC_TYPE_HW_NOISE CONNECT.HARDWARE  HardNoise
+_IMPORT ALLOC.VARIABLE gScratch1   \ fractional phase
+ALLOC.OUTPUT Output
+ALLOC.OUTPUT InterpolatedOutput
+40 ALLOC.TICKS
+
+	c1dPhase _%A Frequency _A _+
+	_BCC:	@Interpc1d
+
+	c1dOld _A c1dNew _A _MOVE               \ save old value
+	c1dNew _A c1dNew _A c1dNew _A _*-       \ x(1-x) = -(x*x-x)
+	Scalar _A ACCUME _*                     \ rx(x-1), 0<=r<=1
+	c1dNew _A _= ACCUME 2 _<<' _NEG         \ 4rx(1-x)
+	HardNoise _A 3 _# _AND
+	c1dNew _%A ACCUME _XOR                  \ dither two low-order bits
+	Output _A _= ACCUME Amplitude _A _*
+
+_LABEL: @Interpc1d
+	gScratch1 _A _= c1dPhase _A 1 _>>' _TRL \ logical right shift, U2/
+	ACCUME c1dOld _A c1dOld _A _*-          \ old*(frac-1) = old*frac-old
+	c1dNew _A gScratch1 _A ACCUME	_*-     \ new*frac - (old*frac-old)
+	InterpolatedOutput _A _= ACCUME Amplitude _A _*
+
+}ins
+}dspp

@@ -1,0 +1,32 @@
+#############################################################################
+#  File   : makefile
+#  Author : spence
+#############################################################################
+
+SHELL = /bin/sh
+
+CC	    = gcc
+CFLAGS  = -g
+HEADERS = ../parser.h  ../parsererrors.h write.h  ../parsertypes.h  ../syntax.h
+OBJS    = ../parse.o write.o  ../errors.o ../file.o mkheader.o mhsyntax.o ../memory.o ../builtinclasses.o
+
+all : mkheader.exe
+	
+.c.o: ; $(CC) -c -o $@ $*.c  $(CFLAGS)
+	
+mkheader.exe : $(OBJS)  $(HEADERS)
+	$(CC) -o $@ $(OBJS) $(CFLAGS)
+
+../parse.o : ../parse.c
+../errors.o: ../errors.c
+write.o: write.c write.h ../parsererrors.h ../parsertypes.h
+../file.o: ../file.c
+mkheader.o: mkheader.c ../parsertypes.h ../parsererrors.h ../parser.h
+mhsyntax.o: mhsyntax.c ../syntax.h write.h
+../memory.o: ../memory.c
+../builtinclasses.o: ../builtinclasses.c
+
+clean :: ;
+	rm -f mkheader.exe $(OBJS)
+
+	

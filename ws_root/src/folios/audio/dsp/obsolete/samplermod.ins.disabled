@@ -1,0 +1,117 @@
+\ @(#) samplermod.ins.disabled 95/11/16 1.8
+\ $Id: samplermod.ins,v 1.9 1995/01/20 21:27:52 peabody Exp $
+\ Instrument Template for Sample Player
+\ Call the DSP routine for a variable rate mono 16 bit sample
+\ with a Freq Modulation Input
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+\ 931215 PLB Scale modulation by Frequency as well as Depth, NAH!, too
+\            expensive, 12 ticks
+\ 940427 WJB Changed DFID_SAMPLER to DFID_SAMPLERMOD in include?.
+
+\\\	NOAUTODOC -private -class DSP -name samplermod.dsp
+\\\	Variable-rate sample player with pitch modulation. !!! OBSOLETE
+\\\
+\\\	  Function
+\\\
+\\\	    This is a composite instrument consisting of sampler.dsp with built-in
+\\\	    pitch modulation. samplermod.dsp uses unsigned addition and clipping to
+\\\	    generate a frequency range of 0 to $FFFF.
+\\\
+\\\	    The sampler frequency is computed as follows:
+\\\
+\\\	    SamplerFrequency = Frequency + ModInput * ModDepth
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency                       Units are fixed point phase increment.
+\\\	                                    $8000 equals the normal sample rate, with 1
+\\\	                                    sample per frame. Valid range is 0..$ffff.
+\\\	                                    Thus, you can go from zero to one octave
+\\\	                                    above the original. Defaults to $8000.
+\\\
+\\\	    Amplitude                       0..$7FFF. Defaults to $7FFF.
+\\\
+\\\	    ModInput                        Pitch modulation signal (e.g. output of
+\\\	                                    triangle_lfo.dsp) in the range of
+\\\	                                    -$8000..$7fff. Defaults to 0.
+\\\
+\\\	    ModDepth                        Gain of pitch modulation in the range of
+\\\	                                    -$8000..$7fff. Defaults to 0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 43
+\\\
+\\\	    Code: 18
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+
+include? PhaseInc OscUpDownFP.j
+include? DFID_SAMPLERMOD function_ids.j
+
+anew task-samplermod.ins
+
+\ From OscUpDownFP.j,v 1.2 1994/05/12 00:01:00 peabody Exp $
+
+\ Register assignments for OscUpDownFP
+\ ARIA does not support includes, and certainly not
+\ conditional includes, so use these "unique" names
+4 constant FIFOPtr4Sampler
+8 constant PhaseInc4Sampler
+
+_RED
+dspp-echo off
+dspp{
+ins{
+
+DFID_SAMPLERMOD dspp-function-id !
+$" samplermod.dsp" ins-name !
+
+ALLOC.RBASE MYRB   \ allocate a register base for a block of 8 registers
+ALLOC.INFIFO  InFIFO
+ALLOC.OUTPUT Output
+$ -8000 $ 7FFF $ 0000 ALLOC.KNOB ModInput
+$ -8000 $ 7FFF $ 0000 ALLOC.KNOB ModDepth
+0 $ FFFF $ 8000 ALLOC.KNOB Frequency
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+43 ALLOC.TICKS
+
+    MYRB _RBASE                         \ set RBASE for subsequent calls
+\ calc frequency from knob
+\ 1) OLD WAY WITH CLIP PROBLEM
+\    PhaseInc4Sampler _reg _= ModInput _A ModDepth _A Frequency _A _CLIP _*+
+
+\ 2) MODDEPTH UNAFFECTED BY PITCH
+    Frequency _A #$ 8000 _+
+    ModInput _A ModDepth _A ACCUME _CLIP _*+
+    PhaseInc4Sampler _reg _= ACCUME #$ 8000 _-
+
+\ 3) Scale modulation by Depth and Frequency, TOO EXPENSIVE
+\    PhaseInc4Sampler _reg _= Frequency _A #$ 8000 _+   \ add -1 to bring in clip range, use PhaseInc4Sampler as scratch
+\    Frequency _A 1 _>>>' _TRL   \ scale unsigned frequency to 0-1 range with logical shift
+\    ACCUME ModDepth _A _*
+\    ACCUME  ModInput _A PhaseInc4Sampler _reg _CLIP _*+
+\    PhaseInc4Sampler _reg _= ACCUME #$ 8000 _- \ subtract -1
+
+    FIFOPtr4Sampler _reg InFIFO _# _MOVE        \ put FIFO address in register indirect
+    _JSR:   OscUpDownFP                 \ call external reference
+    Output _A _= ACCUME Amplitude _A _* \ scale loudness
+
+}ins
+}dspp

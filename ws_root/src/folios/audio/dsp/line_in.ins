@@ -1,0 +1,72 @@
+\ @(#) line_in.ins 96/09/11 1.17
+\ $Id: directin.ins,v 1.6 1995/02/07 06:28:42 phil Exp $
+\ directin from ADC
+\
+\ Author: Phil Burk
+\ Copyright 1994 3DO
+\ All Rights Reserved
+
+\\\	AUTODOC -class DSP -group Line_In_And_Out -name line_in.dsp
+\\\	Taps stereo audio line in.
+\\\
+\\\	  Description
+\\\
+\\\	    Outputs the stereo Audio Input signal.
+\\\
+\\\	    Each task that intends to use this instrument must successfully enable
+\\\	    audio input (by calling EnableAudioInput()) before an Instrument(@) can be
+\\\	    created from this template (or a patch template containing this template).
+\\\
+\\\	    Any number of instances of line_in.dsp(@) can be used without interraction.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 2 parts
+\\\	        Stereo line in signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V23
+\\\
+\\\	  Notes
+\\\
+\\\	    A special license may be required to use audio input in a title. (!!! is this still true?)
+\\\
+\\\	  See Also
+\\\
+\\\	    EnableAudioInput(), line_out.dsp(@)
+
+decimal
+
+include? DFID_LINE_IN function_ids.j
+
+anew task-directin.f
+
+_ANVIL
+dspp{
+ins{
+
+dspp-echo off
+
+DFID_LINE_IN dspp-function-id !
+$" line_in.dsp" ins-name !
+
+DRSC_TYPE_HW_ADC_INPUT 2 CONNECT.HARDWARE.ARRAY  InputADC   \ these can be read multiple times per frame
+
+2 ALLOC.OUTPUT.ARRAY Output
+6 ALLOC.TICKS
+
+	Output 0 PART+ _A   InputADC 0 PART+ _A   _MOVE
+	Output 1 PART+ _A   InputADC 1 PART+ _A   _MOVE
+
+}ins
+}dspp
+

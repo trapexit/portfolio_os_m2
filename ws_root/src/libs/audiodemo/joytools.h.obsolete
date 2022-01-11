@@ -1,0 +1,28 @@
+#ifndef __AUDIODEMO_JOYTOOLS_H
+#define __AUDIODEMO_JOYTOOLS_H
+
+
+/******************************************************************************
+**
+**  @(#) joytools.h.obsolete 95/04/27 1.2
+**  $Id: joytools.h,v 1.4 1994/10/06 18:43:49 peabody Exp $
+**
+**  libaudiodemo.a joypad stuff (really obsolete)
+**  !!! should phase this out - only used by dspfaders!
+**
+******************************************************************************/
+
+
+#include <kernel/types.h>
+
+
+int32 InitJoypad( void );
+int32 ReadJoypad( uint32 *Buttons );
+int32 TermJoypad( void );
+int32 WaitJoypad( uint32 Mask, uint32 *Buttons );
+
+
+/*****************************************************************************/
+
+
+#endif  /* __AUDIODEMO_JOYTOOLS_H */

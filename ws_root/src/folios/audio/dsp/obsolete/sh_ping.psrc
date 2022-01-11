@@ -1,0 +1,90 @@
+\ @(#) sh_ping.psrc 95/10/24 1.3
+\
+\ Sample and Hold or triangle wave controlling filter frequency.
+\
+\ Author: Phil Burk
+\ Copyright 3DO 1995
+
+include? patch{ patch_maker.fth
+
+anew task-sh_ping.psrc
+
+patch{
+
+\ Declare templates that will be used.
+\ A single template can be used multiple times.
+c" triangle_lfo.dsp"      pm.template: TMP_SOURCE
+c" svfilter.dsp"   pm.template: TMP_SVFILTER
+c" latch.dsp"      pm.template: TMP_LATCH
+c" timesplus.dsp"  pm.template: TMP_TIMESPLUS
+c" impulse.dsp"    pm.template: TMP_IMPULSE
+
+\ Block Names
+c" Source"   pm.name: BLK_SOURCE
+c" Filter"  pm.name: BLK_FILTER
+c" Latch"   pm.name: BLK_LATCH
+c" Impulse" pm.name: BLK_IMPULSE
+c" FreqMix" pm.name: BLK_FREQMIX
+
+\ Declare Port names
+c" Output" pm.name: PORT_OUTPUT
+c" Input"  pm.name: PORT_INPUT
+c" Gate"   pm.name: PORT_GATE
+c" InputA" pm.name: PORT_INPUTA
+c" InputB" pm.name: PORT_INPUTB
+c" InputC" pm.name: PORT_INPUTC
+
+\ Declare Knob names
+c" Amplitude"  pm.name: KNOB_AMPLITUDE
+c" Frequency"  pm.name: KNOB_FREQUENCY
+c" CutoffFreq" pm.name: KNOB_CUTOFF_FREQ
+c" PulseFreq"   pm.name: KNOB_PULSE_FREQ
+c" PulseAmp"   pm.name: KNOB_PULSE_AMP
+c" Resonance"  pm.name: KNOB_RESONANCE
+c" ModRate"    pm.name: KNOB_MODRATE
+c" ModDepth"   pm.name: KNOB_MODDEPTH
+
+\ Add blocks to patch
+BLK_SOURCE  TMP_SOURCE      pc.add.template
+BLK_FILTER  TMP_SVFILTER    pc.add.template
+BLK_LATCH   TMP_LATCH       pc.add.template
+BLK_FREQMIX TMP_TIMESPLUS   pc.add.template
+BLK_IMPULSE TMP_IMPULSE     pc.add.template
+
+\ Set ports to constant values
+\ pc.set.constant { name_index port_index part_num  -- , default_val -f- }
+\ BLK_IMPULSE          KNOB_AMPLITUDE  0 0.2000  pc.set.constant
+
+\ define inputs and outputs
+\ : pc.define.port { name_index num_parts port_type signal_type -- }
+PORT_OUTPUT  1 AF_PORT_TYPE_OUTPUT KNOB_TYPE_RAW_SIGNED  pc.define.port
+
+\ connect templates
+BLK_SOURCE         PORT_OUTPUT 0   BLK_LATCH        PORT_INPUT     0 pc.connect
+BLK_LATCH          PORT_OUTPUT 0   BLK_FREQMIX      PORT_INPUTA    0 pc.connect
+BLK_FREQMIX        PORT_OUTPUT 0   BLK_FILTER       KNOB_FREQUENCY 0 pc.connect
+BLK_IMPULSE        PORT_OUTPUT 0   BLK_LATCH        PORT_GATE      0 pc.connect
+BLK_IMPULSE        PORT_OUTPUT 0   BLK_FILTER       PORT_INPUT     0 pc.connect
+BLK_FILTER         PORT_OUTPUT 0   PATCH_BLOCK_SELF PORT_OUTPUT    0 pc.connect
+
+\ Create Knobs for external control
+\ : pc.define.knob { name_index num_parts knob_type -- , default -f- }
+KNOB_FREQUENCY    1  KNOB_TYPE_RAW_SIGNED    0.1000 pc.define.knob
+KNOB_AMPLITUDE    1  KNOB_TYPE_RAW_SIGNED    1.0000 pc.define.knob
+KNOB_RESONANCE    1  KNOB_TYPE_RAW_SIGNED    0.0010 pc.define.knob
+KNOB_PULSE_FREQ   1  KNOB_TYPE_OSC_FREQ      25.700 pc.define.knob
+KNOB_PULSE_AMP    1  KNOB_TYPE_RAW_SIGNED    0.1000 pc.define.knob
+KNOB_MODDEPTH     1  KNOB_TYPE_RAW_SIGNED    0.0800 pc.define.knob
+KNOB_MODRATE      1  KNOB_TYPE_LFO_FREQ      17.000 pc.define.knob
+
+\ connect KNOBS to blocks
+PATCH_BLOCK_SELF  KNOB_MODRATE     0  BLK_SOURCE  KNOB_FREQUENCY    0  pc.connect
+PATCH_BLOCK_SELF  KNOB_MODDEPTH    0  BLK_FREQMIX PORT_INPUTB       0  pc.connect
+PATCH_BLOCK_SELF  KNOB_FREQUENCY   0  BLK_FREQMIX PORT_INPUTC       0  pc.connect
+PATCH_BLOCK_SELF  KNOB_RESONANCE   0  BLK_FILTER  KNOB_RESONANCE    0  pc.connect
+PATCH_BLOCK_SELF  KNOB_AMPLITUDE   0  BLK_FILTER  KNOB_AMPLITUDE    0  pc.connect
+PATCH_BLOCK_SELF  KNOB_PULSE_FREQ  0  BLK_IMPULSE KNOB_FREQUENCY    0  pc.connect
+PATCH_BLOCK_SELF  KNOB_PULSE_AMP   0  BLK_IMPULSE KNOB_AMPLITUDE    0  pc.connect
+
+}patch
+

@@ -1,0 +1,94 @@
+# @(#) linkexec 96/07/16 1.55
+
+default.linkexec: default.generic
+
+ifndef	LINK_LIBS
+LINK_LIBS =		c
+endif
+
+ifndef 	NO_STD_MODULES
+ifndef STD_MODULES
+STD_MODULES =		filesystem kernel
+endif
+endif
+
+MODULES += ${STD_MODULES}
+
+THDOFLAGS := 0
+ifdef NO_CHDIR_MODULE
+THDOFLAGS := ${THDOFLAGS} + 1
+endif
+
+ifdef PRIVILEGED_MODULE
+THDOFLAGS := ${THDOFLAGS} + 2
+SIGNED_MODULE = 1
+endif
+
+ifdef NOSIG_PRIVED_MODULE
+THDOFLAGS := ${THDOFLAGS} + 2
+endif
+
+ifdef SIGNED_MODULE
+THDOFLAGS := ${THDOFLAGS} + 64
+endif
+
+ifdef MODULE_CALLBACKS
+THDOFLAGS := ${THDOFLAGS} + 32
+endif
+
+ifdef SHOW_MODULE_INFO
+THDOFLAGS := ${THDOFLAGS} + 8
+endif
+
+PRIVFLAGS := -Hflags=`${EXPR} ${THDOFLAGS}`
+
+
+ifndef TARGET_DIRECTORY
+BUILD_INTO =		${OBJDIR}
+else
+BUILD_INTO =		${TARGET_DIRECTORY}
+ifndef FTP_TRANSFER
+FTP_TRANSFER =		${TARGET_DIRECTORY}/${TARGET_NAME}
+endif
+endif
+
+BITN =			${BUILD_INTO}/${TARGET_NAME}
+
+
+REFERENCE_LINK_LIB_DIR := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${LINK_LIB_DIR})
+TEMP_LINK_LIBS := ${LINK_LIBS:%=lib%.a}
+ALL_LINK_LIBS  := $(foreach lib, ${TEMP_LINK_LIBS}, $(firstword $(wildcard ${LINK_LIB_DIR}/${lib}) ${REFERENCE_LINK_LIB_DIR}/${lib}))
+
+REFERENCE_MODULE_DIR := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${MODULE_DIR})
+REFERENCE_VECTOR_DIR := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${VECTOR_DIR})
+REFERENCE_BOOT_DIR   := $(patsubst ${ROOT}/%,${REFERENCE_ROOT}/%,${BOOT_DIR})
+
+ALL_MODULES  := $(foreach lib, ${MODULES}, $(firstword	$(wildcard ${VECTOR_DIR}/${lib})\
+							$(wildcard ${REFERENCE_VECTOR_DIR}/${lib})))
+
+${BITN}: ${OBJS} ${ALL_LINK_LIBS} ${WHATCSRC} ${LD} $(wildcard ${LINK_CONTROL_FILE}) ${ALL_MODULES}
+	${BUILD_WHATXOBJ}
+	${LD} ${LFLAGS} ${LDFLAGS} -o$@ \
+	        $(foreach lf,$(wildcard ${LINK_CONTROL_FILE}),-x$(lf)) \
+		${LOADERTOOL_STDFLAGS} \
+		${LOADERTOOL_FLAGS} \
+		${PRIVFLAGS} \
+		${OBJS} ${WHATXOBJ} \
+		${ALL_MODULES} \
+		${ALL_LINK_LIBS:%=-l%}
+	@${CAT} ${SRC}/docs/copyright.txt >>$@
+ifdef SIGNED_MODULE
+	${RSASIGN} $@
+endif
+
+all.post: ${BITN}
+
+clean: clean.linkexec
+clean.linkexec:
+	${RM} ${BITN}
+
+unlink: unlink.linkexec
+unlink.linkexec:
+	-@${RM} ${BITN}
+
+include ${CODEMGR_WS}/ws_root/rules/generic

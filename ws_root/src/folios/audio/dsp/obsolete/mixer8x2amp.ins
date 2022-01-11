@@ -1,0 +1,128 @@
+\ @(#) mixer8x2amp.ins 95/11/16 1.8
+\ $Id: mixer8x2amp.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ 8x2 Mixer with amplitude
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+\
+\ 930617 PLB Added clipping.
+
+\\\	NOAUTODOC -private -class DSP -name mixer8x2amp.dsp
+\\\	OBSOLETE - Eight-channel stereo mixer with master gain.
+\\\
+\\\	  Function
+\\\
+\\\	    This is an eight channel stereo mixer. The total gain on a side should
+\\\	    not exceed 0x7FFF. Its output is added to the output of the other mixers
+\\\	    at the end of each frame and then sent to the DAC FIFO.
+\\\
+\\\	    This mixer has an additional master gain control that can be used to fade
+\\\	    control the entire mix.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    LeftGain0, LeftGain1, ..., LeftGain7
+\\\	        Left channel gain for each channel in the range of 0..0x7FFF. Defaults to
+\\\	        0.
+\\\
+\\\	    RightGain0, RightGain1, ..., RightGain7
+\\\	        Right channel gain for each channel in the range of 0..0x7FFF. Defaults
+\\\	        to 0.
+\\\
+\\\	    Amplitude
+\\\	        Master gain control in the range of 0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Inputs -enumerated
+\\\
+\\\	    Input0, Input1, ..., Input7
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 61
+\\\
+\\\	    Code: 59 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    directout.dsp, mixer2x2.dsp, mixer4x2.dsp, mixer8x2.dsp, mixer12x2.dsp, submixer8x2.dsp
+\\\
+
+decimal
+
+$ 106 constant MixLeft
+$ 107 constant MixRight
+include? DFID_MIXER8X2AMP function_ids.j
+
+anew task-mixer8x2amp.f
+
+_RED
+dspp{
+ins{
+
+DFID_MIXER8X2AMP dspp-function-id !
+$" mixer8x2amp.dsp" ins-name !
+
+
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain0
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain1
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain2
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain3
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain4
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain5
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain6
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain7
+
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain0
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain1
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain2
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain3
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain4
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain5
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain6
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain7
+
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+
+ALLOC.IMEM Input0
+ALLOC.IMEM Input1
+ALLOC.IMEM Input2
+ALLOC.IMEM Input3
+ALLOC.IMEM Input4
+ALLOC.IMEM Input5
+ALLOC.IMEM Input6
+ALLOC.IMEM Input7
+
+61 ALLOC.TICKS
+\ left side
+
+	LeftGain0 _A  Input0 _A  _*
+	LeftGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	LeftGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	LeftGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	LeftGain4 _A  Input4 _A  ACCUME _CLIP _*+
+	LeftGain5 _A  Input5 _A  ACCUME _CLIP _*+
+	LeftGain6 _A  Input6 _A  ACCUME _CLIP _*+
+	LeftGain7 _A  Input7 _A  ACCUME _CLIP _*+
+	_NOP
+	Amplitude _A ACCUME MixLeft _%A  _CLIP _*+
+
+\ right side
+	_NOP
+	RightGain0 _A  Input0 _A  _*
+	RightGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	RightGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	RightGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	RightGain4 _A  Input4 _A  ACCUME _CLIP _*+
+	RightGain5 _A  Input5 _A  ACCUME _CLIP _*+
+	RightGain6 _A  Input6 _A  ACCUME _CLIP _*+
+	RightGain7 _A  Input7 _A  ACCUME _CLIP _*+
+	_NOP
+	Amplitude _A ACCUME MixRight _%A _CLIP _*+
+}ins
+}dspp
+

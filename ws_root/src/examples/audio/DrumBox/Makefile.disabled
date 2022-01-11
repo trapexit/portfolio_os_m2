@@ -1,0 +1,13 @@
+# @(#) Makefile.disabled 96/03/20 1.10
+# DrumBox demo
+
+EXAMPLE_CLASS =		Audio/DrumBox
+
+LINK_LIBS =		audiodemo music frame_utils framework bsdf framework pipeline bsdf clt spmath eventbroker c
+MODULES =		audio audiopatchfile font graphics gstate iff frame2d
+
+include ${CODEMGR_WS}/ws_root/variables/makeexamples
+include ${CODEMGR_WS}/ws_root/variables/linkexec
+include ${CODEMGR_WS}/ws_root/rules/subtree
+include ${CODEMGR_WS}/ws_root/rules/makeexamples
+include ${CODEMGR_WS}/ws_root/rules/linkexec

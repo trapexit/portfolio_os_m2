@@ -1,0 +1,7 @@
+@(#) archive.txt 96/02/23 1.1
+
+audio programs archive
+
+The files in this directory are here for archival purposes. They are no longer
+intended to be part of the audio program set.
+

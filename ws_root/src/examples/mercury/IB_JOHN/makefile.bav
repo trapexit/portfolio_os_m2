@@ -1,0 +1,168 @@
+# Makefile generated for Microsoft nMake
+#
+# The 3DO Company
+
+.SILENT :
+
+#------------------------------------------------------------------------------
+Target	= ib
+
+3DO	= $(THDO)
+OS	= $(3DO)\$(THDO_RELEASE)
+Mercury	= $(3DO)\$(THDO_RELEASE)\Examples\Mercury
+
+#------------------------------------------------------------------------------
+C_Files = \
+	bsdf_read.o \
+	filepod.c \
+	graphicsenv.c \
+	mainloop.c \
+	fight.c \
+	controller.c \
+	..\extras\am_anim.c \
+	..\extras\am_model.c \
+	..\extras\tex_read.c
+
+#------------------------------------------------------------------------------
+S_Files = \
+
+#------------------------------------------------------------------------------
+Libs	= \
+	-L$(OS)\libs\default \
+	-llibmercury_setup.a \
+	-llibmercury1.a \
+	-llibmercury2.a \
+	-llibmercury3.a \
+	-llibmercury4.a \
+	-llibmercury_utils.a \
+	-lclt \
+	-leventbroker \
+	-lblitter_utils \
+	-lspmath \
+	-lc
+
+#------------------------------------------------------------------------------
+Modules = \
+	$(OS)\vectors\default\audio \
+	$(OS)\vectors\default\font \
+	$(OS)\vectors\default\graphics \
+	$(OS)\vectors\default\gstate \
+	$(OS)\vectors\default\iff \
+	$(OS)\vectors\default\blitter \
+	$(OS)\vectors\default\frame2d \
+	$(OS)\vectors\default\audiopatch \
+	$(OS)\vectors\default\audiopatchfile \
+	$(OS)\vectors\default\kernel \
+	$(OS)\vectors\default\filesystem
+
+#------------------------------------------------------------------------------
+Objects = \
+	$(C_Files:.c=.o) \
+	$(S_Files:.s=.o)
+
+#------------------------------------------------------------------------------
+Assembler = ppcas
+Assembler_Options = \
+	-I$(Mercury)\include \
+	-I$(OS)\includes
+AS = $(Asssembler)
+ASFLAGS = $(Asssembler_Options)
+
+#------------------------------------------------------------------------------
+Compiler = dcc
+Compiler_Options = \
+	-I..\extras \
+	-I$(Mercury)\include \
+	-I$(OS)\includes \
+	-DNUPUPSIM \
+	-D__3DO__ \
+	-DOS_3DO=2 \
+	-XO \
+	-Xinline=5 \
+	-Xtest-at-bottom \
+	-Xunroll=1 \
+	-Xstring-align=1 \
+	-Ximport
+CC = $(Compiler)
+CFLAGS = $(Compiler_Options)
+
+#------------------------------------------------------------------------------
+Archive = dar
+Archive_Options = \
+	\cq
+AR = $(Archive)
+AROPTS = $(Archive_Options)
+
+#------------------------------------------------------------------------------
+Linker = link3do
+Linker_Options = \
+	-D \
+	-r \
+	-s \
+	-Htime=now \
+	-Hsubsys=1 \
+	-Hversion=30 \
+	-Hrevision=0 \
+	-Hosversion=30 \
+	-Hosrevision=0 \
+	-Hname=$(Target) \
+	-Hstack=32768 \
+	-Htype=5 \
+	-Hflags=0
+LINK = $(Linker)
+
+#------------------------------------------------------------------------------
+FTP = cutftp32
+FTP_Options = \
+
+#------------------------------------------------------------------------------
+# Explicit Rules
+#
+$(Target): $(Objects)
+	@echo Linking ...
+	$(Linker) $(Linker_Options) -o $(Target) $(Objects) $(OS)\libs\default\M_SetupForceLink.o $(Modules) $(Libs)
+	@echo Copying executable to remote ...
+	copy $(Target) $(OS)\build\remote\$(Target) /Q
+	@echo Completed $(Target).
+
+.PHONY : run
+run: $(Target)
+	@echo M2 Execute ...
+	$(OS)\build\m2 hardreset
+	copy $(Target) $(OS)\build\remote\$(Target) /Q
+	$(OS)\build\m2 cd /remote/$(Target)
+	$(OS)\build\m2 $(Target) 14 11
+	@echo Completed run.
+
+.PHONY : clean
+clean:
+	@echo Cleaning ...
+	-rm $(Target) $(Objects)
+#	del $(Target) $(Objects)
+	@echo Completed Cleaning.
+
+.PHONY : runall
+runall: $(Target)
+	@cd graphics
+	nmake
+	@cd ..
+	@echo M2 Execute ...
+	$(OS)\build\m2 hardreset
+	copy $(Target) $(OS)\build\remote\$(Target) /Q
+	$(OS)\build\m2 cd /remote/$(Target)
+	$(OS)\build\m2 $(Target)
+	@echo Complete.
+
+#------------------------------------------------------------------------------
+# Implicit Rules
+
+.c.o:
+	@echo Compiling ... $<
+	$(Compiler) $(Compiler_Options) -c $< -o $@
+
+.s.o:
+	@echo Assembling ... $<
+	$(Assembler) $(Assembler_Options) $< -o $@
+
+#------------------------------------------------------------------------------
+# End of File

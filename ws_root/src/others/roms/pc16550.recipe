@@ -1,0 +1,15 @@
+// @(#) pc16550.recipe 96/03/11 1.2
+//
+// Recipe for building PC16550 image.
+// Just set some defines and include "generic.recipe".
+
+#define	VOLUME_NAME		PC16550_PROTO
+#define	FSTYPE			romdisk
+#define	VOLSIZE			64
+#define	BLOCK_SIZE		4
+#define	DIR_BLOCK_SIZE		512
+#define	BLUEPRINT		pc16550.blueprint
+#define	DEVDIPIR_NAME		dipir.pc16550
+#define	DEVDIPIR_COMPONENT_ID	DIPIRID_PC16550
+
+#include "generic.recipe"

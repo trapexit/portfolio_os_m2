@@ -1,0 +1,16 @@
+// @(#) remote.blueprint 96/09/11 1.2
+//
+// Blueprint file for remote image.
+//
+// This is used in the debugger environment to create the remotevol file which
+// holds the data needed to make dipir handle the host communications.
+
+#include	"generic.defines"
+
+TAKEME {
+	System.m2 {
+		Boot {
+			dipir.host -> DIPIRDIR/dipir.host
+		}
+	}
+}

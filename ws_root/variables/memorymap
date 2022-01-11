@@ -1,0 +1,169 @@
+# @(#) memorymap 96/08/26 1.62
+
+##############################################################################
+#
+#	memorymap
+#
+#	This file contains the ROM/RAM memory map related variable
+#	definitions.
+#
+##############################################################################
+
+
+##############################################################################
+#
+#	Global system map
+#
+##############################################################################
+
+SYSROMSTART	= 0x20000000			# Hardware ROM starting address
+DRAMSTART       = 0x40000000			# Hardware RAM starting address
+
+# Note: OSRESERVEDMEM should be used only by dipir and in RomTags.
+OSRESERVEDMEM	= 0x00080000			# 512K reserved for OS
+
+
+##############################################################################
+#
+#	ROM usage map
+#
+##############################################################################
+
+DIPIRTEMPSIZE	=		0x00008000 	# Dipir needs 32K buffer
+
+ifeq (${BUILD_DEBUGGER}, NO)
+
+# ----- Definitions for real ROM
+
+SYSROMIMAGE	= ${SYSROMSTART}		# ROM image is really in system ROM
+BOOTCODESTART	= ${SYSROMIMAGE}		# Boot code
+BOOTCODESIZE	=		0x00004800
+
+ROMVOLUMELABEL	= 0x20004800			# File system volume label
+
+DIPIRCODESTART	= 0x20005000			# Dipir code
+DIPIRCODESIZE	=		0x????????
+
+DEBUGGERSTART	= 0x????????
+DEBUGGERSIZE	=		0x????????
+DEBUGGERREGION	= 0x????????			# Not used in real ROM case
+
+else
+
+# ----- Definitions for development ROM
+
+ifeq (${BUILD_16M}, YES)
+DEBUGGERSTART	= 0x40FFF000			# Reserved for debugger
+DEBUGGERSIZE	=		0x00001000
+DEBUGGERREGION	= 0x40FFFF00			# Location of DebuggerInfo
+else
+DEBUGGERSTART	= 0x407FF000			# Reserved for debugger
+DEBUGGERSIZE	=		0x00001000
+DEBUGGERREGION	= 0x407FFF00			# Location of DebuggerInfo
+endif
+
+ifeq (${BUILD_FLASH}, YES)
+
+# ----- Definitions for development ROM burned into devcard Flash memory.
+
+SYSROMIMAGE	= 0x20000000			# Debugger puts ROM image here
+BOOTCODESTART	= ${SYSROMIMAGE}		# Boot code
+BOOTCODESIZE	=		0x00004800
+
+ROMVOLUMELABEL	= 0x20004800			# File system volume label
+
+DIPIRCODESTART	= 0x20005000			# Dipir code
+DIPIRCODESIZE	=		0x00010000
+
+
+else						# Definitions for fake ROM
+ifeq (${BUILD_16M}, YES)
+
+# ----- Definitions for development ROM in high-memory (16M config)
+
+SYSROMIMAGE	= 0x40F00000			# Debugger puts ROM image here
+BOOTCODESTART	= ${SYSROMIMAGE}		# Boot code
+BOOTCODESIZE	=		0x00004800
+
+ROMVOLUMELABEL	= 0x40F04800			# File system volume label
+
+DIPIRCODESTART	= 0x40F05000			# Dipir code
+DIPIRCODESIZE	=		0x00010000
+
+
+else
+
+# ----- Definitions for development ROM in high-memory (8M config)
+
+SYSROMIMAGE	= 0x40700000			# Debugger puts ROM image here
+BOOTCODESTART	= ${SYSROMIMAGE}		# Boot code
+BOOTCODESIZE	=		0x00004800
+
+ROMVOLUMELABEL	= 0x40704800			# File system volume label
+
+DIPIRCODESTART	= 0x40705000			# Dipir code
+DIPIRCODESIZE	=		0x00010000
+
+
+endif
+endif
+endif
+
+
+##############################################################################
+#
+#	RAM usage map
+#
+##############################################################################
+
+VECTORSTART	= 0x40000000			# Exception vectors
+VECTORSIZE	=		0x00002000
+BOOTDATASTART	= 0x40002000			# Boot code static data
+BOOTDATASIZE	=		0x00001000
+
+DIPIRDATASTART  = 0x40003000			# Dipir static data
+DIPIRDATASIZE	=		0x00001000
+DIPIRBUFSTART	= 0x40004000			# Buffer shared between dipir and OS
+DIPIRBUFSIZE	=		0x0000c000
+DIPIRSCRATCH	= 0x40100000			# Must be above any OS components
+
+
+##############################################################################
+#
+#	Defines for the various maps
+#
+##############################################################################
+
+MAP_GLOBAL_DEFINES =				\
+	-DSYSROMSTART=${SYSROMSTART}		\
+	-DSYSROMSIZE=${SYSROMSIZE}		\
+	-DOSRESERVEDMEM=${OSRESERVEDMEM}	\
+	-DDRAMSTART=${DRAMSTART}
+
+MAP_ROM_DEFINES =				\
+	-DSYSROMIMAGE=${SYSROMIMAGE}		\
+	-DBOOTCODESTART=${BOOTCODESTART}	\
+	-DBOOTCODESIZE=${BOOTCODESIZE}		\
+	-DROMVOLUMELABEL=${ROMVOLUMELABEL}	\
+	-DDIPIRCODESTART=${DIPIRCODESTART}	\
+	-DDIPIRCODESIZE=${DIPIRCODESIZE}	\
+	-DDIPIRTEMPSIZE=${DIPIRTEMPSIZE}	\
+	-DDEBUGGERSTART=${DEBUGGERSTART}	\
+	-DDEBUGGERSIZE=${DEBUGGERSIZE}		\
+	-DDEBUGGERREGION=${DEBUGGERREGION}
+
+MAP_RAM_DEFINES =				\
+	-DVECTORSTART=${VECTORSTART}		\
+	-DVECTORSIZE=${VECTORSIZE}		\
+	-DBOOTDATASTART=${BOOTDATASTART}	\
+	-DBOOTDATASIZE=${BOOTDATASIZE}		\
+	-DDIPIRDATASTART=${DIPIRDATASTART}	\
+	-DDIPIRDATASIZE=${DIPIRDATASIZE}	\
+	-DDIPIRBUFSTART=${DIPIRBUFSTART}	\
+	-DDIPIRBUFSIZE=${DIPIRBUFSIZE}		\
+	-DDIPIRSCRATCH=${DIPIRSCRATCH}
+
+MAP_ALL_DEFINES =				\
+	${MAP_GLOBAL_DEFINES}			\
+	${MAP_ROM_DEFINES}			\
+	${MAP_RAM_DEFINES}

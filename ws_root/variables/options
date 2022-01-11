@@ -1,0 +1,224 @@
+# @(#) options 96/09/17 1.40
+#
+# Global build options. To control these, set a shell environment variable
+# to YES or NO. When the variable is not currently set, a default is used.
+#
+
+
+###############################################################################
+# Establish defaults
+#
+
+ifndef BUILD_M2CD_MONITOR
+BUILD_M2CD_MONITOR = NO
+endif
+
+ifndef BUILD_MEIBRINGUP
+BUILD_MEIBRINGUP = NO
+endif
+
+ifeq (${BUILD_MEIBRINGUP}, YES)
+ifndef BUILD_ROM
+BUILD_ROM = YES
+endif
+ifndef BUILD_PFORTHMON
+BUILD_PFORTHMON = YES
+endif
+ifndef BUILD_CACHESOFF
+BUILD_CACHESOFF = YES
+endif
+endif
+
+ifndef BUILD_PFORTHMON
+BUILD_PFORTHMON = NO
+endif
+
+ifndef BUILD_CACHESOFF
+BUILD_CACHESOFF = NO
+endif
+
+ifndef BUILD_HARDCODED_BUSCLK
+BUILD_HARDCODED_BUSCLK = NO
+endif
+
+ifndef BUILD_ROM
+BUILD_ROM = NO
+endif
+
+ifeq (${BUILD_ROM}, YES)
+BUILD_LUMBERJACK = NO
+BUILD_DEBUGGER = NO
+BUILD_MACDEBUGGER = NO
+BUILD_PCDEBUGGER = NO
+BUILD_CD = NO
+BUILD_PARANOIA = NO
+BUILD_MEMDEBUG = NO
+ifndef BUILD_STRINGS
+BUILD_STRINGS = NO
+endif
+ifndef OPTIONS_PATH
+OPTIONS_PATH := systemrom
+endif
+endif
+
+ifndef BUILD_LUMBERJACK
+BUILD_LUMBERJACK = YES
+endif
+
+ifndef BUILD_DEBUGGER
+BUILD_DEBUGGER = YES
+endif
+
+ifndef BUILD_MACDEBUGGER
+BUILD_MACDEBUGGER = YES
+endif
+
+ifndef BUILD_PCDEBUGGER
+BUILD_PCDEBUGGER = NO
+endif
+
+ifndef BUILD_CD
+BUILD_CD = YES
+endif
+
+ifndef BUILD_STRINGS
+BUILD_STRINGS = YES
+endif
+
+ifndef BUILD_PARANOIA
+BUILD_PARANOIA = YES
+endif
+
+ifndef BUILD_MEMDEBUG
+BUILD_MEMDEBUG = YES
+endif
+
+ifndef BUILD_BDA2_VIDEO_HACK
+BUILD_BDA2_VIDEO_HACK = YES
+endif
+
+
+##############################################################################
+# Based on the value of the options, set appropriate build flags
+#
+
+OPTIONS_FLAGS :=
+
+ifeq (${BUILD_M2CD_MONITOR}, YES)
+OPTIONS_FLAGS += -DBUILD_M2CD_MONITOR
+endif
+
+ifeq (${BUILD_ROM}, YES)
+OPTIONS_FLAGS += -DBUILD_ROM
+endif
+
+ifeq (${BUILD_PFORTHMON}, YES)
+OPTIONS_FLAGS += -DBUILD_PFORTHMON
+endif
+
+ifeq (${BUILD_MEIBRINGUP}, YES)
+OPTIONS_FLAGS += -DBUILD_MEIBRINGUP
+endif
+
+ifeq (${BUILD_CACHESOFF}, YES)
+OPTIONS_FLAGS += -DBUILD_CACHESOFF
+endif
+
+ifeq (${BUILD_HARDCODED_BUSCLK}, YES)
+OPTIONS_FLAGS += -DBUILD_HARDCODED_BUSCLK
+endif
+
+ifeq (${BUILD_LUMBERJACK}, YES)
+OPTIONS_FLAGS += -DBUILD_LUMBERJACK
+endif
+
+ifeq (${BUILD_DEBUGGER}, YES)
+OPTIONS_FLAGS += -DBUILD_DEBUGGER
+ifeq (${BUILD_MACDEBUGGER}, YES)
+OPTIONS_FLAGS += -DBUILD_MACDEBUGGER
+else
+OPTIONS_FLAGS += -DBUILD_PCDEBUGGER
+endif
+endif
+
+ifeq (${BUILD_CD}, YES)
+OPTIONS_FLAGS += -DBUILD_CD
+endif
+
+ifeq (${BUILD_STRINGS}, YES)
+OPTIONS_FLAGS += -DBUILD_STRINGS
+endif
+
+ifeq (${BUILD_PARANOIA}, YES)
+OPTIONS_FLAGS += -DBUILD_PARANOIA
+endif
+
+ifeq (${BUILD_MEMDEBUG}, YES)
+OPTIONS_FLAGS += -DBUILD_MEMDEBUG
+endif
+
+ifeq (${BUILD_BDA2_VIDEO_HACK}, YES)
+OPTIONS_FLAGS += -DBUILD_BDA2_VIDEO_HACK
+endif
+
+ifeq (${BUILD_16M}, YES)
+OPTIONS_FLAGS += -DBUILD_16M
+endif
+
+ifeq (${BUILD_FLASH}, YES)
+OPTIONS_FLAGS += -DBUILD_FLASH
+endif
+
+ifeq (${BUILD_SHERLOCK}, YES)
+OPTIONS_FLAGS += -DSHERLOCK
+endif
+
+
+##############################################################################
+# Now compute the object directory name
+#
+
+ifndef OPTIONS_PATH
+
+ifeq (${BUILD_LUMBERJACK}, YES)
+OPTIONS_PATH := ${OPTIONS_PATH}lum
+endif
+
+ifeq (${BUILD_DEBUGGER}, YES)
+ifeq (${BUILD_MACDEBUGGER}, YES)
+OPTIONS_PATH := ${OPTIONS_PATH}mac
+else
+OPTIONS_PATH := ${OPTIONS_PATH}pc
+endif
+OPTIONS_PATH := ${OPTIONS_PATH}dbg
+endif
+
+ifeq (${BUILD_CD}, YES)
+OPTIONS_PATH := ${OPTIONS_PATH}cd
+endif
+
+ifeq (${BUILD_STRINGS}, YES)
+OPTIONS_PATH := ${OPTIONS_PATH}str
+endif
+
+ifeq (${BUILD_PARANOIA}, YES)
+OPTIONS_PATH := ${OPTIONS_PATH}par
+endif
+
+ifeq (${BUILD_MEMDEBUG}, YES)
+OPTIONS_PATH := ${OPTIONS_PATH}mdbg
+endif
+
+ifndef OPTIONS_PATH
+OPTIONS_PATH := default
+endif
+
+endif
+
+
+###############################################################################
+# Make sure this stuff gets exported
+#
+
+export OPTIONS_FLAGS
+export OPTIONS_PATH

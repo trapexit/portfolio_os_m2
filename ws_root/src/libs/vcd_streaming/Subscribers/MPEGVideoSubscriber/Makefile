@@ -1,0 +1,16 @@
+# @(#) Makefile 96/06/05 1.1
+
+REQUIRE_HIERARCHICAL_INCLUDES = 1
+INCDIRS	=	${VCD}/includes
+ifdef DEBUG_MPEGSUBSCRIBER
+CDEFINES =		-DDEBUG -DEXTERNAL_RELEASE
+#CDEFINES =		-DDEBUG -DEXTERNAL_RELEASE -DMPVD_TRACE_MAIN=1 -DMPVD_TRACE_SUPPORT=1
+SRCDEBUG =		1
+else
+CDEFINES =              -DEXTERNAL_RELEASE
+endif
+
+include ${CODEMGR_WS}/ws_root/variables/linklib
+include ${CODEMGR_WS}/ws_root/rules/generic
+
+all.post: ${OBJS}

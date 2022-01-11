@@ -1,0 +1,245 @@
+# @(#) Video.worksheet 96/08/12 1.8
+#
+# WORKSHEET FOR PREPARING DATA STREAMING EXAMPLE STREAMS
+
+
+# Stream 1: Audio plus MPEG-Video
+# ===============================
+
+# This example can be used as an exercise in M2 movie stream preparation.
+# All of the source files described are provided on your M2 SW CD.
+
+# VIDEO SOURCE FILE: SF.mpv  (San Francisco scenes).
+# Characteristics: MPEG-Video elementary stream; 29.97 frames/sec; 1.6 Mbits/sec.
+
+# AUDIO SOURCE FILE: raggae.aiff  (raggae background music).
+# Characteristics: 44.1 kHz; 16 bits/sample; stereo; edited to match length of SF.mpv.
+
+# Resulting stream bandwidth = ((1600000/8) + (44100*2)) / 1024 = 281 KByte/s,
+# excluding overhead of chunk headers and multiplexing.
+
+# STEP 1:  Set your directory to "{3dofolder}Examples:{3dorelease}:Streaming:Tools_and_Data:"
+
+directory "{3dofolder}Examples:{3dorelease}:Streaming:Tools_and_Data:"
+
+# Step 2: Chunkify the MPEG Video stream:
+# Set delay (-d) and presentation-start-time (-s) params to 3 frame-times each.
+# At 29.97 frames/sec, 3 frame-times = 3*(239.67 ticks/s)/(29.97 frame/s) ~= 24 ticks.
+
+MPEGVideoChunkifier -i SF.mpv -o SF.mpv.chk -d 24 -s 24
+
+# STEPS 3 & 4: Compress and chunkify the audio stream:
+
+SquashSnd -i raggae.aiff -o raggae.cbd2 -cbd2
+AudioChunkifier -i raggae.cbd2 -o raggae.snds -cs 4096
+
+
+# STEP 5: Weave the streams together using a simple weave script. Note that
+# the sound file start time is set to 24 ticks, to match the video start time
+# set above by the MPEGVideoChunkifier -s option.
+
+# NOTE: With the M2_1.1 release, you should not try to set the start time of 
+# MPEG-Video streams using the Weaver.
+
+set WeaveScript ¶
+	'file SF.mpv.chk	1 0			¶n¶
+	 file raggae.snds	0 24		¶n'
+echo "{WeaveScript}" | Weaver -o SF_av1.stream
+
+
+# STEP 6: The stream is now ready to be played, using the VideoPlayer example app.
+# Move SF_av.stream to your remote directory (..:remote:Examples:Streaming:VideoPlayer:),
+
+
+# Alternative Step 4: For more control over the M2 System resources that the example
+# app VideoPlayer will utilize, use a more complex weave script such as the one that
+# follows.
+
+set WeaveScript ¶
+	'writestreamheader							¶n¶
+	 streamblocksize	32768					¶n¶
+	 streambuffers		4						¶n¶
+	 streamerdeltapri	-10						¶n¶
+	 dataacqdeltapri	-9						¶n¶
+	 subscriber			MPVD -2					¶n¶
+	 subscriber			SNDS 11					¶n¶
+	 preloadinstrument  SA_44K_16B_S_CBD2		¶n¶
+	 file SF.mpv.chk	1 0						¶n¶
+	 file raggae.snds	0 24					¶n'
+echo "{WeaveScript}" | Weaver -o SF_av2.stream
+
+
+
+# Stream 2: MPEG-Video-only
+# =========================
+
+# For this exercise use SF.mpv.chk, the MPEG-Video chunkified file created in
+# Step 2 of the previous example.
+
+set WeaveScript ¶
+	'file SF.mpv.chk	1 0		¶n'
+echo "{WeaveScript}" | Weaver -o SF_v.stream
+
+
+
+# Stream 3: MPEG-Video with non-MPEG-standard frame-rate
+# ======================================================
+
+# This example shows how to prepare an MPEG-encoded stream for which the video
+# frame rate is not one of the "standard" video frame rates defined by the 
+# MPEG-1 Video spec. (Defined rates are 23.976, 24, 25, 29.97, 30, 50, 59.94, 
+# and 60 frames/sec).  One situation in which this case arises is when the source
+# video stream is a QuickTime movie with a non-MPEG-standard frame rate, say,
+# 12 or 15 or 20 frames/sec. No matter how you wind up MPEG-encoding such a movie,
+# whether by using Sparkle or by some other means, the resulting MPEG-Video 
+# elementary stream has no standard method of encoding the non-standard frame
+# rate in its header. You must use the MPEGVideoChunkifier -fps option to force the
+# stream to use the correct (non-standard) frame rate, as shown in this example.
+
+# The specific stream prepared in this example is BladeForceMPEG.stream, which
+# is contained on the M2 SW CD under Examples:Streaming:Tools_and_Data. Because of the
+# size, however, the source streams are not provided, so this example is for 
+# illustration rather than exercise.
+
+MPEGVideoChunkifier -i BF.mpv -o BF.mpv.chk -d 60 -s 60 -fps 12
+
+AudioChunkifier -i BFintro22s.cbd2 -o BFintro22s.cbd2.snds -cs 4096
+
+set WeaveScript ¶
+	'writestreamheader						¶n¶
+	 streamblocksize	98304				¶n¶
+	 streambuffers		4					¶n¶
+	 streamerdeltapri	-10					¶n¶
+	 dataacqdeltapri	-9					¶n¶
+	 subscriber			MPVD -2				¶n¶
+	 subscriber			SNDS 11				¶n¶
+	 preloadinstrument  SA_22K_16B_S_CBD2	¶n¶
+	 file BF.mpv.chk	1 0			¶n¶
+	 file BFintro22s.cbd2.snds	0 60		¶n'
+echo "{WeaveScript}" | Weaver -o BladeForceMPEG.stream
+
+# NOTES: Two other points about this example (Stream 3) deserve mention:
+# (1) Back in the Stream 1 example, the MPEGVideoChunkifier -s and -d parameters were set 
+# to 24 ticks, because the frame rate was 30 fps (actually 29.97). But in this example,
+# the frame rate is 12 fps, so 3 frames' delay is 60 ticks.
+# (2) The streamblocksize in the weave script was chosen to be 96K, which is
+# rather large. This was necessary because of a known bug in the M2_1.1 Weaver, which
+# can cause chunks of data to be multiplexed in the wrong order if several consecutive
+# MPEG-Video frames are nearly the size of the streamblock. Since this MPEG stream was 
+# compressed (with Sparkle) as an I-frame-only stream, a number of consecutive frames
+# were nearly as large as the typical 32K streamblocksize, so a larger size was used
+# for expediency. We haven't seen this problem with IP or IPB streams, since large
+# frames tend not to occur consecutively in those cases. This Weaver bug will be fixed
+# in the next M2 release.
+
+
+
+# Stream 4: MPEG-Video with Audio and branching.
+# ======================================================
+
+# Same as stream 1 but has two markers, one stop chunk and a goto chunk.
+# Do steps 1 through 4 in Stream 1. Replace step 5 or 6 in Stream 1 example
+# with following Weaver script.
+
+set WeaveScript ¶
+	'writestreamheader							¶n¶
+	 streamblocksize	32768					¶n¶
+	 streambuffers		4						¶n¶
+	 streamerdeltapri	-10						¶n¶
+	 dataacqdeltapri	-9						¶n¶
+	 subscriber			MPVD -2					¶n¶
+	 subscriber			SNDS 11					¶n¶
+	 writestopchunk 1304						¶n¶
+	 markertime 1671							¶n¶
+	 writegotochunk	3351 1 1					¶n¶
+	 markertime 3391							¶n¶
+	 writemarkertable							¶n¶
+	 preloadinstrument  SA_44K_16B_S_CBD2		¶n¶
+	 file SF.mpv.chk	1 0						¶n¶
+	 file raggae.snds	0 24					¶n'
+echo "{WeaveScript}" | Weaver -o stopgoto.stream
+
+
+# Stream 5: EZFlix data-prep example
+# ==================================
+
+# STEP 1: Compress the source movie using EZFlix:
+
+# Use the MovieCompress application and select the EZFlix QuickTime
+# component to compress the raw BladeForce video.
+# The resulting file is BladeForce100.QT
+
+
+# STEP 2: Chunkify the EZFlix-compressed QT movie:
+
+QTVideoChunkifier -b 98304 BladeForce100.QT -o BladeForce100.EZFL
+
+
+# Alternative to STEPS 1 & 2:
+
+# The above two steps can be done in one operation using EZFlixChunkifier.
+# Due to a minor quality bug in this version of EZFlixChunkifier, better results 
+# will be obtained using the QuickTime component.
+
+EZFlixChunkifier -q 100 -w 288 -h 208 -i BF.moov -o BladeForce100.EZFL
+
+
+# STEP 3: Chunkify the audio (assuming it's already been SquashSnd-compressed):
+
+sftostream -i BFintro22s.cbd2 -o BFintro22s.cbd2.snds
+
+
+# STEP 4: Weave the audio and video files.
+
+# NOTE: When using EZFlix on full-size frames, the BW-overhead of "fill" chunks in 
+# the resulting stream are generally most reliably minimized by using a large
+# streamblocksize, such as the size (96K) used below.
+
+set WeaveScript ¶
+	'writestreamheader						¶n¶
+	 streamblocksize	98304				¶n¶
+	 streambuffers		6					¶n¶
+	 streamerdeltapri	6					¶n¶
+	 dataacqdeltapri	8					¶n¶
+	 subscriber			EZFL 7				¶n¶
+	 subscriber			SNDS 11				¶n¶
+	 preloadinstrument	SA_22K_16B_S_CBD2	¶n¶
+	 file BladeForce100.EZFL	1  0		¶n¶
+	 file BFintro22s.cbd2.snds	0  0		¶n'
+echo "{WeaveScript}" | Weaver -o BladeForceEZFlix.stream
+
+# Stream 5: MPEG Audio & Video
+# ============================
+
+# This example demonstrates the use of MPEG audio and video.
+
+# VIDEO SOURCE FILE: bob.mpv.
+# Characteristics: MPEG-Video elementary stream; 29.97 frames/sec; 1.2 Mbits/sec.
+
+# AUDIO SOURCE FILE: bob.mpa.
+
+# Step 1: Chunkify the MPEG Audio stream:
+MPEGAudioChunkifier -i bob.mpa -o bob_mpa.chk
+
+# Step 2: Chunkify the MPEG Video stream:
+# Set delay (-d) and presentation-start-time (-s) params to 3 frame-times each.
+MPEGVideoChunkifier -i bob.mpv -o bob_mpv.chk -d 24 -s 24
+
+# STEP 3: Weave the streams together. Note that
+# the sound file start time is set to 24 ticks, to match the video start time
+# set above by the MPEGVideoChunkifier -s option.
+
+# MPEG-Audio-Video streams using the Weaver.
+
+set WeaveScript ¶
+	'writestreamheader						¶n¶
+	 streamblocksize	32768				¶n¶
+	 streambuffers		8					¶n¶
+	 streamerdeltapri	-10					¶n¶
+	 dataacqdeltapri	-9					¶n¶
+	 subscriber			MPVD -2				¶n¶
+	 subscriber			MPAU 4				¶n¶
+	 file bob_mpa.chk	0  24				¶n¶
+	 file bob_mpv.chk	1  0				¶n'
+echo "{WeaveScript}" | weaver -o "{3doremote}"examples:streaming:VideoPlayer:bob_av.stream
+

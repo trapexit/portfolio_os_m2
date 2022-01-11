@@ -1,0 +1,79 @@
+Alias to SDF converter 
+---------------------
+
+This program converts Alias "wire format" to M2 "SDF format". 
+The data that is supported at this point is geometry 
+(NURBS, polygons etc.), hierarchy, materials and  textures.
+
+The converter can generate triangles or quadrilaterals. You 
+can also control polygon count by specifying tessellation 
+quality ( coarse or fine ). 
+
+Texture references are the file names from Alias package. You
+need to convert Alias "Pix" files to "M2 .utf" format. Currently 
+references to procedural textures are written out as "texture_name.utf"
+you need to generate a ".utf" corresponding to these textures.
+  
+
+Entities it can Read :
+
+1.	Objects ( Geometry and other )
+	. Polygon set object
+	. NURBS ( non-uniform rational b-spline surface )
+	. Trimmed surface
+	. Face
+	. Geometry vertex has POSITION, TEXTURE COORDINATES 
+	  and NORMALS information.
+	. Transformation matrices
+	. Object name
+
+2.	Textures
+	Texture vertices data for individual objects
+	Texture map name
+	
+3.	Material
+	. Ambient
+	. Emission
+	. Specular
+	. Shininess
+	. Transparency
+	. Material name
+
+4.	Hierarchy
+	. Groups
+	. Relative transformation matrices
+	. Hierarchy node names
+
+5.	Data sharing information
+	Converter also writes out necessary sharing information
+	for models, hierarchies, material and textures.
+
+6.	Lights
+
+
+Usage: altosdf [-r] [-l] [-m] [-t polytype] [-p prefix] [-q tessquality] [-sa scriptfile] [-sn scriptfile] [-o outfile] <infile>
+  This program creates a SDF data out of a wire file
+  -r               do not write texture references[ default write textures ]
+  -l               do not write lighting information [default = ON]
+  -m               separate materials and textures in different files [default = OFF]
+  -t polytype      quads for quadrilateral polygons [ default triangles ]
+  -p prefix        concatenate the 'prefix' to object names[ default none ]
+  -q tessquality   0.0 to 1.0 for coarse to fine quality [ default 0.5 ]
+  -sa scriptfile   append to a texture conversion script file [ default none ]
+  -sn scriptfile   output to a texture conversion script file [ default none ]
+  -o outfile       output SDF file name[ default stdout ]
+  infile           input Alias wire file name
+
+  eg : altosdf car -p car_ -t quads -q 0.7 -s car.scr -o car.sdf
+
+the script file contains commands in the form of :
+
+  process_procedural_tex Ramp_4 Ramp_4.utf
+  process_image_tex /usr/astro/3DO/Allmaps/mp_redritetop mp_redritetop.utf
+
+  The first argument is the either Alias texture name ( procedure where there 
+  is no file associated ) or Alias file name ( associated PIX file ). The 
+  second argument is the SDF texture file name ( this is the file referenced 
+  in the SDF file ). This script file can be used to batch process Alias 
+  textures to .utf textures.
+

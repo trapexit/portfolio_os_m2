@@ -1,0 +1,83 @@
+# @(#) fileinfo 96/09/09 1.77
+# This file sets up variables containing information
+# about the path to the current working directory
+# and the files in this directory.
+
+# {{{ Various directory names
+
+ABSPATH :=		${shell /bin/pwd}
+CODEMGR_WS :=		${shell cd ${CODEMGR_WS}; /bin/pwd}
+DIRNAME =		${notdir ${ABSPATH}}
+
+ROOT =			${CODEMGR_WS}/ws_root
+SRC =			${ROOT}/src
+RELEASE_DIR =		${ROOT}/release/3do_os/${BUILD_TYPE}
+REMOTE_DIR =		${RELEASE_DIR}/remote
+PLATFORM_DIR =		${ROOT}/release/${RELEASE_PLATFORM}
+
+ifeq (${wildcard ${SRC}/tools}, ${SRC}/tools)
+HOSTOSBIN =		${ROOT}/hostbin/${HOSTOS}
+HOSTOSLIB =		${ROOT}/hostlib/${HOSTOS}
+else
+HOSTOSBIN =		${REFERENCE_BUILD}/ws_root/hostbin/${HOSTOS}
+HOSTOSLIB =		${REFERENCE_BUILD}/ws_root/hostlib/${HOSTOS}
+endif
+
+ifdef REFERENCE_BUILD
+REFERENCE_ROOT := ${REFERENCE_BUILD}/ws_root
+else
+REFERENCE_ROOT := ${ROOT}
+endif
+
+REFERENCE_SRC       =   ${REFERENCE_ROOT}/src
+REFERENCE_HOSTOSBIN =	${REFERENCE_ROOT}/hostbin/${HOSTOS}
+REFERENCE_HOSTOSLIB =	${REFERENCE_ROOT}/hostlib/${HOSTOS}
+
+LINK_LIB_DIR =		${ROOT}/libs/${BUILD_TYPE}
+MODULE_DIR =		${REMOTE_DIR}/System.m2/Modules
+VECTOR_DIR =		${ROOT}/vectors/${BUILD_TYPE}
+BOOT_DIR =		${REMOTE_DIR}/System.m2/Boot
+HEADER_DIR =		${SRC}/includes
+
+ABSOLUTE_DOT =		${ABSPATH:%=%/.}
+RELATIVE_DOT =		${ABSOLUTE_DOT:${ROOT}/%=%}
+RELATIVE_PATH =		${RELATIVE_DOT:%.=%}
+
+OBJDIR =		objects/${BUILD_TYPE}${OBJSUBDIR}
+
+# Global example binary data archive.
+EXAMPLE_DATA_ARCHIVE_DIR := /m2/examples_data
+
+export CODEMGR_WS ROOT SRC REL
+
+# }}}
+# {{{ Filtered lists of local files
+
+ALLFILES :=		${filter-out ${DO_NOT_BUILD},${sort ${wildcard *} ${notdir ${EXTRA_SRC}}}}
+
+STD_UNREG_FILES :=	ChangeLog sources.list autodoc.tmp ${notdir ${EXTRA_SRC}}
+
+REGISTERED_FILES :=	${filter-out ${UNREGISTERED_FILES} ${STD_UNREG_FILES} %~ %.BAK %.lst _%.s,${ALLFILES}}
+
+CSRC :=			${filter %.c,${ALLFILES}}
+SHSRC :=		${filter %.sh,${ALLFILES}}
+CPPSRC :=		${filter %.cpp,${ALLFILES}}
+CXXSRC :=		${filter %.cxx,${ALLFILES}}
+SSRC :=			${filter-out _%.s,${filter %.s,${ALLFILES}}}
+SSSRC	:=		${filter %.S,${ALLFILES}}
+R64FILES :=		${filter %.R64,${ALLFILES}}
+
+# }}}
+# {{{ Derived file lists
+
+OBJS :=			${SSRC:%.s=${OBJDIR}/%.so} \
+			${SSSRC:%.S=${OBJDIR}/%.so} \
+			${CXXSRC:%.cxx=${OBJDIR}/%.xo} \
+			${CPPSRC:%.cpp=${OBJDIR}/%.po} \
+			${CSRC:%.c=${OBJDIR}/%.co}
+
+HOSTOBJS :=		${CSRC:%.c=${OBJDIR}/%.o} \
+			${CXXSRC:%.cxx=${OBJDIR}/%.o} \
+			${CPPSRC:%.cpp=${OBJDIR}/%.o}
+
+# }}}

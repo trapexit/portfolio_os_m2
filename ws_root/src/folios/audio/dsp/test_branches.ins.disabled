@@ -1,0 +1,75 @@
+\ @(#) test_branches.ins.disabled 96/03/07 1.4
+\ Test various features of DSP instrument assembly.
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\ 930617 PLB Added clipping.
+
+\\\	NOAUTODOC -private -class DSP -name test1.dsp
+\\\	Test DSP assembler and folio.
+\\\
+\\\	  Function
+\\\
+\\\	    Just for testing.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: ???
+\\\
+\\\	    Code: ??? words
+
+decimal
+
+include? DFID_MIXER4X2 function_ids.j
+
+anew task-test2.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_MIXER4X2 dspp-function-id !
+$" test2.dsp" ins-name !
+
+dspp-echo on
+ALLOC.INPUT  Input
+$ 7FFF KNOB_TYPE_RAW_SIGNED   ALLOC.KNOB.M2 Amplitude
+ALLOC.VARIABLE  Var1
+ALLOC.VARIABLE  Var2
+ALLOC.OUTPUT Output
+32 ALLOC.TICKS
+
+	Var1 _A  $ 0123 _# _MOVE
+	Input _A _TRA
+	_BGT:  Label1
+	Var1 _A  $ 0123 _# _MOVE
+	Input _A _TRA
+	_BGT:  Label1
+	Var1 _A  $ 0123 _# _MOVE
+_LABEL: Label1
+	Input _A _TRA
+	_BGT:  Label1
+	Output _A _= Amplitude _A Var2 _A _*
+
+\ reference an external subroutine
+	_JSR:   ExternalSub
+	ACCUME 1 _# _+
+	_JSR:   ExternalSub
+
+\ use a local then repeat use
+	4 0
+	DO
+		Var1 _A _TRA
+		_BEQ:  @AllDone
+		Var1 _A _= ACCUME _--
+		_BEQ:  @AllDone
+		Var1 _A _= ACCUME _--
+_LABEL: @AllDone
+		_ENDEXT
+	LOOP
+
+}ins
+}dspp
+

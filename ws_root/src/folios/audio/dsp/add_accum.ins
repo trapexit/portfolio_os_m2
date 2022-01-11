@@ -1,0 +1,56 @@
+\ @(#) add_accum.ins 96/03/26 1.9
+\ ACCUM+A
+
+\\\	AUTODOC -class DSP -group Accumulator -name add_accum.dsp
+\\\	Adds signed signal to DSP accumulator.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument performs a signed addition between its input and the DSP
+\\\	    accumulator: Accum = Accum + Input. The result is clipped into range, and
+\\\	    left in the accumulator.
+\\\
+\\\	    This instrument can only be used within a patch.
+\\\	    It may not be used as a stand-alone instrument.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Input - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed input value. -1.0 to 1.0. Defaults to 0.0.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 4
+\\\
+\\\	    Code: 4 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    multiply_accum.dsp(@), subtract_accum.dsp(@), input_accum.dsp(@),
+\\\	    output_accum.dsp(@), add.dsp(@)
+
+include? DFID_ADD_ACCUM function_ids.j
+
+anew task-add_accum.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PATCHES_ONLY dspp-header-flags !
+
+DFID_ADD dspp-function-id !
+$" add_accum.dsp" ins-name !
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Input
+4 ALLOC.TICKS
+
+	ACCUME Input _A _CLIP _+
+}ins
+}dspp

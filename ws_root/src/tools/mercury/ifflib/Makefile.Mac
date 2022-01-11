@@ -1,0 +1,71 @@
+#  Mac Makefile for the IFF library
+#  Creates both PPC and 68K
+
+OBJDIR			=	:objects:Mac:
+LIBDIR			=	::libs:Mac:
+IFFLIB68K			= 	{LIBDIR}IFFlib.68K.a
+IFFLIBPPC			= 	{LIBDIR}IFFlib.PPC.a
+CC68K = SC
+CCPPC = MRC
+
+PPCOBJS = ¶
+		{OBJDIR}iff.c.o ¶
+		{OBJDIR}unix.c.o
+
+68KOBJS = ¶
+		{OBJDIR}iff.o ¶
+		{OBJDIR}unix.o
+
+#####################################
+#	Default compiler and linker options
+#####################################
+IncludeFlags	=
+68KCOptions		=	-mc68020 -opt full -r -model far {IncludeFlags} -d applec -d NO_64_BIT_SCALARS
+68KLOptions		=	-model far -t MPST -c 'MPS ' -opt on -br on
+68KLibOptions	=	-mf -sym off
+
+PPCCOptions		=	{IncludeFlags} -d applec -d NO_64_BIT_SCALARS
+PPCLOptions		=	-model far -t MPST -c 'MPS ' -br on
+PPCLibOptions	=	 -xm l -sym off -mf
+
+#####################################
+#	Default build rules
+#####################################
+complete	Ä	{IFFLIB68K} {IFFLIBPPC}
+
+All			Ä	complete
+
+{OBJDIR}	Ä	:
+
+.o			Ä	.c
+	echo "Compiling {Default}.c"; ¶
+	{CC68K} {68KCOptions} -o {OBJDIR}{Default}.o {DepDir}{Default}.c
+
+.c.o			Ä	.c
+	echo "Compiling {Default}.c"; ¶
+	{CCPPC} {PPCCOptions} -o {OBJDIR}{Default}.c.o {DepDir}{Default}.c
+
+{IFFLIB68K} ÄÄ Makefile.Mac {68KOBJS}
+	Lib  ¶
+		{68KOBJS} ¶
+		{68KLibOptions} ¶
+		-o {IFFLIB68K}; ¶
+
+{IFFLIBPPC} ÄÄ Makefile.Mac {PPCOBJS}
+	PPCLink  ¶
+		{PPCOBJS} ¶
+		{PPCLibOptions} ¶
+		-o {IFFLIBPPC}; ¶
+
+#####################################
+# Scrub all old objects and binaries
+#####################################
+clean			Ä
+	set exit 0;
+	delete -i {OBJDIR}Å;
+	set exit 1
+
+clobber			Ä
+	set exit 0;
+	delete -i {IFFLIB68K} {IFFLIBPPC};
+	set exit 1

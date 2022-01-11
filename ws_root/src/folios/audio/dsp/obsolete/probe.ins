@@ -1,0 +1,23 @@
+\ @(#) probe.ins 95/04/14 1.4
+\ $Id: probe.ins,v 1.4 1994/05/12 00:00:19 peabody Exp $
+\ PROBE - Instrument Template for diagnostic probe for scope
+include? DFID_PROBE function_ids.j
+
+anew task-probe.ins
+
+_RED
+dspp{
+ins{
+
+DFID_PROBE dspp-function-id !
+$" probe.dsp" ins-name !
+
+ALLOC.OUTFIFO  OutFIFO
+0 $ 1000 $ 108 ALLOC.KNOB Address   \ to be probed
+10 ALLOC.TICKS
+
+	OutFIFO FIFOSTATUS+ _A #$ 0008 _AND	\ check FIFO status
+	_BNE: FIFOFULL						\ branch to be offset
+	OutFIFO _A   Address _[A]  _MOVE
+_LABEL: FIFOFULL
+}ins

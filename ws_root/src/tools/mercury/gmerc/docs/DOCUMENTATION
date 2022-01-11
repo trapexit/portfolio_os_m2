@@ -1,0 +1,139 @@
+Gcomp for Mercury
+Last Change   8/23/96
+****************************************
+
+* Overview:
+
+Gcomp for Mercury is a geometry data processing tool for M2 Mercury engine. 
+This tool compiles the ASCII SDF files into portable binary SDF files. It
+provides the follwing support.
+
+1. Input ASCII SDF format.
+2. POD geometry format.
+3. Snake primitive support.
+4. Texture pages support.
+5. Hierarchy support.
+6. Animation support.
+
+* Usage:
+
+The tool is a command line tool. It runs on both Mac (MPW) and SGI.
+
+Usage: gmerc [flags] <SDF_file_1 SDF_file_2 ... SDF_file_n>
+Description:
+   Version 1.1 a1
+   Gcomp for Mercury
+   -s              The "triangles" primitive will be interpreted as shared vertices
+   -f              Write out object name chunk
+   -h              Create a header file for object name
+   -c              Turn off hierarchy collapsing
+   -t              Texture page file name
+   -a <anim.bsf>   Animation file name
+   -b <geom.bsf>   Mercury geometry file name
+Example: 
+gmerc -t rush.tex -a rush.anim.bsf -b rush.geom.bsf rush.sdf rush.anim
+gmerc -f -t rushtp.sdf -s -b rushskt2.bsf rushskt2.sdf rushskt2.anim
+gmerc -s -b cube.bsf cube.sdf
+
+* Pod geometry output rules:
+1. Switching "model" will produce new pod geometry.
+2. Changing material in index will produce new pod geometry.
+3. Changing texture page will produce new pod geometry.
+4. If "-s" flag is set, the "triangle" primitive will create a pod that uses shared vertices scheme.
+
+* Assumption:
+
+1. Each file can have only one TexArray and MatArray.
+2. Material:
+	a) The base color alpha is taken from the diffuse color alpha value.
+	b) If the material color has both specular color component and transparecy 
+	   (diffuse color alpha is less than 1), the pod will be interpreted as 
+	   transparent case.
+3. Lighting information will not be processes. One must use "-l" option in the
+converter to turn off the lighting information.
+
+* Example:
+
+Example of texture pages description file
+
+Define TexArray RUSHSKT2_textures {
+    {   
+        fileName skate.utf
+        txColorOut Texture 
+        txAlphaOut Prim
+    } 
+    {   
+        fileName skates.utf
+        txColorOut Texture 
+        txAlphaOut Prim
+    } 
+    {   
+        fileName skatetop.utf
+        txColorOut Texture 
+        txAlphaOut Prim
+    } 
+    {   
+        fileName skatembl.utf
+        txColorOut Texture
+        txAlphaOut Prim
+    }
+    {
+        fileName fabric2.utf
+        xWrap Tile
+        yWrap Tile
+        txColorOut Texture
+        txAlphaOut Prim
+    }
+}   
+Define TexPageArray {
+	{
+		fileName skate.utf
+		fileName skates.utf
+	}
+	{
+		fileName skatetop.utf
+	}
+	{
+		fileName skatembl.utf
+		fileName fabric2.utf
+	}
+}
+
+* How to generate different pod cases?
+
+1. DynLitCase:
+	Default case for a non-textured pod.
+2. DynLitTexCase :
+	Default case for a textured pod.
+3. DynLitTransCase :
+	The diffuse alpha of a non-textured pod's materail is less than 1.0.
+4. DynLitTransTexCase :
+	The diffuse alpha of a textured pod's materail is less than 1.0.
+5. DynLitSpecCase :
+	The specular component of a non-textured pod's materail exists.
+6. DynLitSpecTexCase :
+	The specular component of a textured pod's materail exists.
+7. DynLitTransSpecCase:
+	The diffuse alpha of a non-textured pod's materail is less than 1.0 and
+	the specular component of a non-textured pod's materail exists.
+8. PreLitCase:
+	A non-textured pod's vertex color is specified. 
+9. PreLitTexCase:
+	A textured pod's vertex color is specified. 
+10. PreLitTransCase:
+	A non-textured pod's vertex color is specified and its alpha value is 
+	less than 1.0.
+11. PreLitTransTexCase:
+	A textured pod's vertex color is specified and its alpha value is 
+	less than 1.0.
+
+* How to specify environment map case?
+In the surface attribute, use
+	texgen {
+		kind environment
+	}
+to specify the environment map for the pod geometry. The following cases are supported.
+1. DynLitEnvCase.
+2. DynLitTransEnvCase.
+3. DynLitSpecEnvCase.
+

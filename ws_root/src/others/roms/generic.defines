@@ -1,0 +1,90 @@
+// @(#) generic.defines 96/08/23 1.15
+//
+// Definition file for bootable.recipe.
+//
+
+// Directories
+#define	TAKEME			OBJDIR/takeme.IMAGE
+#define	DIPIRDIR		ROOT/src/others/dipir/objects/OPTIONS_PATH/dipirs
+#define	DRIVERDIR		ROOT/src/others/dipir/objects/OPTIONS_PATH/drivers
+#define	BOOTDIR			TAKEME/System.m2/Boot
+#define	RELEASE_BOOTDIR		RELEASE_DIR/remote/System.m2/Boot
+#define	STUFF			/thdo/ssw/opera/archive/m2stuff
+
+// File	s
+#define	OUTPUT_IMAGE		OBJDIR/IMAGE.image
+
+#define	RTT_IMAGE		BOOTDIR/rtt.image
+#define	RTT_PLACE		BOOTDIR/#rtt.image
+#define	RTT2_IMAGE		BOOTDIR/rtt2.image
+#define	RTT2_PLACE		BOOTDIR/#rtt2.image
+#define	ENCODER_IMAGE		BOOTDIR/encoder.image
+#define	ENCODER_PLACE		BOOTDIR/#encoder.image
+
+#ifdef BOOTABLE
+#define	OSCODE			BOOTDIR/oscode
+#define	OSCODE_PLACE		BOOTDIR/#oscode
+#define	MISCCODE		BOOTDIR/misccode
+#define	MISCCODE_PLACE		BOOTDIR/#misccode
+#define	KERNEL			RELEASE_BOOTDIR/kernel
+#define	OPERATOR		RELEASE_BOOTDIR/operator
+#define	FILESYSTEM		RELEASE_BOOTDIR/filesystem
+#define	KERNEL_INIT		RELEASE_BOOTDIR/kernel.init
+#define	OPERATOR_INIT		RELEASE_BOOTDIR/operator.init
+#define	FILESYSTEM_INIT		RELEASE_BOOTDIR/filesystem.init
+#endif /* BOOTABLE */
+
+#ifdef DEVDIPIR_NAME
+#define	DEVDIPIR		BOOTDIR/DEVDIPIR_NAME
+#define	DEVDIPIR_PLACE		BOOTDIR/#DEVDIPIR_NAME
+#endif /* DEVDIPIR_NAME */
+
+#ifdef DDDFILE_NAME
+#define	DDDFILE			BOOTDIR/DDDFILE_NAME
+#define	DDDFILE_PLACE		BOOTDIR/#DDDFILE_NAME
+#endif /* DDDFILE_NAME */
+
+#ifdef APPBANNER_NAME
+#define	APPBANNER		BOOTDIR/APPBANNER_NAME
+#define	APPBANNER_PLACE		BOOTDIR/#APPBANNER_NAME
+#endif /* APPBANNER_NAME */
+
+#ifdef DEVICON_NAME
+#define	DEVICON			BOOTDIR/DEVICON_NAME
+#define	DEVICON_PLACE		BOOTDIR/#DEVICON_NAME
+#endif /* APPBANNER_NAME */
+
+#ifdef OPERA
+#define	OSCODE_OPERA		BOOTDIR/oscode.opera
+#define	OSCODE_OPERA_PLACE	BOOTDIR/#oscode.opera
+#define	MISCCODE_OPERA		BOOTDIR/misccode.opera
+#define	MISCCODE_OPERA_PLACE	BOOTDIR/#misccode.opera
+#define	DEVDIPIR_OPERA		BOOTDIR/cddipir.opera
+#define	DEVDIPIR_OPERA_PLACE	BOOTDIR/#cddipir.opera
+#define	APPBANNER_OPERA		BOOTDIR/AppBanner.opera
+#define	APPBANNER_OPERA_PLACE	BOOTDIR/#AppBanner.opera
+#define	KERNEL_OPERA		BOOTDIR/kernel.opera
+#endif
+
+#define	DUMMYSIG64		OBJDIR/dummysig64
+#define	DUMMYSIG128		OBJDIR/dummysig128
+#define	FILEMAP			OBJDIR/filemap.out
+#define	LAYOUT_LOG		OBJDIR/layout.IMAGE.log
+
+// Tools
+#define	RSASIGN			HOSTOSBIN/rsasign
+#define	DMNUM			HOSTOSBIN/dmnum
+#define	OVERWRITE		HOSTOSBIN/overwrite
+#define MAKEBOOT		HOSTOSBIN/makeboot
+#define	LAYOUT_TOOLS		HOSTOSBIN
+
+// Sizes & block numbers
+#define	SIZEOF_LABEL	176
+#define	SIZEOF_OPERA_LABEL 132
+
+// File offsets of version numbers
+#ifdef OPERA
+#define	AIFVER		0x94	// Offset of version number in AIF file
+#define	AIFREV		0x95	// Offset of revision number in AIF file
+#endif
+

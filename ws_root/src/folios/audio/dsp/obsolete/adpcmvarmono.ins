@@ -1,0 +1,167 @@
+\ @(#) adpcmvarmono.ins 95/11/16 1.11
+\ $Id: adpcmvarmono.ins,v 1.5 1995/01/20 20:20:23 peabody Exp $
+\ Prototype for ADPCM
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+
+\\\	NOAUTODOC -private -class DSP -name adpcmvarmono.dsp
+\\\	OBSOLETE - Play a variable-rate compressed 4-bit Intel/DVI format sample.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a variable rate sample that has been previously
+\\\	    compressed to a 4-bit Intel/DVI format. Run the SoundHack program to compress
+\\\	    a sound sample from 16 bits to 4 bits (Intel/DVI format). This instrument
+\\\	    plays this compressed sample, and it uses the decodeadpcm.dsp library routine
+\\\	    to do the necessary decompression.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Frequency
+\\\	        Frequency in fixed point phase increment in the range of 0..0x8000. 0x8000
+\\\	        equals the normal sample rate, with 1 sample per frame. Defaults to 0x2000
+\\\	        which is 1/4 normal rate.
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 108
+\\\
+\\\	    Code: 70 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  Caveats
+\\\
+\\\	    This instrument uses the decodeadpcm.dsp library routine which must be
+\\\	    loaded as an instrument prior to using this instrument.
+\\\
+\\\	    Unlike other sample player instruments this one doesn't support playing the
+\\\	    sample above the system sample rate.
+\\\
+\\\	  See Also
+\\\
+\\\	    adpcmmono.dsp, decodeadpcm.dsp, dcsqxdvarmono.dsp, sampler.dsp
+\\\
+
+include? DFID_ADPCMVARMONO function_ids.j
+
+anew task-adpcmvarmono.ins
+
+_RED
+dspp{
+ins{
+
+DFID_ADPCMVARMONO dspp-function-id !
+$" adpcmvarmono.dsp" ins-name !
+
+\ ADPCM stream parsing variables
+ALLOC.RBASE   MYRB
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    SampleHolder
+ALLOC.IMEM    CurState
+ALLOC.IMEM    OldVal    \ previous for interpolation, expanded to 16 bits
+ALLOC.IMEM    NewVal    \ current for interpolation, expanded to 16 bits
+ALLOC.IMEM    Phase
+ALLOC.OUTPUT  Output
+
+$ 2000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 Amplitude
+
+\ ADPCM register assignments
+4 constant  StepSize        \ initialize to 7
+6 constant  StepIndex       \ static
+7 constant  OutputSample    \ static
+
+ALLOC.IMEM  InitFlag     \ initialize if non-zero
+108 ALLOC.TICKS
+
+InitFlag  DINI_AT_START    1  INIT.RESOURCE  InitFlag_NAME
+Phase  DINI_AT_START    0  INIT.RESOURCE  Phase_NAME
+OldVal  DINI_AT_START    0  INIT.RESOURCE  OldVal_NAME
+NewVal  DINI_AT_START    0  INIT.RESOURCE  NewVal_NAME
+
+    MYRB _RBASE                        \ set RBASE for subsequent calls
+
+\ Initialization
+	InitFlag _A _TRA
+	_BEQ:  @GoDoIt
+	StepIndex    _reg #$ 0000 _MOVE
+	OutputSample _reg #$ 0000 _MOVE
+	StepSize     _reg #$ 0007 _MOVE
+	CurState     _A #$ 0003 _MOVE
+	InFIFO _A _TRL  \ throw away first sample
+	InitFlag _A #$ 000 _MOVE  \ so we don't Init next time
+	_JUMP: @Done     \ skip so we don't have overly long frame
+
+\ -----------------------------------
+_LABEL: @GoDoIt
+
+\ Calculate phase increment
+	Phase _%A Frequency _A _+
+\ Determine whether to decompress another samples
+	_BPL:	@Interpolate
+
+	Phase _%A #$ 8000	_-		\ wrap back to positive phase
+	OldVal _A NewVal _A	_MOVE		\ save for interpolation
+
+	CurState _%A #$ 0001 _+
+
+\ decode which nibble to decode
+	ACCUME  #$ 0002 _AND
+	_BNE: @State23
+	CurState _A  #$ 0001 _AND
+	_BNE: @State1
+
+\ State0
+	SampleHolder _A  _= InFIFO _A _TRL  \ get 16 bits from FIFO, leave in ACCUME
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State1
+	SampleHolder _A 4 _<<' _TRL
+	_JUMP: @DECODE_NIBBLE
+
+_LABEL: @State23
+	CurState _A #$ 0001 _AND
+	_BNE: @State3
+	_NOP
+	SampleHolder _A 8 _<<' _TRL
+	_JUMP: @DECODE_NIBBLE
+	_NOP
+\ Decode proper nibble based on state word
+_LABEL: @State3
+	SampleHolder _A 8 _<<' _TRL   \ <<12
+	ACCUME 4 _<<' _TRL
+
+_LABEL: @DECODE_NIBBLE
+	_JSR:  DecodeADPCM
+	NewVal _A _= ACCUME _TRA
+
+\ ------------------------------------------
+_LABEL: @Interpolate
+	Phase _A OldVal _A OldVal _A _*-	\ old*(frac-1)	= old*frac-old
+	NewVal _A Phase _A ACCUME _*-		\ interpolate output value
+
+	Output _A _= ACCUME Amplitude _A _*	\  scale output
+
+_LABEL: @Done
+
+_ENDEXT
+}ins
+}dspp

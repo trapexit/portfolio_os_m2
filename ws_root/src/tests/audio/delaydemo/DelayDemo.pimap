@@ -1,0 +1,6 @@
+; @(#) DelayDemo.pimap 96/07/02 1.2
+; Demonstrate Delay Lines and Delay Line Templates
+
+1 DelayLine.patch -m 32
+2 DelayLineTemplate.patch -m 32
+3 DelayLineTemplateClear.patch -m 32

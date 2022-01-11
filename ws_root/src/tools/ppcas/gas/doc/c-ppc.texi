@@ -1,0 +1,115 @@
+@c Copyright (C) 1991, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+@c This is part of the GAS manual.
+@c For copying conditions, see the file as.texinfo.
+@ifset GENERIC
+@page
+@node PPC-Dependent
+@chapter PowerPC Dependent Features
+@end ifset
+@ifclear GENERIC
+@node Machine Dependencies
+@chapter PowerPC Dependent Features
+@end ifclear
+
+@cindex PPC support
+@menu
+* PPC-Opts::                    PowerPC Options
+* M68K-Syntax::                 Syntax
+* M68K-Moto-Syntax::            Motorola Syntax
+* M68K-Float::                  Floating Point
+* M68K-Directives::             680x0 Machine Directives
+* M68K-opcodes::                Opcodes
+@end menu
+
+@node PPC-Opts
+@section PPC Options
+
+@cindex options, PPC
+@cindex PPC options
+The PowerPC version of the GNU assembler, @code{@value{AS}}, has a few machine
+dependent options.
+
+@cindex @samp{-mppc} and related options
+@cindex architecture options, PowerPC
+@cindex PowerPC architecture options
+@code{@value{AS}} can assemble code for several different members of the
+PowerPCfamily.  The default depends upon how @code{@value{AS}}
+was configured when it was built; normally, the default is to assemble
+code for the PPC 602 microprocessor.  The following options may be used to
+change the default.  These options control which instructions and
+addressing modes are permitted.  The members of the PowerPC family are
+very similar.  For detailed information about the differences, see the
+Motorola and IBM manuals.
+
+@table @samp
+@item -mppc
+@itemx -mppc32
+@itemx -m403
+@itemx -m603
+@itemx -m604
+Assemble for the PowerPC 603/604.  These 32-bit PowerPC chips are virtually the 
+same from the point of view of the assembler.
+
+@item -m602
+Just like -mppc except replaces some double-precision floating point 
+instructions with their single-precision equivalents.  This is a kludge to
+correct bad compiler output so it will probably go away in the future.This is 
+the current default.
+
+@item -m601
+Assemble for the PowerPC 601.
+
+@item -mppc64
+@itemx -m620
+Assemble for the 64-bit PowerPC 620.
+
+@item -V
+Print the assembler's version number.
+
+@node PPC-Syntax
+@section Syntax
+
+@cindex PowerPC syntax
+@cindex syntax, PowerPC
+
+This version of @code{@value{AS}} uses instructions names and
+syntax compatible with most PowerPC manuals.  The basic syntax is also
+compatible with the Diab assembler, allowing it to assemble the output of the
+Diab compiler.  Note that the syntax for macros and @samp{.equ} are two 
+notable incompatibilities.
+
+@cindex PowerPC register names
+@cindex register names, PowerPC
+The following register names are understood:
+
+@table @dfn
+@item General Purpose Registers
+@samp{r0} through @samp{r31} or
+@samp{R0} through @samp{R31}
+
+@item Floating Point Registers
+@samp{f0} through @samp{f31} or
+@samp{F0} through @samp{F31}
+
+@item Condition Register Fields
+@samp{cr0} through @samp{cr7} or
+@samp{CR0} through @samp{CR7}
+@end table
+
+@node PPC-LocalLabels
+@section Local Labels
+
+@cindex local labels, PowerPC
+@cindex PowerPC local labels
+
+Local labels in the PowerPC assembler begin with @samp{.L}.
+No symbolic information will be generated for local labels.
+
+@node PPC-Chars
+@subsection Special Characters
+
+@cindex special characters, PowerPC
+@cindex PowerPC line comment character
+@cindex line comment character, PowerPC
+@cindex comments, PowerPC
+The line-comment character is @samp{#}.  

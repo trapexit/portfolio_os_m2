@@ -1,0 +1,52 @@
+\ @(#) sub_sampler_16_v1.ins 95/09/22 1.6
+\
+\ 16 bit, 8 bit, and SQS2 instruments can share the same code
+\ because the decompression is done in hardware.
+\
+\ Author: Phil Burk
+\ Copyright 1993,4,5 3DO
+\ All Rights Reserved
+
+
+include? DFID_SUB_SAMPLER_16_V1 function_ids.j
+include? SM16_BASE_DATA_REG sampler_16_v1_regs.j
+
+anew task-sub_sampler_16_v1.ins
+
+dspp-echo off
+_BULLDOG
+
+dspp{
+ins{
+
+DHDR_F_PRIVILEGED DHDR_F_SHARED or dspp-header-flags !
+DFID_SUB_SAMPLER_16_V1 dspp-function-id !
+$" sub_sampler_16_v1.dsp" ins-name !
+
+\ This version uses fixed point SampleRate that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ Phase contains the fractional phase as a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+
+_EXPORT _LABEL: sub_sampler_16_v1
+\ interpolate new value
+\ old*(frac-1)	= old*frac-old
+	SM16_REG_PHASE _reg
+		SM16_BASE_FIFO_REG FIFO_CURRENT + _reg
+		SM16_BASE_FIFO_REG FIFO_CURRENT + _reg _*-
+	SM16_BASE_FIFO_REG FIFO_NEXT + _reg
+		SM16_REG_PHASE _reg ACCUME _*-
+\ set phase for OSC
+	SM16_BASE_FIFO_REG FIFO_PHASE + _reg   SM16_REG_PHASE _reg _MOVE
+\ advance oscillator by writing to FREQ register
+  	SM16_BASE_FIFO_REG FIFO_FREQ  + _reg   SM16_REG_SAMPLERATE _reg _MOVE
+\ scale output to desired amplitude
+   	SM16_REG_OUTPUT _reg _= ACCUME SM16_REG_AMPLITUDE _reg _*
+\ save phase for next time
+	SM16_REG_PHASE _reg   SM16_BASE_FIFO_REG FIFO_PHASE + _reg  _MOVE
+	_RTS
+
+	_ENDEXT
+}ins
+}dspp
+

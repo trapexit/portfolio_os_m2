@@ -1,0 +1,12 @@
+# @(#)hostexec 95/02/17 1.2
+
+ifndef BUILD_TYPE
+BUILD_TYPE =		${HOSTOS}
+endif
+
+ifndef	TARGET_NAME
+TARGET_NAME =		${DIRNAME}
+endif
+
+include ${CODEMGR_WS}/ws_root/variables/generic
+

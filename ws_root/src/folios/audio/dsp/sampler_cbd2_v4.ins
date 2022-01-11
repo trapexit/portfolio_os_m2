@@ -1,0 +1,193 @@
+\ @(#) sampler_cbd2_v4.ins 96/08/07 1.1
+\ Play sample compressed using CuBic Delta 2:1 compression
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+
+\ @@@ Maybe make cbd2 a shared subroutine for mono and quad versions.
+\     But this is not often used more than once in an app.
+\     Just once for soundtrack.
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_cbd2_v4.dsp
+\\\	Variable-rate stereo sample player with CBD2 2:1 decompression.
+\\\
+\\\	  Description
+\\\
+\\\	    Variable-rate stereo CBD2-format sample player.
+\\\
+\\\	    This instrument plays a sample, at variable rate, that has been previously
+\\\	    compressed to the 8-bit CBD2 format. Run SoundHack or SquashSnd to compress
+\\\	    the sample.
+\\\
+\\\	  Knobs
+\\\
+\\\	    SampleRate - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        SampleRate in Hertz. Range is 0.0 to 44100.0. Default is 44100.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 4 parts
+\\\	        Quad output.
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 201
+\\\
+\\\	    Code: 92 words
+\\\
+\\\	    Data: 15 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  Caveats
+\\\
+\\\	    Unlike most other sample player instruments this one doesn't support playing
+\\\	    the sample above the system sample rate.
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_v2.dsp(@), sampler_cbd2_v1.dsp(@)
+
+include? DFID_SAMPLER_CBD2_v4 function_ids.j
+
+anew task-sampler_cbd2_v4.ins
+
+_BULLDOG
+dspp{
+ins{
+
+dspp-echo off
+DFID_SAMPLER_CBD2_v4 dspp-function-id !
+
+$" sampler_cbd2_v4.dsp" ins-name !
+
+_IMPORT ALLOC.VARIABLE   gScratch1
+_IMPORT ALLOC.VARIABLE   gScratch2
+\ _IMPORT ALLOC.VARIABLE   gScratch3
+
+: dc_hold gScratch1 ;  \ compressed 16 bit sample
+: dc_byte gScratch2 ;  \ compressed byte
+\ : dc_cubed gScratch3 ; \ cubed value
+
+\ register assignments
+0 constant CBD2_BASE_DATA_REG
+CBD2_BASE_DATA_REG
+dup 1+ swap constant  dc_previous     \ static, previously decoded sample
+dup 1+ swap constant  dc_oldval       \ static, previous for interpolation, expanded to 16 bits
+CBD2_BASE_DATA_REG - constant CBD2_NUM_DATA_REGS
+
+CBD2_BASE_DATA_REG CBD2_NUM_DATA_REGS ALLOC.RBASE#  RBase_Ch0
+CBD2_BASE_DATA_REG CBD2_NUM_DATA_REGS ALLOC.RBASE#  RBase_Ch1
+CBD2_BASE_DATA_REG CBD2_NUM_DATA_REGS ALLOC.RBASE#  RBase_Ch2
+CBD2_BASE_DATA_REG CBD2_NUM_DATA_REGS ALLOC.RBASE#  RBase_Ch3
+4 ALLOC.OUTPUT.ARRAY Output
+ALLOC.VARIABLE  Phase
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+$ 8000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 SampleRate
+ALLOC.INFIFO InFIFO
+
+201 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A 2 _# _-           \ check to see if enough data in FIFO
+	_BLT: AllDone
+
+\ Calculate phase increment
+	Phase _%A SampleRate _A _+
+\ Determine whether to decompress another sample
+	_BPL:	@InterpolateAll
+
+\ ---------------------------------------------
+	Phase _%A #$ 8000	_-	            \ wrap back to positive phase
+	
+	dc_hold _A  _= InFIFO _A _TRL               \ get 16 bits from FIFO
+
+	RBase_Ch0 CBD2_BASE_DATA_REG _RBASE#
+	dc_byte _A _= ACCUME #$ FF00 _AND   	    \ mask off high byte
+	_JSR:  DecodeCBD2
+	Output 0 PART+ _A _=A
+
+	RBase_Ch1 CBD2_BASE_DATA_REG _RBASE#
+	dc_byte _A _= 	dc_hold _A  8 _<<' _TRL     \ mask off low byte
+	_JSR:  DecodeCBD2
+	Output 1 PART+ _A _=A
+	
+	dc_hold _A  _= InFIFO _A _TRL    	    \ get next 16 bits from FIFO
+
+	RBase_Ch2 CBD2_BASE_DATA_REG _RBASE#
+	dc_byte _A _= ACCUME #$ FF00 _AND   	    \ mask off high byte
+	_JSR:  DecodeCBD2
+	Output 2 PART+ _A _=A
+
+	RBase_Ch3 CBD2_BASE_DATA_REG _RBASE#
+	dc_byte _A _= 	dc_hold _A  8 _<<' _TRL     \ mask off low byte
+	_JSR:  DecodeCBD2
+	Output 3 PART+ _A _=A
+
+	_JUMP: AllDone
+
+\ ---------------------------------------------
+_LABEL: @InterpolateAll
+	RBase_Ch0 CBD2_BASE_DATA_REG _RBASE#
+	_JSR:  InterpolateCBD2
+	Output 0 PART+ _A _=A
+
+	RBase_Ch1 CBD2_BASE_DATA_REG _RBASE#
+	_JSR:  InterpolateCBD2
+	Output 1 PART+ _A _=A
+	
+	RBase_Ch2 CBD2_BASE_DATA_REG _RBASE#
+	_JSR:  InterpolateCBD2
+	Output 2 PART+ _A _=A
+	
+	RBase_Ch3 CBD2_BASE_DATA_REG _RBASE#
+	_JSR:  InterpolateCBD2
+	Output 3 PART+ _A _=A
+
+	_JUMP: AllDone
+
+\ --------- DecodeCBD2 SUBROUTINE --------------------------------------------
+\ On entry:
+\     ACCUME = dc_byte = compressed byte value
+\ On exit:
+\     ACCUME = scaled output
+\ ------------------------------------------- DECODE
+_LABEL: DecodeCBD2
+	dc_oldval _reg dc_previous _reg	_MOVE	\ save for interpolation
+
+	ACCUME #$ 0100 _AND                 \ odd or even ?
+	_BEQ: @ExactMode
+\ Delta mode, use previous_sample + x**3 as the next sample
+	dc_byte _A dc_byte _A _*                    \ square data value
+	ACCUME dc_byte _A dc_previous _%reg _CLIP _*+   \ cube data value + previous
+	_JUMP: InterpolateCBD2
+
+\ Exact mode, use x**3 as the next sample
+_LABEL: @ExactMode
+	dc_byte _A dc_byte _A _*                    \ square data value
+	dc_previous _reg _= ACCUME dc_byte _A  _*   \ cube data value
+\ No RTS. Just fall into interpolate routine.
+\ I know. UGLY ... but fast.
+
+\ ------------------------------------------- INTERPOLATE
+_LABEL: InterpolateCBD2
+\ dc_previous is now the current sample
+	Phase _A dc_oldval _reg dc_oldval _reg _*-    \ old*(frac-1) = old*frac-old
+	dc_previous _reg Phase _A ACCUME _*-	      \ interpolate output value
+	ACCUME Amplitude _A _*	                      \  scale output
+	_RTS
+
+_LABEL: AllDone
+
+}ins
+}dspp

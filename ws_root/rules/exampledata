@@ -1,0 +1,34 @@
+# @(#) exampledata 96/09/17 1.3
+# Rules for example data files.
+# See variables/exampledata.
+
+# dummy target to permit order-independent inclusion of this rule with other rules
+default:
+
+all.here: all.exampledata
+all.exampledata:
+ifdef EXAMPLE_DATA_SOURCE_DIR
+	@if [ ! -d ${EXAMPLE_DATA_SOURCE_DIR} ]		; \
+	   then echo "EXAMPLE_DATA_SOURCE_DIR ${EXAMPLE_DATA_SOURCE_DIR} not found." ; \
+		${FALSE}				; \
+	   fi
+else
+	@echo "EXAMPLE_DATA_SOURCE_DIR or EXAMPLE_DATA_REV not defined." ; \
+	 ${FALSE}
+endif
+
+include ${CODEMGR_WS}/ws_root/rules/datafiles
+
+# Inherits a few things from rules/datafiles:
+#
+# variables:
+#     BUILD_INTO - for symlink below
+#     TARGETS - for all.post, ftp, unlink, and clean targets
+#
+# dependencies:
+#     all.post: ${TARGETS}
+
+# Construct symlink in BUILD_INTO pointing to file in EXAMPLE_DATA_SOURCE_DIR
+${BUILD_INTO}/%: ${EXAMPLE_DATA_SOURCE_DIR}/%
+	${RM} $@
+	${SLN} $< $@

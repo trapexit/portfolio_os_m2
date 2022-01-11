@@ -1,0 +1,81 @@
+#
+# @(#) Makefile.Sun 96/11/19 1.7
+#
+SHELL = /bin/sh
+
+PLATFORM = Sun
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../../libs/$(PLATFORM)
+OBJDIR = ../../txtlib/src/objects/$(PLATFORM)
+HGRELEASEDIR = ../../release/$(PLATFORM)
+
+CP = cp
+RM = /bin/rm -f
+MD = mkdir
+
+M2TXLIB = M2TXlib.a
+IFFLIB = IFFlib.a
+LIBS = $(LIBDIR)/$(M2TXLIB) $(LIBDIR)/$(IFFLIB) -lm
+INCLUDES = -I../../txtlib/include  -I../../ifflib -I./
+CC = gcc
+CCFLAGS = -g -ansi -DTEXTOOLS_VERISION="\"3.1\"" $(INCLUDES)
+
+AUTOMAGIC_DIR = \
+	bin     \
+	$(BINDIR)	\
+	$(HGRELEASEDIR)
+
+TOOLS = \
+	$(BINDIR)/utfpipcat \
+	$(BINDIR)/utfpipsub \
+	$(BINDIR)/utfquantmany \
+	$(BINDIR)/utfsplit \
+	$(BINDIR)/utfunpage \
+	$(BINDIR)/utfcat \
+	$(HGRELEASEDIR)/utfpipcat \
+	$(HGRELEASEDIR)/utfpipsub \
+	$(HGRELEASEDIR)/utfquantmany \
+	$(HGRELEASEDIR)/utfsplit \
+	$(HGRELEASEDIR)/utfunpage \
+	$(HGRELEASEDIR)/utfcat
+
+all: ${AUTOMAGIC_DIR} $(TOOLS) \
+	$(BINDIR)/utfpage $(BINDIR)/utfsdfpage \
+	$(HGRELEASEDIR)/utfpage $(HGRELEASEDIR)/utfsdfpage
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+$(BINDIR)/%: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(HGRELEASEDIR)/%: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(BINDIR)/utfpage: $(UTFPAGEOBJS) utfpage.c
+	$(CC) $(CCFLAGS) -o $@ utfpage.c $(UTFPAGEOBJS) ${LIBS}
+
+$(BINDIR)/utfsdfpage: $(UTFPAGEOBJS) utfsdfpage.c
+	$(CC) $(CCFLAGS) -o $@ utfsdfpage.c $(UTFPAGEOBJS) ${LIBS}
+
+$(HGRELEASEDIR)/utfpage: $(UTFPAGEOBJS) utfpage.c
+	$(CC) $(CCFLAGS) -o $@ utfpage.c $(UTFPAGEOBJS) ${LIBS}
+
+$(HGRELEASEDIR)/utfsdfpage: $(UTFPAGEOBJS) utfsdfpage.c
+	$(CC) $(CCFLAGS) -o $@ utfsdfpage.c $(UTFPAGEOBJS) ${LIBS}
+
+UTFPAGEOBJS = \
+	$(OBJDIR)/futil.o \
+	$(OBJDIR)/LWToken.o \
+	$(OBJDIR)/page.o \
+	$(OBJDIR)/SDFTexBlend.o
+	
+depends:
+	makedepend -- $(INCLUDES)
+
+clean:
+
+clobber:
+	$(RM) $(TOOLS) $(BINDIR)/utfpage $(HGRELEASEDIR)/utfpage
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

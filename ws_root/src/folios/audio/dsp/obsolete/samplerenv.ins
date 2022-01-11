@@ -1,0 +1,121 @@
+\ @(#) samplerenv.ins 95/06/02 1.6
+\ $Id: samplerenv.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ Instrument Template for Sample Player
+\ Call the DSP routine for a variable rate mono 16 bit sample.
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	NOAUTODOC -private -class DSP -name samplerenv.dsp
+\\\	OBSOLETE - Variable-rate sample player with amplitude envelope.
+\\\
+\\\	  Function
+\\\
+\\\	    This is a composite instrument consisting of sampler.dsp with a built-in
+\\\	    amplitude envelope generator.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency                       Units are fixed point phase increment. $8000 equals the
+\\\	                                    normal sample rate, with 1 sample per frame. Thus, you can go from zero
+\\\	                                    to one octave above the original. Defaults to $8000.
+\\\
+\\\	    Amplitude                       0..$7FFF. Defaults to $7FFF.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Envelopes
+\\\
+\\\	    AMPEnv                          Amplitude envelope hook.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 56
+\\\
+\\\	    Code: 36 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Notes
+\\\
+\\\	    This instrument has some obvious limitations. Consider using the discrete
+\\\	    instruments sampler.dsp and envelope.dsp or designing a custom
+\\\	    instrument with ARIA instead of using this instrument.
+\\\
+
+include? PhaseInc OscUpDownFP.j
+include? DFID_SAMPLERENV function_ids.j
+
+anew task-samplerenv.ins
+
+dspp-echo off
+_RED
+dspp{
+ins{
+
+DFID_SAMPLERENV dspp-function-id !
+$" samplerenv.dsp" ins-name !
+
+ALLOC.RBASE MYRB   \ allocate a register base for a block of 8 registers
+ALLOC.INFIFO  InFIFO
+ALLOC.OUTPUT Output
+
+$ -8000 $ 7FFF $ 0000 ALLOC.KNOB AMPEnv.request
+$ 0 $ 7FFF $ 0010 ALLOC.KNOB AMPEnv.incr
+ALLOC.IMEM AMPEnv.phase
+ALLOC.IMEM AMPEnv.target
+ALLOC.IMEM AMPEnv.source
+ALLOC.IMEM AMPEnv.current
+
+0 $ FFFF $ 8000 ALLOC.KNOB Frequency
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+56 ALLOC.TICKS
+
+\ do a simple amplitude envelope
+\ create amp-env-data
+\	  0 ,     0 ,
+\	200 , 30067 ,  \ attack
+\	500 , 20000 ,  \ decay, sustain
+\   4000 ,     0 ,     \ release
+\ amp-env-data 4 2 2 0 $" AMPEnv" attach.envelope
+
+\ -------------------------------------------------- AMP Envelope
+\ Compare Current and Requested Target
+	AMPEnv.request _A AMPEnv.target _A _-
+	_BNE: @AMPUpdateTarget
+
+\ Calculate new phase, phase ranges from 0-0.9999
+	 AMPEnv.phase _%A AMPEnv.incr _A _CLIP _+
+
+\ sample = new*frac + old*(1-frac)  ; crossfade interpolation
+	ACCUME AMPEnv.source _A AMPEnv.source _A _*-
+	AMPEnv.current _A _= AMPEnv.target _A AMPEnv.phase _A ACCUME	_*-
+	_JUMP: @AMPDone
+	_NOP
+
+_LABEL: @AMPUpdateTarget
+\ not calculating new value may cause some jitter on the envelope
+	AMPEnv.source _A _= AMPEnv.current _A _TRL	\ pass through ACCUME
+	AMPEnv.phase _A #$ 0000 _MOVE
+	AMPEnv.target _A AMPEnv.request _A _MOVE
+_LABEL: @AMPDone
+
+    MYRB _RBASE                         \ set RBASE for subsequent calls
+    FIFOPtr _reg InFIFO _# _MOVE        \ put FIFO address in register indirect
+    PhaseInc _reg Frequency _A _MOVE    \ get frequency from knob
+    _JSR:   OscUpDownFP                 \ call external reference
+    ACCUME AMPEnv.current _A _*         \ scale by envelope
+    Output _A _= ACCUME Amplitude _A _* \ scale loudness
+_ENDEXT
+}ins
+}dspp

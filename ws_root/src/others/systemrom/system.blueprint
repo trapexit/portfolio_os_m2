@@ -1,0 +1,147 @@
+// @(#) system.blueprint 96/12/03 1.72
+
+#include	"system.defines"
+
+#define	ARCHIVE_DIR	/thdo/ssw/opera/archive/m2stuff
+
+
+SOURCE_TREE {
+
+#ifndef BUILD_DEBUGGER
+
+	LaunchMe.m2 -> RELEASE_DIR/remote/System.m2/Tasks/romapplauncher
+
+#ifdef	BOOT_UNENC
+
+	RomApps.txt -> SRC/scripts/RomAppsFlow.txt
+	opera.romapp -> RELEASE_DIR/remote/RomApps/opera.romapp
+	audio.romapp -> RELEASE_DIR/remote/RomApps/audio.romapp
+	photo.romapp -> RELEASE_DIR/remote/RomApps/photo.romapp
+	video.romapp -> RELEASE_DIR/remote/RomApps/video.romapp
+	nodisc.romapp -> RELEASE_DIR/remote/RomApps/nodisc.romapp
+	unknown.romapp -> RELEASE_DIR/remote/RomApps/unknown.romapp
+
+#else	// ifdef BOOT_UNENC
+
+#ifndef	BOOT_PCDEV
+	RomApps.txt -> SRC/scripts/RomApps.txt
+	AudioCD -> ARCHIVE_DIR/AudioCD.96.11.23
+	AudioCDFiles -> ARCHIVE_DIR/AudioCDFiles.96.11.23
+	VideoCDFiles -> ARCHIVE_DIR/VideoCDFiles.96.11.23
+	VideoCD -> ARCHIVE_DIR/VideoCD.96.11.27
+	Attract -> ARCHIVE_DIR/Attract.96.12.02
+	AttractFiles -> ARCHIVE_DIR/AttractFiles.96.11.23
+	PhotoCD -> ARCHIVE_DIR/PhotoCD.96.11.23
+	PhotoCDFiles -> ARCHIVE_DIR/PhotoCDFiles.96.11.23
+	EjectDisk -> RELEASE_DIR/remote/RomApps/EjectDisk
+	MenuApp -> ARCHIVE_DIR/MenuApp.96.11.23
+	MenuAppFiles -> ARCHIVE_DIR/MenuAppFiles.96.11.23
+	StorageManager -> ARCHIVE_DIR/StorageManager.96.11.23
+	StorageManagerFiles -> ARCHIVE_DIR/StorageManagerFiles.96.11.23
+#endif // ifndef BOOT_PCDEV
+
+#endif	// ifdef BOOT_UNENC
+#endif	// ifndef BUILD_DEBUGGER
+
+	System.m2 {
+
+#ifndef	BUILD_DEBUGGER
+
+		Audio -> RELEASE_DIR/remote/System.m2/Audio
+		Drivers {
+			Descriptions {
+#ifdef BOOT_PCDEV
+		    	pchost.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/pchost.ddf
+        		stackedhost.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/stackedhost.ddf
+#endif
+				bdavideo.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/bdavideo.ddf
+				cdrom.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/cdrom.ddf
+				controlport.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/controlport.ddf
+				eventport.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/eventport.ddf
+				mp.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/mp.ddf
+				mpegvideo.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/mpegvideo.ddf
+				mpsim.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/mpsim.ddf
+				ns16550.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/ns16550.ddf
+				proxy.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/proxy.ddf
+				storagecard.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/storagecard.ddf
+				triangleengine.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/triangleengine.ddf
+			}
+#ifdef BOOT_PCDEV 
+			pchost.driver -> RELEASE_DIR/remote/System.m2/Drivers/pchost.driver
+			stackedhost.driver -> RELEASE_DIR/remote/System.m2/Drivers/stackedhost.driver
+#endif
+			bdavideo.driver -> RELEASE_DIR/remote/System.m2/Drivers/bdavideo.driver
+			cdrom.driver -> RELEASE_DIR/remote/System.m2/Drivers/cdrom.driver
+			controlport.driver -> RELEASE_DIR/remote/System.m2/Drivers/controlport.driver
+			eventport.driver -> RELEASE_DIR/remote/System.m2/Drivers/eventport.driver
+			mp.driver -> RELEASE_DIR/remote/System.m2/Drivers/mp.driver
+			mpegvideo.driver -> RELEASE_DIR/remote/System.m2/Drivers/mpegvideo.driver
+			mpsim.driver -> RELEASE_DIR/remote/System.m2/Drivers/mpsim.driver
+			ns16550.driver -> RELEASE_DIR/remote/System.m2/Drivers/ns16550.driver
+			proxy.driver -> RELEASE_DIR/remote/System.m2/Drivers/proxy.driver
+			storagecard.driver -> RELEASE_DIR/remote/System.m2/Drivers/storagecard.driver
+			triangleengine.driver -> RELEASE_DIR/remote/System.m2/Drivers/triangleengine.driver
+		}
+		EventBroker -> RELEASE_DIR/remote/System.m2/EventBroker
+		FileSystems -> RELEASE_DIR/remote/System.m2/FileSystems
+		Fonts {
+			default_14.font -> RELEASE_DIR/remote/System.m2/Fonts/default_14.font
+			saltpile_12.font -> RELEASE_DIR/remote/System.m2/Fonts/saltpile_12.font
+#ifndef	BOOT_UNENC
+			USCleanCondensed_12.font -> ARCHIVE_DIR/Fonts.96.06.05/USCleanCondensed_12.font
+			USCleanCondensed_10.font -> ARCHIVE_DIR/Fonts.96.06.05/USCleanCondensed_10.font
+			USCleanCondensed_14.font -> ARCHIVE_DIR/Fonts.96.06.05/USCleanCondensed_14.font
+#endif
+		}
+		International -> RELEASE_DIR/remote/System.m2/International
+		Modules -> RELEASE_DIR/remote/System.m2/Modules
+		Requester -> RELEASE_DIR/remote/System.m2/Requester
+		Tasks -> RELEASE_DIR/remote/System.m2/Tasks
+
+#else	// ifndef BUILD_DEBUGGER
+
+		Drivers {
+			Descriptions {
+				host.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/host.ddf
+				stackedhost.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/stackedhost.ddf
+				cdrom.ddf -> RELEASE_DIR/remote/System.m2/Drivers/Descriptions/cdrom.ddf
+			}
+			host.driver -> RELEASE_DIR/remote/System.m2/Drivers/host.driver
+			stackedhost.driver -> RELEASE_DIR/remote/System.m2/Drivers/stackedhost.driver
+			cdrom.driver -> RELEASE_DIR/remote/System.m2/Drivers/cdrom.driver
+		}
+		FileSystems {
+			host.fs -> RELEASE_DIR/remote/System.m2/FileSystems/host.fs
+		}
+
+#endif	// ifndef BUILD_DEBUGGER
+
+		Boot {
+			MICROCARD_DIPIR_NAME -> MICROCARD_DIPIR_SRC
+			VISA_DIPIR_NAME -> VISA_DIPIR_SRC
+			SYSROMAPP_DIPIR_NAME -> SYSROMAPP_DIPIR_SRC
+			CHARACTER_DATA_NAME -> CHARACTER_DATA_SRC
+#if INC_CDDIPIR
+			CD_DIPIR_NAME -> CD_DIPIR_SRC
+#endif	// if INC_CDDIPIR
+#if MEDIADEBUG
+			MEDIADEBUG_DIPIR_NAME -> MEDIADEBUG_DIPIR_SRC
+#endif	// if MEDIADEBUG
+			LCCD_DRIVER_NAME -> LCCD_DRIVER_SRC
+#ifdef	BUILD_DEBUGGER
+			HOST_DRIVER_NAME -> HOST_DRIVER_SRC
+#if HOSTCD
+			HOSTCD_DRIVER_NAME -> HOSTCD_DRIVER_SRC
+#endif	// ifHOSTCD
+#else	// ifdef BUILD_DEBUGGER
+			STATIC_SCREEN_NAME -> STATIC_SCREEN_SRC
+			KERNEL_NAME -> KERNEL_SRC
+			OPERATOR_NAME -> OPERATOR_SRC
+			FILE_SYS_NAME -> FILE_SYS_SRC
+			KINIT_NAME -> KINIT_SRC
+			OPINIT_NAME -> OPINIT_SRC
+			FSINIT_NAME -> FSINIT_SRC
+#endif	// ifdef BUILD_DEBUGGER
+		}
+	}
+}

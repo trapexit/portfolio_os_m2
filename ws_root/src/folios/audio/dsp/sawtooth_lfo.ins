@@ -1,0 +1,87 @@
+\ @(#) sawtooth_lfo.ins 96/05/14 1.2
+\ Instrument Template for Sawtooth LFO
+\ Sawtooth waves look like /|/|/|/|/|/|
+
+\\\	AUTODOC -class DSP -group Control_Signal -name sawtooth_lfo.dsp
+\\\	Sawtooth wave Low-Frequency Oscillator.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument is a sawtooth wave generator that uses extended precision
+\\\	    arithmetic to give lower frequencies than sawtooth.dsp(@). It also has
+\\\	    better resolution at the same frequency. The frequency of this instrument is
+\\\	    256 times lower than its corresponding high frequency version. It is useful
+\\\	    as a modulation source for controlling other instruments, or for bass
+\\\	    instruments.
+\\\
+\\\	    When Frequency and Amplitude are the same sign, the waveform is a rising
+\\\	    sawtooth (i.e., /|/|/|/|). When Frequency and Amplitude are opposite signs,
+\\\	    the waveform is a falling sawtooth (i.e., |\|\|\|\).
+\\\
+\\\	    This instrument is reset to the beginning of the ramp when started
+\\\	    (i.e., -Amplitude).
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency - AUDIO_SIGNAL_TYPE_LFO_FREQ
+\\\	        Oscillator frequency in Hertz. Ranges from -86.1 Hz to +86.1 Hz.
+\\\	        Default is 17.2 Hz.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -1.0 to +1.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 15
+\\\
+\\\	    Code: 15 words
+\\\
+\\\	    Data: 5 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V31
+\\\
+\\\	  See Also
+\\\
+\\\	    pulse_lfo.dsp(@), square_lfo.dsp(@), triangle_lfo.dsp(@), sawtooth.dsp(@)
+
+include? DFID_SAWTOOTH_LFO function_ids.j
+
+anew task-sawtooth_lfo.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_SAWTOOTH_LFO dspp-function-id !
+$" sawtooth_lfo.dsp" ins-name !
+    \ initialize instrument
+
+$ 8000 2 10 */ KNOB_TYPE_LFO_FREQ ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+ALLOC.OUTPUT Output
+
+\ double precision phase accumulator
+\ init at start to bottom of ramp
+$ -8000 DRSC_AT_START ALLOC.VARIABLE.DEFAULT PhaseHigh
+$     0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT PhaseLow
+
+15 ALLOC.TICKS
+
+\ Accumulate phase
+	Frequency _A 8 _<<' _TRA                    \ extract low bits
+	PhaseLow _%A ACCUME _+                      \ add low phase
+	PhaseHigh _A _+C                            \ carry bit
+	PhaseHigh _A _= Frequency _A $ 0080 _#   ACCUME  _*+
+
+\ Scale for output
+	Output _A _= ACCUME Amplitude _A _*
+
+}ins
+}dspp

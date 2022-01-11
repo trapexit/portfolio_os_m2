@@ -1,0 +1,91 @@
+\ @(#) fixedstereosample.ins 95/11/16 1.8
+\ $Id: fixedstereosample.ins,v 1.9 1995/01/20 21:27:52 peabody Exp $
+\ FixedStereoSample - Instrument Template for Sample Player without rate conversion
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+\
+\ 940608 PLB removed FIFOSTATUS check
+\            reduced tick allocation from 23 to 10
+\            reduced code size from 16 to 10
+\ 940809 PLB put back FIFOSTATUS check because it is needed to
+\            maintain stereo integrity.  A side switch could
+\            otherwise occur if the DMA started between FIFO reads.
+\            Also fixed very old bug where I was doing +F instead
+\            of &F which is needed to mask off the low 4 bits.
+\            Set ticks to 18 after remeasuring.
+
+\\\	NOAUTODOC -private -class DSP -name fixedstereosample.dsp
+\\\	OBSOLETE - Play a stereophonic sample at 44,100 Hz.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a stereophonic sample at 44,100 Hz.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    LeftOutput
+\\\
+\\\	    RightOutput
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 18
+\\\
+\\\	    Code: 16
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Caveats
+\\\
+\\\	    The left/right channels are likely to be reversed from what you expect due
+\\\	    to an unexpected hardware/software interaction. Please test the stereo
+\\\	    output carefully, if this matters, and reconnect the outputs of this
+\\\	    instrument appropriately. Only 16-bit stereo players are effected by this.
+\\\
+\\\	  See Also
+\\\
+\\\	    halfstereosample.dsp, fixedstereo8.dsp
+\\\
+
+include? DFID_FIXEDSTEREOSAMPLE function_ids.j
+
+anew task-fixedstereosample.ins
+
+_RED
+dspp{
+ins{
+
+DFID_FIXEDSTEREOSAMPLE dspp-function-id !
+$" fixedstereosample.dsp" ins-name !
+
+ALLOC.INFIFO  InFIFO
+ALLOC.OUTPUT LeftOutput
+ALLOC.OUTPUT RightOutput
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+18 ALLOC.TICKS
+
+\	InFIFO FIFOSTATUS+ _A #$ 000F _+    \ check FIFO status, OLD BUG, 940809
+	InFIFO FIFOSTATUS+ _A #$ 000F _AND  \ check FIFO status, mask off low 4 bits, FIXED
+	ACCUME #$ 0002 _-                   \ are there at least two samples
+	_BLT: NODATA                        \ if not forget it
+
+	LeftOutput _A _= InFIFO _A Amplitude _A _*	\ direct from FIFO to Mixer
+	RightOutput _A _= InFIFO _A Amplitude _A _*	\ direct from FIFO to Mixer
+
+_LABEL: NODATA
+
+}ins
+}dspp

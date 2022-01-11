@@ -1,0 +1,184 @@
+\ @(#) sawenvsvfenv.ins 95/11/16 1.8
+\ $Id: sawenvsvfenv.ins,v 1.7 1995/01/20 20:20:23 peabody Exp $
+\ Envelope low level ramp function
+\ controlling the amplitude of a sawtooth
+\ also filter and envelope filter cutoff
+\
+\ Phil Burk
+\ Copyright 1993 3DO
+
+\\\	NOAUTODOC -private -class DSP -name sawenvsvfenv.dsp
+\\\	OBSOLETE - Sawtooth generator with amplitude and filter envelope.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is a simple sawtooth generator with two built-in envelopes
+\\\	    to control amplitude and filter cutoff. It is a test instrument that we
+\\\	    use to test the envelope code, but you may find it useful as a synthesizer
+\\\	    voice.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - 0  =>  $7FFF, final amplitude of voice
+\\\
+\\\	    CutoffFreq - 0 => $2000, default $100. Currently nonlinear cutoff
+\\\	    frequency of filter.
+\\\
+\\\	    Frequency - If you call TweakRawKnob(), the units are phase increments, If
+\\\	    youcall TweakKnob(), the units are 16.16 fractional hertz.
+\\\
+\\\	    Resonance - 1 / Q, 0 => $6000, default $1000
+\\\
+\\\	    SawAmp - 0  =>  $4000, default $1000, amplitude of sawtooth feeding into
+\\\	    filter
+\\\
+\\\	    SVFEnvDepth - 0 => $7FFF, default $2000, Depth of filter envelope.
+\\\
+\\\	  Inputs
+\\\
+\\\	    None
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resource
+\\\
+\\\	    Ticks = 72
+\\\
+\\\	    N memory = 82 words
+\\\
+
+include? DFID_SAWENVSVFENV function_ids.j
+
+anew task-sawenvsvfenv.ins
+
+_RED
+if-translate-unders on
+dspp{
+ins{
+
+DFID_SAWENVSVFENV dspp-function-id !
+$" sawenvsvfenv.dsp" ins-name !
+
+
+\ dspp-echo on
+
+$ -8000 $ 7FFF $ 0000 ALLOC.KNOB AMPEnv.request
+$ 0 $ 7FFF $ 0010 ALLOC.KNOB AMPEnv.incr
+ALLOC.IMEM AMPEnv.phase
+ALLOC.IMEM AMPEnv.target
+ALLOC.IMEM AMPEnv.source
+ALLOC.IMEM AMPEnv.current
+
+$ -8000 $ 7FFF $ 0000 ALLOC.KNOB SVFEnv.request
+$ 0 $ 7FFF $ 0010 ALLOC.KNOB SVFEnv.incr
+ALLOC.IMEM SVFEnv.phase
+ALLOC.IMEM SVFEnv.target
+ALLOC.IMEM SVFEnv.source
+ALLOC.IMEM SVFEnv.current
+0 $ 7fff $ 2000 ALLOC.KNOB SVFEnvDepth
+
+ALLOC.IMEM SawPhase
+ALLOC.IMEM LowPass
+ALLOC.IMEM BandPass
+ALLOC.IMEM HighPass
+ALLOC.IMEM CalcFreq
+ALLOC.IMEM CalcSignal
+ALLOC.OUTPUT Output
+
+0 $ 4000 $ 1000 ALLOC.KNOB SawAmp
+0 $ 2000 $ 0100 ALLOC.KNOB CutoffFreq
+0 $ 6000 $ 1000 ALLOC.KNOB Resonance
+0 $ 1000 $ 0200 ALLOC.KNOB Frequency
+CALC_DIVIDE_SR 0 0 Frequency set.knob.calc
+0 $ 7FFF $ 6000 ALLOC.KNOB Amplitude
+72 ALLOC.TICKS
+
+\ do a simple amplitude envelope
+create amp-env-data
+	0 , 0 ,
+	200 , 32767 ,  \ attack
+	500 , 20000 ,  \ decay, sustain
+	1000 , 0 ,     \ release
+amp-env-data 4 2 2 0 $" AMPEnv" attach.envelope
+
+\ do a simple amplitude envelope
+create svf-env-data
+	0 , 0 ,
+	1000 , 32767 ,  \ attack
+	1500 , 20000 ,  \ decay, sustain
+	2000 , 10000 ,  \ release
+svf-env-data 4 2 2 0 $" SVFEnv" attach.envelope
+
+\ -------------------------------------------------- AMP Envelope
+\ Compare Current and Requested Target
+	AMPEnv.request _A AMPEnv.target _A _-
+	_BNE: @AMPUpdateTarget
+
+\ Calculate new phase, phase ranges from 0-0.9999
+	 AMPEnv.phase _%A AMPEnv.incr _A _CLIP _+
+
+\ sample = new*frac + old*(1-frac)  ; crossfade interpolation
+\        = new*frac - old*(frac-1)
+\        = new*frac - (old*frac-old)
+	ACCUME AMPEnv.source _A AMPEnv.source _A _*-
+	AMPEnv.current _A _= AMPEnv.target _A AMPEnv.phase _A ACCUME	_*-
+	_JUMP: @AMPDone
+	_NOP
+
+_LABEL: @AMPUpdateTarget
+\ not calculating new value may cause some jitter on the envelope
+	AMPEnv.source _A _= AMPEnv.current _A _TRL	\ pass through ACCUME
+	AMPEnv.phase _A #$ 0000 _MOVE
+	AMPEnv.target _A AMPEnv.request _A _MOVE
+	_NOP
+_LABEL: @AMPDone
+
+\ Calculate filter frequency.
+	CalcFreq _A _= AMPEnv.current _A SVFEnvDepth _A CutoffFreq _A _CLIP _*+
+
+\ -------------------------------------------------- SVF Envelope
+\ Compare Current and Requested Target
+	SVFEnv.request _A SVFEnv.target _A _-
+	_BNE: @SVFUpdateTarget
+
+\ Calculate new phase, phase ranges from 0-0.9999
+	 SVFEnv.phase _%A SVFEnv.incr _A _CLIP _+
+	ACCUME SVFEnv.source _A SVFEnv.source _A _*-
+	SVFEnv.current _A _= SVFEnv.target _A SVFEnv.phase _A ACCUME	_*-
+	_JUMP: @SVFDone
+	_NOP
+
+_LABEL: @SVFUpdateTarget
+\ not calculating new value may cause some jitter on the envelope
+	SVFEnv.source _A _= SVFEnv.current _A _TRL	\ pass through ACCUME
+	SVFEnv.phase _A #$ 0000 _MOVE
+	SVFEnv.target _A SVFEnv.request _A _MOVE
+	_NOP
+_LABEL: @SVFDone
+
+\ ------------------------------------------------------
+	SawPhase _%A Frequency _A _+   \ Calculate Sawtooth.
+
+	CalcSignal _A _= ACCUME SawAmp _A  _*
+	_NOP
+	CalcFreq _A BandPass _A LowPass _%A _CLIP _*+   \ LowPass=SVFFreq*BandPass+LowPass
+	Resonance _A BandPass _A ACCUME _CLIP _*+		\ SVFQ*BandPass+A
+	_NOP
+	HighPass _A _= CalcSignal _A ACCUME _CLIP _-	\ HighPass=Noise-A
+	CalcFreq _A ACCUME BandPass _%A _CLIP _*+	    \ BandPass=SVFFreq*A+BandPass
+
+	Amplitude _A AMPEnv.current _A _*
+	Output _A _= ACCUME LowPass _A _*
+
+}ins
+}dspp

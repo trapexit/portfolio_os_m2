@@ -1,0 +1,50 @@
+@(#) module_registry 96/09/05 1.24
+
+The Module Registry
+-------------------
+
+This is the master registry of module ID numbers.  Every Module (DLL) must have
+a unique 32 bit ID number.  Some numbers are reserved for use by 3DO, some
+by MEI, and some for developers.
+
+This file lists the IDs for ALL 3DO modules.  If a 3DO module doesn't have an
+ID in this file - it doesn't exist (ie: can't be auto upgraded etc...).
+Eventually, this file will be automagically maintained by the linker or some
+other tool.
+
+The following scheme is being used:
+
+  0x0000-0x007f   - for 3DO use
+  0x0080-0x00ff   - for MEI use
+  0x0100-0xffff   - reserved
+
+3DO_MODULE_IDS
+0x00000001	kernel
+0x00000002	operator
+0x00000003	filesystem
+0x00000004	shell
+0x00000005	script.folio
+0x00000006	compression.folio
+0x00000007	icon.folio
+0x00000008	font.folio
+0x00000009	iff.folio
+0x0000000a	audio.folio
+0x0000000b	jstring.folio
+0x0000000c	os.dll
+0x0000000d	international.folio
+0x0000000e	graphics.privfolio
+0x0000000f	requester.folio
+0x00000010	fsutils.folio
+0x00000011	gstate.folio
+0x00000012	frame2d.folio
+0x00000013	operator.init
+0x00000014	kernel.init
+0x00000015	filesystem.init
+0x00000016	audiopatch.folio
+0x00000017	mpegaudiodecoder.folio
+0x00000018	beep.privfolio
+0x00000019	date.folio
+0x0000001a	batt.folio
+0x0000001b	savegame.folio
+0x0000001c	audiopatchfile.folio
+0x0000001d	blitter.folio

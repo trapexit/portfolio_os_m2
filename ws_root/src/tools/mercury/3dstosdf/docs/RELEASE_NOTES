@@ -1,0 +1,165 @@
+3D Studioª to SDF Release Notes **********************
+9/15/96 version 3.1
+*       Shine and Shine Strength values are now properly represented in the ASCII
+	SDF output.  Previous versions would enable specular lighting even if the
+	shine strength was = 0 (no specular).  This cause materials to get specular
+	highlights (which also eats up rendering performance) that they should not
+	have had.
+*       The previous version (with the 3.0 release) had a bug which caused null
+	rotation values (i.e. a rotation axis of 0 0 0) to get illegal values for
+	the rotation about the axis.  This has been fixed for this release.
+
+8/15/96 version 3.0
+*       The previous version (with the 2.7 release) had a bug which caused many 
+	rotation values to be snapped to 180 degrees (PI) when they were in the 
+	90-180 degrees.  This has been fixed.
+*       To minimize the possibility of floating point round-off, all internal
+	transforms are now performed in double precision and printed out in 
+	scientific notation (e.g. 2.334343 e-4).  While this may lead to messier 
+	looking ASCII SDF files, it minimizes round-off errors. 
+*       The version number will now try to reflect the OS release the tool was 
+	shipped with.
+
+5/7/96 version 1.0a8
+
+*	To reduce the number of nodes in the hierarchy, model transformation 
+	information is propagated to the vertex level now.
+	
+*	Flag to enable geometry splitting based on smoothing groups. In 3D Studio 
+	smoothing groups are used achieve sharp edges between different facet sets.
+	By default geometry splitting based on smoothing groups is disabled. This is
+	because the vertex sharing information is lost and thus breaking the
+	snake primitives into smaller ones. This has a big performance penalty
+	on M2 rendering engine.
+	
+*	Flag to suppress lighting information
+
+*	Flag to suppress texture seam stitching for cylindrical and spherical 
+	mapping
+
+5/2/96 version 1.0a7
+
+*	Bug fixes related to texture tiling calculation  and proper vertex 
+	normal calculations
+
+2/23/96 version 1.0a6
+
+*	Texture seams that are generated from spherical/cylindrical mapping 
+	are stitched in the converter now.
+
+*	Now degenerate polygons are not written out to ASCII SDF file
+
+*	Unified the command line interface across all conversion tools
+
+*	Lighting information ( point, spot, soft spot ) is written out to
+	ASCII SDF file
+
+*	Unique name creation for material, texture arrays and top-level node
+	is done by pre-concatenating output file name rather than input filename
+	
+*	Error messages have been added to notify you when an error has occurred 
+	during the writing out of ASCII SDF files rather than just exiting without 
+	any message.
+	
+*	Material ( sdf_outfile.mat ) and texture data ( sdf_outfile.tex ) can be 
+	written out to separate files now. These files will be included in ASCII
+	SDF file automatically.
+	
+12/14/95 version 1.0a5
+
+*	Now "DUMMY" nodes in 3D Studio are converted as empty nodes in the
+	hierarchy.
+	
+*	All string names in the SDF file are enclosed in quotes to fix
+	the problem where string names start with numbers.
+	
+*	Write unique names for animation array. This is done by prefixing
+	filename, for example: "skeleton_kfengines"
+		
+*	In material "shadeenable" flag is written out.
+
+*	The default Texblend information sets the blending between material
+	and texture ( txBlendOp Mult ).
+	
+*	Write out "3DS smoothing groups". 3DS smoothing groups broken into
+	separate TriMeshes so that it is possible to get sharp edges
+	between different groups.
+
+
+10/13/95 version 1.0a4
+
+*	Bug related to minimum arc distance between adjacent rotational 
+	keys is fixed. The 'anim' program plays the animation correctly now.
+	
+*	Duration field in animation data is in seconds now. 
+
+*	Vertex texture coordinates are not written out if there is no 
+	texture reference in the model
+
+*	Object names containing character '/' is replaced with'_' 
+	because ascii SDF parser does not allow this.
+	
+*	If there is a texture chunk in 3DS file with NULL file name then
+	the object referring to this material does not have texture in it.
+
+8/7/95 version 1.0a2 
+
+*	Arrays of materials and textures are shared, across different
+	models, through indexing mechanism.
+	
+*	Fixed the way output SDF file names were generated.
+
+*	Following key frame animation data is exported :
+	1. animation control ( repeat on/off )
+	2. animation duration
+
+7/18/95 version 1.0a1
+
+*	Key frame animation data is exported to a *.anim file.
+	There is an example code to play these animation files (this
+	example is not available on the M2 1.0 software CD).
+	This code makes use of the framework engines to parse
+	the user defined data. This code has a spline based key frame
+	interpolator for the data. 
+
+*	Object types not supported
+	1. Camera
+	2. Light
+	
+*	.utf texture files
+	The converter does not output the utf files automatically. 
+	You need to use the texture conversion utilities, which are 
+	part of the texture lib functionality.
+	
+*	By default textures, materials and models are shared.
+	
+*	Normals are generated automatically with the autoNormals flag.
+	This flag is set to ON for all models now.
+	
+*	The converter can read files from 3D Studio version 3.0 and 4.0
+
+*   Texture coordinate tiling/wrapping
+	3D Studio by default has the tiling flag "on". The converter uses this flag
+	to generate texture tiling mode. If the texture coordinates for a 
+	model are in the range of [0.0, 1.0] then the converter writes it out
+	in the clamp mode,  otherwise it defaults to the tiling flag.
+		
+*	Tiled textures need to be powers-of-two in the direction of tiling.
+
+*	If the two-sided flag is set in 3D Studio then the converter duplicates
+	the original model set of vertices and polygons for display on the second side. 
+	This functionality preserves the appearance of the original geometry from 
+	3D Studio.
+	
+*	If the flat-shaded flag is set in 3D Studio then the converter will write
+	out the model polygons as individual triangles (no vertex sharing).
+
+*	All of the models and hierarchies from the converted model file 
+	are enclosed in a top-level node named as "filename_world". If 
+	the model prefix is requested then it will be renamed "prefix_world". 
+	This convention is used to generate unique names for the models in 
+	each file.
+	
+***********************************************
+
+

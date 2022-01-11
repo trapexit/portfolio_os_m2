@@ -1,0 +1,115 @@
+\ @(#) svfilter.ins 96/03/11 1.19
+\ $Id: svfilter.ins,v 1.11 1995/01/20 21:27:52 peabody Exp $
+\ State Variable Filter
+\ Phil Burk
+\ Copyright 1992 NTG
+\
+\ 940608 PLB removed some NOPs to reduce code size and
+\            ticks from 22 to 19
+
+\\\	AUTODOC -class DSP -group Effects -name svfilter.dsp
+\\\	State-variable digital filter.
+\\\
+\\\	  Description
+\\\
+\\\	    State-variable digital filter.
+\\\
+\\\	    To convert a frequency in Hz to the value needed to set the filter, the
+\\\	    following formula, from Hal Chamberlain's "Musical Applications of
+\\\	    MicroProcessors," is used:
+\\\
+\\\	        F1 = 2 * sin ( PI * CriticalFrequency / FrameRate )
+\\\
+\\\	    where:
+\\\	        F1 is the frequency control value.
+\\\
+\\\	        CriticalFrequency is the desired critical frequency in Hertz.
+\\\
+\\\	        FrameRate is audio frame rate (e.g. 44100.0).
+\\\
+\\\	    If CriticalFrequency / SampleRate is small, for example less than 1/5, you
+\\\	    can use the approximation:
+\\\
+\\\	        F1 = 2 * PI * CriticalFrequency / FrameRate
+\\\
+\\\	    In both above cases, F1 is a floating point value suitable for passing to
+\\\	    SetKnob().
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        F1 (as defined above) in the range of 0.0 to 1.0. For FrameRate of
+\\\	        44100 Hz, this corresponds to a critical frequency range of 0 to
+\\\	        7350 Hz. Remember that the relationship between critical frequency and
+\\\	        F1 isn't linear. Defaults to 0.25 (approx 1759 Hz).
+\\\
+\\\	    Resonance - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        1 / Q in the range of 0.0 to 1.0. Defaults to 0.125.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Amplitude of Output in the range of 0.0 to 1.0. Defaults to 1.0.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Low-pass output scaled by Amplitude.
+\\\
+\\\	    LowPass, BandPass, HighPass
+\\\	        Low-pass, band-pass, and high-pass outputs of the filter. These are NOT
+\\\	        scaled by Amplitude.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 19
+\\\
+\\\	    Code: 19 words
+\\\
+\\\	    Data: 7 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Caveats
+\\\
+\\\	    The filter can be driven into oscillation to produce a sine wave. Because the
+\\\	    frequency control is non-linear, however, it can't be used for such things as
+\\\	    FM synthesis.
+\\\
+\\\	  See Also
+\\\
+\\\	    filter_1o1z.dsp(@)
+
+include? DFID_SVFILTER function_ids.j
+
+anew task-svfilter.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_SVFILTER dspp-function-id !
+$" svfilter.dsp" ins-name !
+
+\ ************************************************************************************
+
+ALLOC.INPUT  Input
+$ 2000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Frequency
+$ 1000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Resonance
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+ALLOC.OUTPUT  LowPass
+ALLOC.OUTPUT  BandPass
+ALLOC.OUTPUT  HighPass
+ALLOC.OUTPUT  Output
+19 ALLOC.TICKS
+	Frequency _A BandPass _A LowPass _%A _CLIP _*+   \ LowPass=SVFFreq*BandPass+LowPass
+	Resonance _A BandPass _A ACCUME _CLIP _*+        \ SVFQ*BandPass+A
+	HighPass _A _= Input _A ACCUME _CLIP _-          \ HighPass=InSamp-A
+	Frequency _A ACCUME BandPass _%A _CLIP _*+       \ BandPass=SVFFreq*A+BandPass
+	Output _A _= LowPass _A Amplitude _A _*
+}ins
+}dspp

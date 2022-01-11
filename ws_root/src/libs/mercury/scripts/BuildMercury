@@ -1,0 +1,44 @@
+#
+# BuildMercury
+#
+# Copyright (c) 1996, The 3DO Company.  All rights reserved.
+#
+# MPW Script to build all libraries and examples for Mercury.
+
+# You should have the current directory set to the top of the
+# Mercury tree when this script is executed.
+	Set MercuryDir "`directory`"
+
+# Build the libraries
+	Directory "{MercuryDir}lib:libmercury1:"
+	BuildProgram libmercury1
+	Directory "{MercuryDir}lib:libmercury2:"
+	BuildProgram libmercury2
+	Directory "{MercuryDir}lib:libmercury3:"
+	BuildProgram libmercury3
+	Directory "{MercuryDir}lib:libmercury4:"
+	BuildProgram libmercury4
+	Directory "{MercuryDir}lib:libmercury_setup:"
+	BuildProgram libmercury_setup
+	Directory "{MercuryDir}lib:libmercury_utils:"
+	BuildProgram libmercury_utils
+	Directory "{MercuryDir}lib:libmercury_mpm:"
+	BuildProgram libmercury_mpm
+
+# Build the examples
+	Directory "{MercuryDir}examples:anim:"
+	BuildProgram anim
+	Directory "{MercuryDir}examples:helloworld:"
+	BuildProgram helloworld
+	# Note helloworld must be built before bigcircel or viewer is built!
+	Directory "{MercuryDir}examples:bigcircle:"
+	BuildProgram bigcircle
+	Directory "{MercuryDir}examples:bigcirclempm:"
+	BuildProgram bigcirclempm
+	Directory "{MercuryDir}examples:viewer:"
+	BuildProgram viewer
+	Directory "{MercuryDir}examples:testbboard:"
+	BuildProgram billboard
+
+# Return to original directory
+	Directory "{MercuryDir}"

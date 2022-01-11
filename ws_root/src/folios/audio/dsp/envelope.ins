@@ -1,0 +1,123 @@
+\ @(#) envelope.ins 96/05/16 1.22
+\ $Id: envelope.ins,v 1.8 1995/01/20 21:27:52 peabody Exp $
+\ Envelope low level ramp function
+\
+\ to initialize the envelope:
+\    Set Env.incr and Env.Request
+\    set Env.current to starting value.
+\    set Env.target to != Env.request
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\\\	AUTODOC -class DSP -group Control_Signal -name envelope.dsp
+\\\	Interpolate a segment of an Envelope(@).
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument is used by the audio folio to produce multi-segmented
+\\\	    Envelope(@)s. The main CPU passes each segment to this DSP instrument, which
+\\\	    interpolates the values between the envelope points. This can be used to
+\\\	    produce contours to smoothly control amplitude or other parameters. See the
+\\\	    audio folio function CreateEnvelope() and the example program
+\\\	    simple_envelope(@). The knobs are controlled internally by the audio folio
+\\\	    to produce the desired effect.
+\\\
+\\\	    You can also use this instrument by itself to generate ramp functions. When
+\\\	    you change the Env.request knob, the envelope will start changing from its
+\\\	    current output value toward the value of Env.request. An internal phase
+\\\	    value will go from 0.0 to 1.0 at a rate controlled by Env.incr. When the
+\\\	    internal phase reaches 1.0, the output will equal Env.request.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Env.request - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Target value. -1.0 to 1.0. Defaults to 0.0. Changing the value of this
+\\\	        knob resets the internal phase to zero.
+\\\
+\\\	    Env.incr - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Amount to increment internal phase per execution frame. A higher number
+\\\	        means it will reach Env.request more quickly. Range is 0.0 to 1.0,
+\\\	        defaults to 0.0005.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0. Defaults to 1.0
+\\\
+\\\	  Envelope Hooks
+\\\
+\\\	    Env
+\\\	        Envelope hook. This envelope accepts signed envelope data.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 28
+\\\
+\\\	    Code: 4 words per instrument + 22 words shared overhead
+\\\
+\\\	    Data: 8 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Notes
+\\\
+\\\	    To use with an Envelope(@) Item, attach the Envelope to the hook "Env" by
+\\\	    calling call CreateAttachment(). To control this directly, use the knobs
+\\\	    "Env.request" and "Env.incr". While an Envelope is attached to this
+\\\	    instrument, the knobs should not be controlled directly.
+\\\
+\\\	  See Also
+\\\
+\\\	    Envelope(@), CreateEnvelope(), CreateAttachment(), simple_envelope(@)
+
+include? DFID_ENVELOPE function_ids.j
+include? ENV_BASE_DATA_REG envelope_regs.j
+
+anew task-envelope.ins
+
+_BULLDOG
+dspp{
+ins{
+
+
+DFID_ENVELOPE dspp-function-id !
+$" envelope.dsp" ins-name !
+
+28 ALLOC.TICKS
+
+ENV_BASE_DATA_REG ENV_NUM_DATA_REGS ALLOC.RBASE#  DataRBase
+
+ALLOC.OUTPUT  Output
+	ENV_REG_OUTPUT ENV_BASE_DATA_REG - DataRBase Output BIND.RESOURCE
+
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+	ENV_REG_AMPLITUDE ENV_BASE_DATA_REG - DataRBase Amplitude BIND.RESOURCE
+
+$ 0000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Env.request
+	ENV_REG_REQUEST ENV_BASE_DATA_REG - DataRBase Env.request BIND.RESOURCE
+$ 0010 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Env.incr
+	ENV_REG_INCR ENV_BASE_DATA_REG - DataRBase Env.incr BIND.RESOURCE
+
+ALLOC.VARIABLE  Env.phase
+	ENV_REG_PHASE ENV_BASE_DATA_REG - DataRBase Env.phase BIND.RESOURCE
+ALLOC.VARIABLE  Env.target
+	ENV_REG_TARGET ENV_BASE_DATA_REG - DataRBase Env.target BIND.RESOURCE
+ALLOC.VARIABLE  Env.source
+	ENV_REG_SOURCE ENV_BASE_DATA_REG - DataRBase Env.source BIND.RESOURCE
+ALLOC.VARIABLE  Env.current
+	ENV_REG_CURRENT ENV_BASE_DATA_REG - DataRBase Env.current BIND.RESOURCE
+
+
+$" sub_envelope.dsp" ALLOC.DYNAMIC.LINKS
+
+	DataRBase ENV_BASE_DATA_REG _RBASE#
+	_JSR:	sub_envelope
+
+}ins
+}dspp

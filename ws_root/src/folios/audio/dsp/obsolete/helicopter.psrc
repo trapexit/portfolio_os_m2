@@ -1,0 +1,80 @@
+\ @(#) helicopter.psrc 95/10/24 1.3
+\
+\ Helicoptor Patch
+\
+\ Author: Phil Burk
+\ Copyright 3DO 1995
+
+include? patch{ patch_maker.fth
+
+anew task-helicopter.patch
+
+patch{
+
+\ Declare templates that will be used.
+\ A single template can be used multiple times.
+c" rednoise.dsp" pm.template: TMP_REDNOISE
+c" svfilter.dsp" pm.template: TMP_SVFILTER
+c" timesplus.dsp" pm.template: TMP_TIMESPLUS
+c" triangle_lfo.dsp" pm.template: TMP_LFO
+
+\ Block Names
+c" LFO" pm.name: BLK_LFO
+c" Noise" pm.name: BLK_NOISE
+c" Filter" pm.name: BLK_FILTER
+c" FreqMix" pm.name: BLK_FREQMIX
+
+\ Declare Port names
+c" Output" pm.name: PORT_OUTPUT
+c" Input" pm.name: PORT_INPUT
+c" InputA" pm.name: PORT_INPUTA
+c" InputB" pm.name: PORT_INPUTB
+c" InputC" pm.name: PORT_INPUTC
+
+\ Declare Knob names
+c" Amplitude" pm.name: KNOB_AMPLITUDE
+c" Frequency" pm.name: KNOB_FREQUENCY
+c" Resonance" pm.name: KNOB_RESONANCE
+c" NoiseFreq" pm.name: KNOB_NOISE_FREQ
+c" ModRate"   pm.name: KNOB_MODRATE
+c" ModDepth"  pm.name: KNOB_MODDEPTH
+
+\ Add blocks to patch
+BLK_NOISE   TMP_REDNOISE    pc.add.template
+BLK_FILTER  TMP_SVFILTER    pc.add.template
+BLK_FREQMIX TMP_TIMESPLUS   pc.add.template
+BLK_LFO     TMP_LFO         pc.add.template
+
+\ Set ports to constant values
+\ pc.set.constant { name_index port_index part_num  -- , default_val -f- }
+BLK_NOISE          KNOB_AMPLITUDE  0 0.3000  pc.set.constant
+
+\ define inputs and outputs
+\ : pc.define.port { name_index num_parts port_type signal_type -- }
+PORT_OUTPUT  1 AF_PORT_TYPE_OUTPUT KNOB_TYPE_RAW_SIGNED  pc.define.port
+
+\ connect templates
+BLK_NOISE          PORT_OUTPUT 0   BLK_FILTER       PORT_INPUT     0 pc.connect
+BLK_FILTER         PORT_OUTPUT 0   PATCH_BLOCK_SELF PORT_OUTPUT    0 pc.connect
+BLK_LFO            PORT_OUTPUT 0   BLK_FREQMIX      PORT_INPUTA    0 pc.connect
+BLK_FREQMIX        PORT_OUTPUT 0   BLK_FILTER       KNOB_FREQUENCY 0 pc.connect
+
+\ Create Knobs for external control
+\ : pc.define.knob { name_index num_parts knob_type -- , default -f- }
+KNOB_NOISE_FREQ 1  KNOB_TYPE_OSC_FREQ    985.0 pc.define.knob
+KNOB_FREQUENCY  1  KNOB_TYPE_RAW_SIGNED  0.045 pc.define.knob
+KNOB_AMPLITUDE  1  KNOB_TYPE_RAW_SIGNED  1.000 pc.define.knob
+KNOB_RESONANCE  1  KNOB_TYPE_RAW_SIGNED  0.400 pc.define.knob
+KNOB_MODRATE    1  KNOB_TYPE_LFO_FREQ    12.000 pc.define.knob
+KNOB_MODDEPTH   1  KNOB_TYPE_RAW_SIGNED  0.088 pc.define.knob
+
+\ connect KNOBS to blocks
+PATCH_BLOCK_SELF  KNOB_NOISE_FREQ 0  BLK_NOISE   KNOB_FREQUENCY 0  pc.connect
+PATCH_BLOCK_SELF  KNOB_FREQUENCY  0  BLK_FREQMIX PORT_INPUTC    0  pc.connect
+PATCH_BLOCK_SELF  KNOB_RESONANCE  0  BLK_FILTER  KNOB_RESONANCE 0  pc.connect
+PATCH_BLOCK_SELF  KNOB_AMPLITUDE  0  BLK_FILTER  KNOB_AMPLITUDE 0  pc.connect
+PATCH_BLOCK_SELF  KNOB_MODDEPTH   0  BLK_FREQMIX PORT_INPUTB    0  pc.connect
+PATCH_BLOCK_SELF  KNOB_MODRATE    0  BLK_LFO     KNOB_FREQUENCY 0  pc.connect
+
+}patch
+

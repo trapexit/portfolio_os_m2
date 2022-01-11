@@ -1,0 +1,11 @@
+# @(#) linklib 95/09/11 1.9
+
+ifndef	TARGET_NAME
+TARGET_NAME =		${DIRNAME:%=lib%.a}
+endif
+
+include ${CODEMGR_WS}/ws_root/variables/version
+
+WHATSTRING    = @(\#) ${TARGET_NAME} ${shell /bin/date +%y/%m/%d} ${OS_VERSION}.${OS_REVISION}
+
+include ${CODEMGR_WS}/ws_root/variables/generic

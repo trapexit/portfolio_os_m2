@@ -1,0 +1,339 @@
+# @(#) generic 96/09/17 1.71
+
+default.generic: default
+default.here: all.here
+default.post: all.post
+
+########################################################################
+# {{{ Standard recursive rules
+# {{{ orphans: verify we can walk the build tree
+
+orphans.here:
+	-@if [ -d SCCS ]						; \
+	  then for f in ${REGISTERED_FILES}				; \
+	       do if   [ ! -f $$f ]					; \
+		  then ${TRUE}						; \
+		  elif [ ! -f SCCS/s.$$f ]				; \
+		  then echo ${RELATIVE_PATH}$$f not registered		; \
+		  elif [ -f SCCS/p.$$f ]				; \
+		  then echo ${RELATIVE_PATH}$$f locked for edit		; \
+		  elif [ -w $$f ]					; \
+		  then echo ${RELATIVE_PATH}$$f unlocked but writable	; \
+		  fi							; \
+	       done							; \
+	  else echo missing directory: ${RELATIVE_PATH}SCCS		; \
+	  fi
+
+orphans: orphans.down
+
+####################
+# }}}
+# {{{ sources.list: generate list of sources in this subtree
+
+sources.list: ${CODEMGR_WS}/Codemgr_wsdata/nametable
+	-@${CAT} $<						| \
+	  ${GREP} '^ws_root/${RELATIVE_PATH}'			| \
+	  ${SED} 's/ .*$$//' 					| \
+	  ${GREP} -v '^VERSION'					| \
+	  ${GREP} -v '/\.'					| \
+	  ${SED} 's;^ws_root/${RELATIVE_PATH};;' 		| \
+	  ${SORT} 						| \
+	  ${UNIQ} > $@
+
+
+####################
+# }}}
+# {{{ autodoc: extract autodocs from sources in this subtree
+
+autodoc:
+	-@${CAT} ${CODEMGR_WS}/Codemgr_wsdata/nametable		| \
+	  ${GREP} '^ws_root/${RELATIVE_PATH}'			| \
+	  ${SED} 's/ .*$$//' 					| \
+	  ${GREP} -v '^VERSION'					| \
+	  ${GREP} -v '/\.'					| \
+	  ${SED} 's;^ws_root/${RELATIVE_PATH};;'		| \
+	  ${SORT} 						| \
+	  ${UNIQ} > autodoc.tmp
+	@${MD} ${CODEMGR_WS}/ws_root/release/docs
+	${ADX} ${AUTODOC_OPTIONS} `${CAT} autodoc.tmp` \
+	   -ascii ${CODEMGR_WS}/ws_root/release/docs/ascii \
+	   -man ${CODEMGR_WS}/ws_root/release/docs/man \
+	   -html ${CODEMGR_WS}/ws_root/release/docs/html \
+	   -411 ${CODEMGR_WS}/ws_root/release/docs/411 \
+	   -print ${CODEMGR_WS}/ws_root/release/docs/print \
+	   -output_platform ${RELEASE_PLATFORM} \
+	   -include_dir ${CODEMGR_WS}/ws_root/release/${RELEASE_PLATFORM}/includes \
+	   -include_dir ${CODEMGR_WS}/ws_root/release/${RELEASE_PLATFORM}/Examples/Mercury/include \
+	   -include_dir ${CODEMGR_WS}/ws_root/src/tools/mercury/txtlib/include
+	-@${RM} autodoc.tmp
+	 ${CP} ${CODEMGR_WS}/ws_root/src/docs/${OBJDIR}/*.gif ${CODEMGR_WS}/ws_root/release/docs/html/Portfolio_HTML
+
+
+# }}}
+########################################################################
+# }}}
+# {{{ Pattern rule to implement subdirectory visits
+
+# This pattern matching rule causes us to build a target in our
+# subdirectories whenever we depend on "target.down"; before any
+# subdirectories are entered, we depend on "target.here".
+
+# Normally, we stop the first time one of our subdirectories reports
+# an error in the build. If you want to build all the subdirectories
+# even if an early one has an error, set "CONTINUE_ON_ERRORS=true".
+
+ifndef CONTINUE_ON_ERRORS
+CONTINUE_ON_ERRORS =	exit
+endif
+
+%.down: %.here
+ifneq (0, ${words ${SUBDIRS}})
+	@err=0								; \
+	 for d in ${SUBDIRS}						; \
+	 do   if test -f $$d/Makefile					; \
+	      then echo "... `${DATE} '+%T'` Building $* in ${RELATIVE_PATH}$$d ..." 1>&2 ; \
+	           if ${MAKE} -C $$d -f Makefile $*			; \
+	           then ${TRUE}						; \
+	           else echo '###' `${DATE} '+%T'` Build of $* in ${RELATIVE_PATH}$$d failed '###' 1>&2 ; \
+	                err=1						; \
+	                ${CONTINUE_ON_ERRORS} $$err			; \
+	           fi							; \
+	      fi							; \
+	 done								; \
+	 if   [ $$err = 0 ]						; \
+	 then echo "... `${DATE} '+%T'` Build of $* under ${RELATIVE_DOT} done" 1>&2 ; \
+	 else echo "### `${DATE} '+%T'` Build of $* under ${RELATIVE_DOT} failed ###" 1>&2 ; \
+	 fi								; \
+	 exit $$err
+else
+	@${TRUE}
+endif
+
+########################################################################
+# }}}
+# {{{ Automagic target directory creation
+
+ifndef	AUTOMAGIC_DIRS
+AUTOMAGIC_DIRS =	${sort ${OBJDIR} ${TARGET_DIRECTORY} ${DELIVER_FILES_TO} ${PLATFORM_TARGET_DIR} ${EXTRA_AUTOMAGIC_DIRS}}
+endif
+
+makedirs.here:  ${AUTOMAGIC_DIRS}
+
+${AUTOMAGIC_DIRS}:
+	[ -d $@ ] || ${MD} $@
+
+
+########################################################################
+# }}}
+# {{{ Implicit rules to compile stuff
+.PRECIOUS: ${OBJDIR}/%.co ${OBJDIR}/%.so ${OBJDIR}/%.xo ${OBJDIR}/%.po
+
+${OBJDIR}/%.o: %.c
+	${HOSTCC} -c -o $@ ${HOSTCFLAGS} $<
+
+${OBJDIR}/%.o: %.cpp
+	${HOSTCC} -x c++ -c -o $@ ${HOSTCFLAGS} $<
+
+${OBJDIR}/%.o: %.cxx
+	${HOSTCC} -x c++ -c -o $@ ${HOSTCFLAGS} $<
+
+${OBJDIR}/%.co: %.c
+	${CC} -c -o $@ ${CFLAGS} $<
+
+%.lst: %.c
+	${CC} -c -S -o $@ ${CFLAGS} $<
+
+${OBJDIR}/%.xo: %.cxx
+	${CXX} -c -o $@ ${CXXFLAGS} $<
+
+${OBJDIR}/%.po: %.cpp
+	${CXX} -c -o $@ ${CXXFLAGS} $<
+
+${OBJDIR}/%.so: %.s
+	${AS} -o $@ ${SFLAGS} $<
+
+${OBJDIR}/%.so: %.S
+	${PPCAS} -o $@ $<
+
+${OBJDIR}/%.ddf: %.D
+	${DDFC} -o $@ $<
+
+########################################################################
+# }}}
+# {{{ the 'default' target is recursive, too!
+
+default: default.down default.post
+default.here: makedirs.here
+default.post:
+
+########################################################################
+# }}}
+# {{{ set up "all" for recursion, attaching makedirs.here
+
+all: all.down all.post
+all.here: makedirs.here
+all.post:
+
+makedirs.here:
+
+########################################################################
+# }}}
+# {{{ pseudo target directories
+
+# Build target w/o having to specify the enormous target directory (e.g. gmake target/directout.dsp)
+target/%: ${TARGET_DIRECTORY}/%
+	@${TRUE}
+
+# Build an object file w/o having to specify the correct object directory (e.g. gmake obj/foo.co)
+obj/%: ${OBJDIR}/%
+	@${TRUE}
+
+########################################################################
+# }}}
+# {{{ "deliver these files into that directory"
+# provides data translation services for delivered source and text files.
+
+ifdef DELIVER_THESE_FILES
+ifdef DELIVER_FILES_TO
+
+DELIVERED_FILES =	${DELIVER_THESE_FILES:%=${DELIVER_FILES_TO}/%}
+
+all.post: ${DELIVERED_FILES}
+
+${DELIVER_FILES_TO}/%.c: %.c
+	${SANITIZE} < $*.c | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.h: %.h
+	${SANITIZE} < $*.h | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.i: %.i
+	${SANITIZE} < $*.i | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.s: %.s
+	${SANITIZE} < $*.s | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.S: %.S
+	${SANITIZE} < $*.S | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.inl: %.inl
+	${SANITIZE} < $*.inl | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.cpp: %.cpp
+	${SANITIZE} < $*.cpp | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%.cxx: %.cxx
+	${SANITIZE} < $*.cxx | ${FIXCOPYR} | ${FIXINCLUDES} | ${FIXEOL} > $@
+
+${DELIVER_FILES_TO}/%: %
+	${FIXCOPYR} < $* | ${FIXEOL} > $@
+
+endif
+endif
+
+########################################################################
+# }}}
+# {{{ "ftp what I built to my dev station"
+
+# Before starting, set these environment variables:
+#
+# setenv FTP_TARGETMACHINE "straylight"
+# setenv FTP_TARGETROOT	   "/Straylight/Builds/Homer\ Test\ (d3e2)"
+#
+# FTP_TARGETMACHINE is the hostname that the UNIX network uses to find
+# the Mac. If you don't know it, use NCSA Telnet to log into the UNIX
+# system you are building on, and do a "who am i"; the name in
+# parentheses at the right is the name to use.
+#
+# FTP_TARGETROOT is the absolute pathname that UNIX tells the NCSA
+# Telnet FTP server to get to the top of the test tree (where your
+# kernel and remote folder can be found). Be sure to put the whole
+# thing in either single or double quotes; and if there are any blanks
+# in any folder names along the way, put backslashes in front of them.
+
+# FTP_TRANSFER is a target, or list of targets, set in one of the
+# other rules files to one or more final targets that can usefully be
+# FTPd over to a devlopment system.
+#
+# FTP_ABLE_DIR is the absolute pathname of the root of the subtree
+# within the workspace that corresponds to FTP_TARGETROOT on the
+# devlopment system.
+#
+# Elements of FTP_TRANSFER that are not within FTP_ABLE_DIR are likely
+# to produce less than useful results. Best to have none.
+
+FTP_ABLE_DIR =		${RELEASE_DIR}
+FTP_RELATIVE =		${FTP_TRANSFER:${FTP_ABLE_DIR}/%=%}
+
+ftp: ftp.down ftp.post
+ftp.here: all.here
+ftp.post: all.post .ftpstamp
+.ftpstamp: ${FTP_TRANSFER}
+ifdef FTP_TRANSFER
+ifdef FTP_TARGETMACHINE
+ifdef FTP_TARGETROOT
+	@(cd ${FTP_ABLE_DIR}					; \
+	  (echo ''						; \
+	   echo binary						; \
+	   echo hash						; \
+	   echo prompt						; \
+	   for r in ${FTP_RELATIVE}				; \
+	   do echo cd "${FTP_TARGETROOT}"			; \
+	      d=`dirname $$r`					; \
+	      b=`${BASENAME} $$r`					; \
+	      if [ $$d != . ]					; \
+	      then echo cd `dirname $$r`			; \
+	      fi						; \
+	      echo pwd						; \
+	      echo put $$r $$b					; \
+	   done) | ftp -v ${FTP_TARGETMACHINE} | ${SED} 's;^;ftp: ;')
+endif
+endif
+endif
+	@touch $@
+
+# ftp a single file after building it (e.g. gmake target/directout.dsp.ftp)
+%.ftp: %
+ifdef FTP_TARGETMACHINE
+ifdef FTP_TARGETROOT
+	@(cd ${FTP_ABLE_DIR}					; \
+	  (echo ''						; \
+	   echo binary						; \
+	   echo hash						; \
+	   echo prompt						; \
+	   echo cd "${FTP_TARGETROOT}"				; \
+	   r=${*:${FTP_ABLE_DIR}/%=%}				; \
+	   d=`dirname $$r`					; \
+	   b=`${BASENAME} $$r`					; \
+	   if [ $$d != . ]					; \
+	      then echo cd `dirname $$r`			; \
+	   fi							; \
+	   echo pwd						; \
+	   echo put $$r $$b) | ftp -v ${FTP_TARGETMACHINE} | ${SED} 's;^;ftp: ;')
+endif
+endif
+	@${TRUE}
+
+# }}}
+# {{{ clean: remove reconstructable intermediate objects
+
+STANDARD_JUNK_FILES =	autodoc.tmp sources.list .ftpstamp
+
+clean.here:
+clean.post:
+clean: clean.down clean.generic clean.post
+clean.generic:
+	-@${RM} ${STANDARD_JUNK_FILES} \
+		${OBJDIR} \
+		${DELIVERED_FILES}
+
+####################
+# }}}
+# {{{ unlink: remove "linked" objects
+
+unlink.here:
+unlink: unlink.down
+
+####################
+# }}}
+
+include ${CODEMGR_WS}/ws_root/rules/depend

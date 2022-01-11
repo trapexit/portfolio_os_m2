@@ -1,0 +1,143 @@
+;
+; @(#) gestures.mp 96/08/22 1.6
+;
+; Patch for Gesture Capture interactive piece
+;
+; Constructs various sounds for real-time control
+;
+
+; Master Mixer has 3 outs
+; Left Out, Right Out, and Effects Send
+;
+; 96/04/01 Reorganised commands.
+;          Scale LFO
+; 96/07/03 Use sampler for voice1
+
+; ========================= Oscillator 1 =========================
+
+
+Instrument  Lfo1         triangle_lfo.dsp ; modulator
+Instrument  LfoScale1    multiply.dsp
+
+; Synthetic source --------
+; Instrument  Osc1         impulse.dsp ; sound source
+; Instrument  Osc1FreqMult timesplus.dsp
+; Sampler source ---------
+Instrument Osc1 sampler_16_v1.dsp
+Instrument  Osc1FreqMult expmod_unsigned.dsp
+; Sample Sample /remote/Samples/PitchedL/Cello/Cello.D4LM44k.aiff
+Sample Sample /remote/Samples/PitchedL/WoodwindQuartet/Woodwind.C4LM44k.aiff
+; Expose the FIFOs, etc, so we can attach things
+Expose InFIFO Osc1 InFIFO
+Attach Sample InFIFO -FatLadySings
+; ------------------------
+
+Instrument  ResScale1    multiply.dsp
+Instrument  Filter1      svfilter.dsp
+
+Knob        Freq1       1 Signed 0.0
+Knob        Amp1        1 Signed 0.0
+Knob        FLFORate1   1 Signed 0.0
+Knob        FLFODepth1  1 Signed 0.0
+Knob        SVFFreq1    1 Signed 0.1
+Knob        SVFRes1     1 Signed 0.01
+
+Connect     .             FLFORate1  0       Lfo1         Frequency 0
+Connect     .             FLFODepth1 0       Lfo1         Amplitude 0
+
+Connect     Lfo1          Output     0       LfoScale1    InputA 0 
+Constant    LfoScale1     InputB     0   0.4
+
+Connect     .             Freq1      0       Osc1FreqMult Input 0
+; Constant    Osc1FreqMult  InputB     0   1.0
+Connect     LfoScale1     Output     0       Osc1FreqMult Modulation 0
+
+; Connect     Osc1FreqMult  Output     0       Osc1         Frequency 0
+Connect     Osc1FreqMult  Output     0       Osc1         Samplerate 0
+Connect     . Amp1 0                Osc1 Amplitude 0
+
+Connect     Osc1          Output     0       Filter1      Input  0
+Connect     .             SVFFreq1   0       Filter1      Frequency 0
+
+Connect     .             SVFRes1    0       ResScale1    InputA 0
+Constant    ResScale1     InputB     0   0.05
+Connect     .             SVFRes1    0       Filter1      Resonance 0
+
+Connect     Filter1  Output 0  BigMix  Input  0
+
+Constant    BigMix Gain   0  0.10  ; left
+Constant    BigMix Gain   8  0.50  ; right
+Constant    BigMix Gain  16  0.80  ; effect send
+
+; ========================= Oscillator 2 =========================
+
+Instrument  Osc2      impulse.dsp ; sound source
+Instrument  Osc2FreqMult  multiply.dsp
+Knob    Freq2 1 Signed 0.1
+Knob    Amp2  1 Signed 0.0
+Connect   . Freq2 0               Osc2FreqMult InputA 0
+Constant  Osc2FreqMult  InputB 0  0.1
+Connect   Osc2FreqMult Output 0   Osc2 Frequency 0
+Connect   . Amp2 0                Osc2 Amplitude 0
+
+Connect     Osc2   Output 0  BigMix  Input  1
+Constant    BigMix Gain   1  0.40  ; left
+Constant    BigMix Gain   9  0.00  ; right
+Constant    BigMix Gain  17  0.80  ; effect send
+
+; ========================= FLANGER ==============================
+
+Knob   Delay     1 Signed 0.5
+Knob   Feedback  1 Signed 0.5
+
+Instrument  DlyTap      sampler_drift_v1.dsp
+Instrument  DlyWrite    delay_f1.dsp
+Instrument  DlyCalc     timesplus_noclip.dsp
+Instrument  DlyOffset   add.dsp
+Instrument  DlyFdbkMult multiply.dsp
+Instrument  DlyMinus    subtract.dsp
+Mixer       DlyMixer     2 2
+
+;                                 center@0.0    rate
+; SampleRate =   (( Drift - (Delay - 0.5) ) * (-0.3)) + 1.0
+
+Connect     .         Delay  0  DlyOffset InputA     0
+Constant    DlyOffset InputB 0 -0.5
+Connect     DlyOffset Output 0  DlyMinus  InputB     0
+Connect     DlyTap    Drift  0  DlyMinus  InputA     0
+Connect     DlyMinus  Output 0  DlyCalc InputA     0
+Constant    DlyCalc   InputB 0 -0.3
+Constant    DlyCalc   InputC 0 +1.0
+Connect     DlyCalc   Output 0  DlyTap    SampleRate 0
+
+; route effects send into delay
+Connect     BigMix    Output 2  DlyMixer  Input      0
+
+Connect     DlyTap    Output 0  DlyMixer  Input      1
+Connect     DlyMixer  Output 1  DlyWrite Input 0
+
+Constant    DlyMixer Gain 0 +0.5    ; BypassGain
+Constant    DlyMixer Gain 1 -0.5    ; DelayGain
+Constant    DlyMixer Gain 2 +0.5    ; InputSend
+Connect     .        Feedback  0  DlyFdbkMult InputA     0
+Constant    DlyFdbkMult InputB 0 -0.99
+Connect     DlyFdbkMult Output 0  DlyMixer Gain 3
+; Constant    DlyMixer Gain 3 -0.8    ; FeedbackGain
+
+Connect     DlyMixer Output 0  BigMix  Input  7
+Constant    BigMix Gain   7  0.50  ; level of delay effect !!!
+Constant    BigMix Gain  15  0.50
+Constant    BigMix Gain  23  0.00
+
+Expose SendFIFO DlyWrite OutFIFO
+Expose TapFIFO  DlyTap  InFIFO
+
+DelayLine   Delay 160000 1
+Attach      Delay SendFIFO  -startat 32780
+Attach      Delay TapFIFO
+
+; ========================= FINAL OUTPUT ==============================
+; connect mixer to line out
+Output     Output 2 Signed
+Connect    BigMix Output 0   . Output 0
+Connect    BigMix Output 1   . Output 1

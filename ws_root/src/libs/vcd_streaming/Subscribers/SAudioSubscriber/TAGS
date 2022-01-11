@@ -1,0 +1,192 @@
+
+mpabufferqueue.c,706
+	#define TRACE_LEVEL	47,1023
+		#define		ADD_TRACE_L1(ADD_TRACE_L154,1221
+		#define		ADD_TRACE_L1(ADD_TRACE_L157,1339
+		#define		ADD_TRACE_L2(ADD_TRACE_L261,1432
+		#define		ADD_TRACE_L2(ADD_TRACE_L264,1550
+		#define		ADD_TRACE_L3(ADD_TRACE_L368,1643
+		#define		ADD_TRACE_L3(ADD_TRACE_L371,1761
+	#define		ADD_TRACE_L1(ADD_TRACE_L176,1858
+	#define		ADD_TRACE_L2(ADD_TRACE_L277,1916
+	#define		ADD_TRACE_L3(ADD_TRACE_L378,1974
+Err GetCompressedBfr(92,2572
+Err CompressedBfrRead(154,4276
+Err DecompressedBfrComplete(187,5314
+static Err FlushCompressedBuffers(198,5775
+static Err FlushCompressedBfrQueue(220,6480
+static Err FlushDecompressedBfrQueue(242,7103
+Err ProcessNewMsgs(265,7772
+
+mpadecoderinterface.c,300
+typedef struct MPADecoderCreationArgs MPADecoderCreationArgs35,647
+} MPADecoderCreationArgs;MPADecoderCreationArgs44,1083
+DecoderMsgPtr GetNextDecompressedBfr(64,1955
+Item NewMPADecoder(88,2779
+static DecoderThreadCtxPtr InitializeDecoderThread(154,5156
+static void MPADecoderThread(215,7195
+
+mpegaudiosubscriber.c,875
+#define NUM_DECODER_MSGS	38,940
+#define DECODER_DELTA_PRI	43,1158
+		#define TRACE_LEVEL	52,1477
+		#define	 ADD_TRACE_L1(ADD_TRACE_L157,1580
+		#define	 ADD_TRACE_L1(ADD_TRACE_L160,1696
+		#define	 ADD_TRACE_L2(ADD_TRACE_L264,1787
+		#define	 ADD_TRACE_L2(ADD_TRACE_L267,1903
+		#define	 ADD_TRACE_L3(ADD_TRACE_L371,1994
+		#define	 ADD_TRACE_L3(ADD_TRACE_L374,2110
+	#define	 ADD_TRACE_L1(ADD_TRACE_L178,2204
+	#define	 ADD_TRACE_L2(ADD_TRACE_L279,2260
+	#define	 ADD_TRACE_L3(ADD_TRACE_L380,2316
+static Err HandleRepliesFromDecoder(105,3400
+static void TearDownMPEGAudioCB(215,6656
+static bool AllocMsgItemsFunc(247,7652
+static bool DeallocMsgItemsFunc(260,8094
+static bool InitPoolEntryWithMsgItem(271,8498
+static SAudioContextPtr InitializeMPEGAudioThread(317,9946
+Item NewMPEGAudioSubscriber(472,15661
+static void	MPEGAudioSubscriberThread(550,18569
+
+sachannel.c,1785
+#define MIN_AMPLITUDE_RANGE 31,1011
+#define AVE_AMPLITUDE_RANGE 32,1055
+#define MAX_AMPLITUDE_RANGE 33,1102
+#define MIN_PAN_RANGE 36,1202
+#define AVE_PAN_RANGE 37,1246
+#define MAX_PAN_RANGE 38,1293
+#define MPEG_AUDIO_SAMPLE_RATE 41,1413
+#define GET_SAUDIO_NUMCHANNELS(GET_SAUDIO_NUMCHANNELS44,1491
+        #define TRACE_LEVEL 53,1838
+                #define         ADD_TRACE_L1(ADD_TRACE_L160,2098
+                #define         ADD_TRACE_L1(ADD_TRACE_L163,2286
+                #define         ADD_TRACE_L2(ADD_TRACE_L267,2421
+                #define         ADD_TRACE_L2(ADD_TRACE_L270,2609
+                #define         ADD_TRACE_L3(ADD_TRACE_L374,2744
+                #define         ADD_TRACE_L3(ADD_TRACE_L377,2932
+        #define         ADD_TRACE_L1(ADD_TRACE_L182,3071
+        #define         ADD_TRACE_L2(ADD_TRACE_L283,3143
+        #define         ADD_TRACE_L3(ADD_TRACE_L384,3215
+static Err SendDecompressedBfrMsgs(105,4147
+static void CloseMPEGDecoder(134,5453
+static Err CreateAudioOutputIns(164,6548
+static Err CreateThdoAudioChannelIns(257,10582
+Err InitSAudioChannel(296,12118
+Err StartSAudioChannel(456,18591
+static Err      InternalPauseSAudioChannel(521,21195
+static Err      InternalStopSAudioChannel(576,23311
+Err StopSAudioChannel(617,24846
+Err FlushSAudioChannel(663,26795
+Err             CloseSAudioChannel(730,30028
+Err SetSAudioChannelAmplitude(842,34664
+Err SetSAudioChannelPan(915,38052
+Err GetSAudioChannelAmplitude(985,41216
+Err GetSAudioChannelPan(1008,42014
+Err MuteSAudioChannel(1028,42725
+Err     UnMuteSAudioChannel(1065,44268
+Err     StopAllAudioChannels(1105,46091
+Err     CloseAllAudioChannels(1120,46667
+Err     FlushAllAudioChannels(1139,47385
+Err BeginSAudioPlaybackIfAppropriate(1154,47987
+
+sasoundspoolerinterface.c,1053
+        #define TRACE_LEVEL 26,889
+                #define         ADD_TRACE_L1(ADD_TRACE_L133,1149
+                #define         ADD_TRACE_L1(ADD_TRACE_L136,1337
+                #define         ADD_TRACE_L2(ADD_TRACE_L240,1472
+                #define         ADD_TRACE_L2(ADD_TRACE_L243,1660
+                #define         ADD_TRACE_L3(ADD_TRACE_L347,1795
+                #define         ADD_TRACE_L3(ADD_TRACE_L350,1983
+        #define         ADD_TRACE_L1(ADD_TRACE_L155,2107
+        #define         ADD_TRACE_L2(ADD_TRACE_L256,2179
+        #define         ADD_TRACE_L3(ADD_TRACE_L357,2252
+SoundBufferNode *FirstActiveNode(77,3112
+Err     InitSoundSpooler(91,3637
+void QueueNewAudioBuffer(148,5875
+Err QueueDecompressedBfrsToSoundSpooler(173,6875
+void QueueWaitingMsgsToSoundSpooler(235,9746
+static Err ProcessClockChannelCompletion(296,13039
+void HandleCompletedMPABuffers(351,15276
+void HandleCompletedBuffers(407,17665
+static Err SpoolMPABufCompletionFunc(453,19833
+static Err      SpoolBufCompletionFunc(506,22211
+
+sasupport.c,889
+                #define TRACE_LEVEL 45,1477
+                #define ADD_TRACE_L1(ADD_TRACE_L150,1617
+                #define ADD_TRACE_L1(ADD_TRACE_L153,1795
+                #define ADD_TRACE_L2(ADD_TRACE_L257,1920
+        #define ADD_TRACE_L2(ADD_TRACE_L260,2098
+        #define  ADD_TRACE_L1(ADD_TRACE_L164,2199
+        #define  ADD_TRACE_L2(ADD_TRACE_L265,2262
+static Err      ProcessMPEGAudioDataChunk(77,2765
+Err ProcessRequestMsgs(134,4788
+Err InitializeSAudioThread(286,12237
+Err SendDecoderMsg(333,14144
+Err     DoData(370,15872
+Err     DoSetChan(456,19200
+Err     DoGetChan(496,21154
+Err     DoControl(511,21770
+Err     DoOpening(634,27769
+void DumpTraceData(646,28194
+Err     DoClosing(663,28897
+Err     DoStart(679,29354
+Err     DoStop(713,30601
+Err     DoSync(725,31159
+Err     DoEOF(736,31550
+Err     DoAbort(748,31970
+Err     DoBranch(766,32853
+
+satemplates.c,234
+	#define		ADD_TRACE_L1(ADD_TRACE_L121,473
+	#define		ADD_TRACE_L1(ADD_TRACE_L125,604
+#define FIXED_RATE	28,668
+#define VARIABLE_RATE	29,694
+int32	GetTemplateTag(87,3910
+Item GetTemplateItem(190,6446
+Err LoadTemplates(237,8108
+
+mpabufferqueue.h,33
+#define _MPABUFFERQUEUES_H8,214
+
+mpadecoderinterface.h,304
+#define _MPAUDIODECODERINTERFACE_H7,221
+enum messageType messageType31,586
+typedef struct DecoderMsg DecoderMsg42,1020
+} DecoderMsg, *DecoderMsgPtr;DecoderMsgPtr58,1694
+typedef struct DecoderThreadCtx DecoderThreadCtx60,1725
+} DecoderThreadCtx, *DecoderThreadCtxPtr;DecoderThreadCtxPtr74,2367
+
+sachannel.h,1082
+#define __SACHANNEL_H__7,210
+#define	SA_SUBS_MAX_CHANNELS	31,713
+#define	SA_SUBS_MAX_BUFFERS	36,839
+#define MIXER_SPEC	38,874
+#define SA_ENVELOPE_INSTRUMENT_NAME	41,985
+#define		INTERNAL_MUTE	46,1139
+#define		INTERNAL_UNMUTE	47,1169
+#define		USER_MUTE	48,1201
+#define		USER_UNMUTE	49,1227
+#define SIZE_OF_DECOMPRESSED_BUFFER 51,1256
+#define IsChanInitalized(IsChanInitalized56,1469
+#define IsChanEnabled(IsChanEnabled57,1533
+#define IsChanActive(IsChanActive58,1587
+#define ALLOC_DECOMPRESSED_BFR_MSG_POOL(ALLOC_DECOMPRESSED_BFR_MSG_POOL61,1720
+#define ALLOC_DECODER_MSG_POOL_MEM(ALLOC_DECODER_MSG_POOL_MEM63,1874
+typedef struct SAudioOutput SAudioOutput72,2234
+	} SAudioOutput, *SAudioOutputPtr;SAudioOutputPtr87,2884
+typedef struct SAudioChannel SAudioChannel95,3119
+	} SAudioChannel, *SAudioChannelPtr;SAudioChannelPtr108,3692
+typedef struct TemplateRec TemplateRec121,4410
+} TemplateRec, *TemplateRecPtr;TemplateRecPtr125,4614
+typedef struct SAudioContext SAudioContext132,4820
+    } SAudioContext, *SAudioContextPtr;SAudioContextPtr187,6682
+
+sasoundspoolerinterface.h,40
+#define __SASOUNDSPOOLERINTERCE_H7,220
+
+sasupport.h,187
+#define SASUPPORT_H7,206
+typedef struct SAudioCreationArgs SAudioCreationArgs46,1617
+    } SAudioCreationArgs;SAudioCreationArgs57,2216
+	#define DumpTraceData(DumpTraceData65,2408

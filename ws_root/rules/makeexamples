@@ -1,0 +1,26 @@
+# @(#) makeexamples 95/09/07 1.3
+# Example program build rules to be used in conjuntion with
+# variables/makeexamples and things such as multilink, linkexec and the like.
+
+# default entry point. otherwise if this is the first rule, just the JUNKFILE gets built.
+default.makeexamples: default
+
+# Junk file to be placed in Objects directory under source. This is necessary
+# because installation script is incapable of copying empty directories. This
+# directory is just meant to be a place for compiler output on developer systems.
+JUNKFILE =		${DELIVER_FILES_TO}/Objects/junk
+
+${JUNKFILE}:
+	@echo 'Place holder file.' | ${FIXEOL} >$@
+
+# ammendments to general rules
+all.post: ${JUNKFILE}
+
+clean: clean.makeexamples
+clean.makeexamples:
+	${RM} ${JUNKFILE}
+
+unlink: unlink.makeexamples
+unlink.makeexamples:
+	${RM} ${JUNKFILE}
+

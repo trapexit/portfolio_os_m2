@@ -1,0 +1,16 @@
+#******************************************************************************
+#*
+#*  @(#) makepatch.script 96/03/20 1.1
+#*
+#******************************************************************************
+
+makepatch bee3d.mp                    bee3d.patch                    -check #
+makepatch bee3dspace.mp               bee3dspace.patch               -check #
+makepatch clonk.mp                    clonk.patch                    -check #
+makepatch phone.mp                    phone.patch                    -check #
+makepatch sound3dspace1tap.mp         sound3dspace1tap.patch         -check #
+makepatch sound3dspace_nice.mp        sound3dspace_nice.patch        -check #
+makepatch sound3dspace_nice_stereo.mp sound3dspace_nice_stereo.patch -check #
+makepatch ta_leslie.mp                ta_leslie.patch                -check #
+makepatch test3dsound.mp              test3dsound.patch              -check #
+makepatch walking.mp                  walking.patch                  -check #

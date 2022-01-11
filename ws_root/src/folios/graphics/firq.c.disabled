@@ -1,0 +1,104 @@
+/*  :ts=8 bk=0
+ *
+ * firq.c:	The FIRQ.  You know, the interrupt handler.
+ *
+ * @(#) firq.c.disabled 95/12/03 1.9
+ *
+ * Leo L. Schwab					9504.21
+ */
+#include <kernel/types.h>
+#include <kernel/super.h>
+#include <hardware/bda.h>
+
+#include <graphics/gfx_pvt.h>
+
+#include <stddef.h>
+
+#include "protos.h"
+
+
+/***************************************************************************
+ * This FIRQ's purpose in life is to see if there are any VDLs to be freed
+ * by sniffing the gb_FreeList.  If there are, the daemon gets signalled so
+ * it can free them.  Then it signals all the tasks that want to know when
+ * their Views have become visible.
+ */
+int32
+displayFIRQ ()
+{
+	View	*v;
+	uint32	curfield;
+	char	*foo;
+
+	/*
+	 * Vertical blank has transpired; it is now safe to free VDLs no
+	 * longer current.  Transfer VDLs from pending list to free list.
+	 */
+	while (v = (View *) RemHead (&GBASE(gb_PendingList)))
+		AddHead (&GBASE(gb_FreeList), (Node *) v);
+
+
+	/*
+	 * Do not send View signals until the changes have actually been
+	 * compiled and installed.
+	 */
+	if (!GBASE(gb_DisplaySema4)->sem_NestCnt  &&
+	    !GBASE(gb_PendingRecompile))
+	{
+		/*
+		 * Send DispList signals.
+		 */
+		while (foo = (char *) RemHead (&GBASE(gb_DispSigList))) {
+			v = (View *) (foo - offsetof (View, v_DispSigNode));
+			SuperInternalSignal (v->v_SigTask, v->v_DispSig);
+			v->v_DispSigNode.n_Next =
+			v->v_DispSigNode.n_Prev = NULL;
+		}
+
+		/*
+		 * Send RendList signals.
+		 */
+		while (foo = (char *) RemHead (&GBASE(gb_RendSigList))) {
+			v = (View *) (foo - offsetof (View, v_RendSigNode));
+			SuperInternalSignal (v->v_SigTask, v->v_RendSig);
+
+			/*
+			 * Bucket View over to DispList if it wishes.
+			 */
+			if (v->v_DispSig)
+				AddTail (&GBASE(gb_DispSigList),
+					 (Node *) &v->v_DispSigNode);
+			else
+				v->v_RendSigNode.n_Next =
+				v->v_RendSigNode.n_Prev = NULL;
+		}
+	}
+
+	/* ####  Temporary testing hack for the hardware guys.  */
+	GBASE(gb_VBLCount)++;
+	curfield = (BDA_READ (BDAVDU_VLOC) & VDU_VLOC_VIDEOFIELD) != 0;
+	if (!curfield ^ GBASE(gb_PrevField))
+		GBASE(gb_Misfires)++;
+	GBASE(gb_PrevField) = curfield;
+
+	return (0);
+}
+
+
+/***************************************************************************
+ * Hack FIRQ.  This routine clobbers the vidUnit over the head every
+ * vertical blank.
+ */
+int32
+hackfirq ()
+{
+	uint32	reset, vint;
+
+	reset = BDA_READ (BDAVDU_VRST);
+	vint = BDA_READ (BDAVDU_VINT) & ~(VDU_VINT_VINT0 | VDU_VINT_VINT1);
+	BDA_WRITE (BDAVDU_VRST, reset | VDU_VRST_VIDRESET);
+	BDA_WRITE (BDAVDU_VRST, reset);
+	BDA_WRITE (BDAVDU_VINT, vint);	/*  Hope, pray... */
+
+	return (0);
+}

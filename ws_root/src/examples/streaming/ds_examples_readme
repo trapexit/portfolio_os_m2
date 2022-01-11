@@ -1,0 +1,99 @@
+############## @(#) ds_examples_readme 96/05/01 1.10
+
+
+THIS README FILE COVERS THE FOLLOWING TOPICS:
+
+	¥ THE DATA STREAMING EXAMPLE APPLICATIONS
+	¥ CREATING STREAMED OUTPUTS
+
+
+RUNNING DATA STREAMING EXAMPLES
+---------------------------------
+
+Data Streaming examples included in the Streaming Folder
+under Examples folder are:
+
+	¥ PlaySA
+		This is an example of using high level stream playback
+		routines for AIFF and MPEG audio. See the Autodocs for
+		usage info.
+
+	¥ VideoPlayer
+		This is an example of playback of MPEG Video with or
+		without audio. See the Autodocs for usage info, or run
+		"VideoPlayer -?".
+
+	¥ EZFlixPlayer
+		This is an example of playback of EZFlix Video.
+		See the Autodocs for usage info.
+
+	¥ DataPlayer
+		This is an example of playback of pure data.
+		See the Autodocs for usage info.
+		
+
+CREATING STREAMED OUTPUT
+-------------------------- 
+
+'Tools and Data' folder (under :Examples:Streaming: folder) contains
+scripts and data for producing streamed output for the aforementioned
+examples. Scripts included in this folders are:
+
+
+	¥ bach_44K_16B_M.script
+		This script produces bach_m.stream. 
+
+	¥ mono_sqs2.script
+		This script produces mono_sqs2.stream. 
+
+	¥ bob.script
+		This script produces bob.stream (MPEG audio only). 
+
+	¥ Video.Worksheet
+		This script produces several streams played by VideoPlayer. 
+
+	¥ DATA.Worksheet
+		This script produces a stream played by DataPlayer. 
+
+Data included in this folder are:
+
+	¥ bach_44K_16B_M.aiff
+		This 16 bit mono, 44KHz raw audio file produces bach_m.stream
+		output when used in conjunction with bach_44K_16B_M.script.
+		To produce the output, follow the instruction described in
+		this file.
+
+	¥ mono.aiff
+		44.1 kHz; 16 bits/sample; mono; AIFF.
+
+	¥ raggae.aiff
+		44.1 kHz; 16 bits/sample; stereo; AIFF.
+		Edited to match length of SF.mpv.
+	
+	¥ SF.mpv
+		MPEG-Video elementary stream; 29.97 frames/sec; 1.6 Mbits/sec.
+	
+	¥ bob.mpa
+		MPEG-Audio elementary stream.
+	
+	¥ bob.mpv
+		MPEG-Video elementary stream; 29.97 frames/sec; 1.2 Mbits/sec.
+
+	¥ BladeForceEZFlix.stream
+		An example of weaved EZFlix video and AIFF audio.
+		
+	¥ BladeForceMPEG.stream
+		An example of weaved MPEG video and AIFF audio.
+
+	¥ SF.stream
+		An example of weaved MPEG video and AIFF audio.
+
+	¥ stopgoto.stream
+		An example of weaved MPEG video and AIFF audio with
+		markers points & stop chunks.
+
+	¥ bob_av.stream
+		An example of weaved MPEG audio and video.
+
+	¥ Quotes
+		Pre-compressed data used by DataPlayer.

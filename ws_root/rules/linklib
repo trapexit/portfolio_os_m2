@@ -1,0 +1,44 @@
+# @(#) linklib 95/03/28 1.14
+#
+
+default.linklib: default.generic
+
+TARGET =		${OBJDIR}/${TARGET_NAME}
+
+${TARGET}: ${OBJS} ${WHATCSRC}
+	${BUILD_WHATLOBJ}
+	-@${RM} $@
+	${AR} ${AR_OPTIONS} $@ ${OBJS} ${WHATLOBJ}
+	${RANLIB} $@
+
+all.post: ${TARGET}
+
+ifdef TARGET_DIRECTORY
+
+PLATFORM_TARGET_DIR =		${TARGET_DIRECTORY:${ROOT}/%=${PLATFORM_DIR}/%}
+
+ifdef LIBRARY_IS_PUBLIC
+PTARGET =			${PLATFORM_TARGET_DIR}/${TARGET_NAME}
+endif
+
+BTARGET =			${TARGET_DIRECTORY}/${TARGET_NAME}
+
+TARGETS =			${PTARGET} ${BTARGET}
+
+all.post: ${TARGETS}
+
+${BTARGET}: ${TARGET}
+	${hardlinkme}
+
+ifdef LIBRARY_IS_PUBLIC
+${PTARGET}: ${TARGET}
+	${hardlinkme}
+endif
+
+endif
+
+clean: clean.linklib
+clean.linklib:
+	${RM} ${TARGET} ${TARGETS}
+
+include ${CODEMGR_WS}/ws_root/rules/generic

@@ -1,0 +1,127 @@
+\ @(#) varquad8.ins 95/11/16 1.4
+\ $Id: varmono8.ins,v 1.6 1994/08/18 20:01:44 peabody Exp $
+\ 8 bit variable rate quadrophonic sample player
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+
+\ !!! make public when ready
+\\\	NOAUTODOC -private -class DSP -name varquad8.dsp
+\\\	Rate-variable 8-bit sample player.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is a QUADrophonic rate-variable 8-bit sample player.
+\\\
+\\\	  Knobs
+\\\
+\\\	    !!! update for floating point
+\\\
+\\\	    Frequency
+\\\	        Frequency in fixed point phase increment in the range of 0..$8000.
+\\\	        $8000 equals the normal sample rate, with 1 sample per frame. Defaults
+\\\	        to $8000 which is normal rate.
+\\\
+\\\	    Amplitude
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output0
+\\\
+\\\	    Output1
+\\\
+\\\	    Output2
+\\\
+\\\	    Output3
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 85
+\\\
+\\\	    Code: 81 words
+
+include? DFID_VARQUAD8 function_ids.j
+
+anew task-varquad8.ins
+
+dspp-echo off
+_RED
+dspp{
+ins{
+
+DFID_VARQUAD8 dspp-function-id !
+$" varquad8.dsp" ins-name !
+
+ALLOC.IMEM    Previous0
+ALLOC.IMEM    Previous1
+ALLOC.IMEM    Previous2
+ALLOC.IMEM    Previous3
+ALLOC.IMEM    Current0
+ALLOC.IMEM    Current1
+ALLOC.IMEM    Current2
+ALLOC.IMEM    Current3
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    Phase
+ALLOC.IMEM    Holder
+
+ALLOC.OUTPUT Output0
+ALLOC.OUTPUT Output1
+ALLOC.OUTPUT Output2
+ALLOC.OUTPUT Output3
+
+0 $ 8000 $ 8000 ALLOC.KNOB Frequency \ default at 1/2 sample rate
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+85 ALLOC.TICKS
+
+Phase  DINI_AT_START    0  INIT.RESOURCE  Phase_NAME
+
+	InFIFO FIFOSTATUS+ _A #$ 000F _AND  \ check FIFO status, mask off low 4 bits, FIXED
+	ACCUME #$ 0002 _-                   \ are there at least two samples
+	_BLT: @NODATA                        \ if not forget it
+
+\ Calculate phase increment
+	Phase _%A Frequency _A _+
+\ Determine whether to decompress another samples
+	_BPL:	@Interpolate
+
+	Phase _%A #$ 8000	_-		\ wrap back to positive phase
+	Previous0 _A Current0 _A  _MOVE		\ save for interpolation
+	Previous1 _A Current1 _A  _MOVE		\ save for interpolation
+	Previous2 _A Current2 _A  _MOVE		\ save for interpolation
+	Previous3 _A Current3 _A  _MOVE		\ save for interpolation
+
+\ Get two channels of data from FIFO
+	Holder _A _= InFIFO _A _TRA
+	Current0 _A _= ACCUME #$ FF00 _AND
+	Current1 _A _= Holder _A 8 _<<' _TRL
+
+	Holder _A _= InFIFO _A _TRA
+	Current2 _A _= ACCUME #$ FF00 _AND
+	Current3 _A _= Holder _A 8 _<<' _TRL
+
+_LABEL: @Interpolate
+	Phase _A Previous0 _A Previous0 _A  _*-      \ old*(frac-1)	= old*frac-old
+	Current0 _A Phase _A ACCUME _*-
+	Output0 _A _= ACCUME Amplitude _A _*
+
+	Phase _A Previous1 _A Previous1 _A  _*-      \ old*(frac-1)	= old*frac-old
+	Current1 _A Phase _A ACCUME _*-
+	Output1 _A _= ACCUME Amplitude _A _*
+
+	Phase _A Previous2 _A Previous2 _A  _*-      \ old*(frac-1)	= old*frac-old
+	Current2 _A Phase _A ACCUME _*-
+	Output2 _A _= ACCUME Amplitude _A _*
+
+	Phase _A Previous3 _A Previous3 _A  _*-      \ old*(frac-1)	= old*frac-old
+	Current3 _A Phase _A ACCUME _*-
+	Output3 _A _= ACCUME Amplitude _A _*
+
+_LABEL: @NODATA
+
+_ENDEXT
+}ins
+}dspp

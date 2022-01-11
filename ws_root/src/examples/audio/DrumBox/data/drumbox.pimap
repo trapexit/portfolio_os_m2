@@ -1,0 +1,17 @@
+
+;******************************************************************************
+;*
+;*  @(#) drumbox.pimap 96/08/22 1.6
+;*
+;*  PIMap for DrumBox demo.
+;*
+;******************************************************************************
+
+1 /remote/Samples/GMPercussion22k/KickDrum1.M22k.aiff       -f -l 0 -b 47 -h 83 -m 2
+2 /remote/Samples/GMPercussion22k/AcousticSnare.M22k.aiff   -f -l 0 -b 60 -h 87 -m 2
+3 /remote/Samples/GMPercussion22k/HiHatShortClose.M22k.aiff -f -l 0 -b 60 -h 89 -m 2
+4 /remote/Samples/GMPercussion22k/LowTom1.M22k.aiff         -f -l 0 -b 60 -h 90 -m 2
+5 /remote/Samples/GMPercussion22k/CowBell2.M22k.aiff        -f -l 0 -b 60 -h 90 -m 2
+6 /remote/Samples/GMPercussion22k/Handclap.M22k.aiff        -f -l 0 -b 60 -h 90 -m 2
+7 /remote/Samples/GMPercussion22k/Snareopen.M22k.aiff       -f -l 0 -b 60 -h 90 -m 2
+8 /remote/Samples/GMPercussion22k/Claves.M22k.aiff          -f -l 0 -b 60 -h 90 -m 2

@@ -1,0 +1,92 @@
+\ @(#) triangle.ins 96/05/13 1.20
+\ $Id: triangle.ins,v 1.12 1995/01/20 21:27:52 peabody Exp $
+\ Instrument Template for Triangle
+\ Triangle waves look like /\/\/\/\/\/\
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+\ 940914 PLB Set initial phase to $ -4000 so output is zero.
+
+\\\	AUTODOC -class DSP -group Sound_Synthesis -name triangle.dsp
+\\\	Triangle wave generator.
+\\\
+\\\	  Description
+\\\
+\\\	    Triangle wave generator. The waves it produces looks like: /\/\/\ .
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency - AUDIO_SIGNAL_TYPE_OSC_FREQ
+\\\	        Oscillator frequency in Hertz. Range is -22050.0 to +22050.0. Default is
+\\\	        440.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -1.0 to +1.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 17
+\\\
+\\\	    Code: 13 words
+\\\
+\\\	    Data: 4 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    pulse.dsp(@), sawtooth.dsp(@), square.dsp(@), triangle_lfo.dsp(@)
+
+include? DFID_TRIANGLE function_ids.j
+
+anew task-triangle.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_TRIANGLE dspp-function-id !
+$" triangle.dsp" ins-name !
+    \ initialize instrument
+
+$ 8000 440 22050 */ KNOB_TYPE_OSC_FREQ ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+
+\ Set initial phase so that triangle output starts at zero.
+$ -4000 DRSC_AT_ALLOC ALLOC.VARIABLE.DEFAULT  Phase            \ allocate internal I memory
+ALLOC.OUTPUT Output
+17 ALLOC.TICKS
+
+\ Generate a sawtooth wave then use phase conversion to get a triangle.
+\  sawtooth   => triangle
+\    -1.0     => -1.0
+\     0.0     =>  0.9999
+\     0.9999  => -1.0
+
+\ Accumulate sawtooth phase
+	Phase _%A Frequency _A _+       \ calculate next phase
+
+\ Rectify sawtooth -> triangle wave with end points at -1.0 ($80000) and 0.0 ($FFFFF)
+	_BMI: NegPhase
+	ACCUME _++                      \ avoid pop when s=0
+	ACCUME _NEG
+_LABEL: NegPhase
+
+\ Normalize triangle
+	#$ 4000 ACCUME 1 _<<' _+        \ triangle = ( 0.5 + -ABS(sawtooth) ) * 2
+
+\ Scale for output
+	Output _A _= ACCUME Amplitude _A _*
+
+}ins
+}dspp

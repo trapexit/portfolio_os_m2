@@ -1,0 +1,22 @@
+// @(#) romapp.blueprint 96/09/11 1.8
+//
+// Blueprint file for RomApp image.
+//
+// This is used to create a PCMCIA card with a RomApp on it that can run using
+// the OS of any production machine.
+//
+
+#include	"generic.defines"
+
+TAKEME {
+	RomApps.txt -> OBJDIR/RomApps.txt
+	audio.romapp -> RELEASE_DIR/remote/RomApps/audio.romapp
+	video.romapp -> RELEASE_DIR/remote/RomApps/video.romapp
+	photo.romapp -> RELEASE_DIR/remote/RomApps/photo.romapp
+	System.m2 {
+		Boot {
+			dipir.romapp -> DIPIRDIR/dipir.romapp
+			romapp.icon  STUFF/romapp.icon
+		}
+	}
+}

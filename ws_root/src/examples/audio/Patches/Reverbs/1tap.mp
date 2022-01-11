@@ -1,0 +1,97 @@
+;******************************************************************************
+;*
+;*  @(#) 1tap.mp 95/12/15 1.5
+;*
+;******************************************************************************
+
+; Single tap reverberator
+
+; The simplest reverb is a delay line with a single, fixed, tap
+; recirculating some of the output back into the delay.  The dry
+; and delayed signals can be mixed into the output.  It looks like
+; this:
+;
+;                        dry gain
+;                      +---+        dry signal
+;   +------------------| * |-------------------------------+
+;   |                  +---+                               |
+;   |                                                      v 
+;   |  +---+        +---------+     delayed signal       +---+
+;  -+->| + |------->|  delay  |-----+------------------->| + |----->
+;      +---+        +---------+     |                    +---+ 
+;        ^                          |
+;        |             +---+        |
+;        +-------------| * |--------+
+;                      +---+
+;                        feedback gain
+;
+; This is so basic as to not be considered "reverb", but it's
+; easy.  It's also highly frequency dependent; the delayed signal forms
+; a comb filter, the basis of a flanging effect (when the delay is 
+; constantly changing).
+
+; Instruments
+Input Input 1 Signed
+Instrument DelOut sampler_raw_f1.dsp
+Instrument DelIn delay_f1.dsp
+
+; To calculate the length of the delay line required (assuming a feedback
+; gain of about 0.7):
+;
+;    totaltime = 20 * loop delay
+;
+; where loop delay is the length of time it takes to get through the delay.
+; At a sample rate of 44100, it takes a delay line of 44100 * 2 (bytes) for
+; a one-second loop delay.
+;
+; By positioning the output tap a little _ahead_ of the input, the signal
+; has to go all the way around the circular delay before being read out.
+; That means setting -startat to 1 implies a maximum-length delay.  Because
+; the input and output aren't necessarily synched, though (because of the
+; nature of the sampler instrument), it's good to separate the input and
+; output pointers in the delay line so they don't cross one another and
+; glitch.
+
+Delayline Delay 980 1	; 980 = 0.01s * 44100 * 2 bytes + 50 samples
+Mixer Mix 2 2
+Output Output 1 Signed
+
+; Hook up the delay line to the in and out
+Expose dOutFIFO DelOut InFIFO
+Expose dInFIFO DelIn OutFIFO
+Attach Delay dInFIFO
+Attach Delay dOutFIFO -startat 50
+
+; Hook up the rest of the audio path
+
+Connect DelOut	Output	0	Mix	Input	1
+Connect Mix	Output	0	.	Output	0
+Connect Mix	Output	1	DelIn	Input	0
+
+; Preset some of the mixer gains
+Constant Mix	Gain	1	-0.5	; delay->output
+Constant Mix	Gain	2	0.5	; input->delay
+
+; Define knobs for tweaking the other mixer inputs
+Knob Dry 1 Signed 0.5
+Knob Feedback 1 Signed -0.5
+
+; Connect the knobs up
+Connect .	Dry		0	Mix	Gain	0
+Connect	.	Feedback	0	Mix	Gain	3
+
+; That's it.  To use a sample as input, pick a sample off the command
+; line with dspfaders.
+
+; Instrument  sampler sampler_16_f1.dsp
+; Expose InFIFO sampler InFIFO
+
+; Connect sampler	Output	0	Mix	Input	0
+
+; Alternatively, use the patch's Input to provide a signal source by
+; commenting out the above, and uncommenting the line below.
+
+Connect	.	Input	0	Mix	Input	0
+
+
+

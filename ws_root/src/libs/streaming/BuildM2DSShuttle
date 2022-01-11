@@ -1,0 +1,132 @@
+#####################################
+##
+##      @(#) BuildM2DSShuttle 95/06/23 1.4
+##
+#####################################
+#
+#   File:       BuildM2DSShuttle
+#
+#	Contains:	Script to build all of the data stream components for
+#				ShuttlePlayer :
+#						libDSShuttle.a				data streamer(Shuttle)
+#						libDSUtils.a				datastream utilities
+#						libSubscriberS.a			subscriberS library
+#
+#	Usage:		BuildM2DSShuttle { root folder | "" }
+#####################################
+#
+	set OldDirectory "`directory`"
+#
+#	Determine the datastream root folder name.
+#
+if "{1}" == ""
+	set DSFolder "`getfilename -q -d -m "Select release directory"`"
+else
+	set DSFolder "{1}"
+end
+
+#
+#	Delete all object files for a "clean" build completely from source
+#
+Begin
+	# Save state of {Exit}
+	set saveExit {Exit}
+	set Exit 0
+
+	# Delete all subscriber object files
+	delete -i "{DSFolder}"Libs:Subscribers:libSubscriberS.a
+
+	delete -i "{DSFolder}"Libs:Subscribers:Objects:Å
+
+	# NOTE: [TBD] This may not be necessary since there is only one
+	#		version of the DSUtils.
+	# Delete all DSUtils object files
+	delete -i "{DSFolder}"Libs:DSUtils:libDSUtils.a
+	delete -i "{DSFolder}"Libs:DSUtils:Objects:Å
+
+	# Delete all datastream object files
+	delete -i "{DSFolder}"Libs:DataStream:libdsshuttle.a
+	delete -i "{DSFolder}"Libs:DataStream:Objects:Å
+
+	# Restore the state of {Exit}
+	set Exit {saveExit}
+
+End ·· Dev:Null
+
+#
+# Create the Object Directories if they don't exist
+#
+if !(`Exists -d -q "{DSFolder}Libs:DataStream:Objects:"`)
+	newfolder "{DSFolder}Libs:DataStream:Objects:"
+end
+
+if !(`Exists -d -q "{DSFolder}Libs:DSUtils:Objects:"`)
+	newfolder "{DSFolder}Libs:DSUtils:Objects:"
+end
+
+if !(`Exists -d -q "{DSFolder}Libs:Subscribers:Objects:"`)
+	newfolder "{DSFolder}Libs:Subscribers:Objects:"
+end
+
+#
+# Build the ShuttleSubscriber library
+#
+
+	echo "Building libsubscriberS.a ..."
+	directory "{DSFolder}"Subscribers:
+
+
+	execute BuildSubscriberSLib
+
+#
+# Build datastream utilities 
+#
+	# NOTE: [TBD] This may not be necessary since there is only one
+	#		version of the DSUtils.
+
+	echo "Building libDSUtils.a ..."
+	directory "{DSFolder}"DSUtils:
+	make -f libDSUtilsShuttle.a.make libDSUtils.a > libDSUtils.a.makeout
+	libDSUtils.a.makeout
+	delete -i libDSUtils.a.makeout
+	
+#
+# Build the data streamer
+#
+	echo "Building libdsShuttle.a ..."
+	directory "{DSFolder}"DataStream:
+	make -f libDSShuttle.a.make libDSShuttle.a > libDSShuttle.a.makeout
+	libDSShuttle.a.makeout
+
+	delete -i libDSShuttle.a.makeout
+
+#
+# Clean up the objects folder
+#
+	delete -i "{DSFolder}"Subscribers:Objects:Å
+
+	delete -i "{DSFolder}"DataStream:Objects:Å
+	delete -i "{DSFolder}"DSUtils:Objects:Å
+
+
+#
+# Build the ShuttlePlayer
+#
+	set DSEX "`getfilename -q -d -m "Select Streaming examples directory"`"
+	directory "{DSEX}ShuttlePlayer:"
+	Echo "Building ShuttlePlayer..."
+	make -f ShuttlePlayer.make ShuttlePlayer > ShuttlePlayer.makeout
+			ShuttlePlayer.makeout
+			
+	delete -i ShuttlePlayer.makeout
+	
+#
+# Reset directory
+#
+	directory "{OldDirectory}"
+#
+# Say we're finished
+#
+	echo "BuildDSShuttle finished."
+	Beep
+

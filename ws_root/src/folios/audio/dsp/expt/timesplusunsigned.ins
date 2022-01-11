@@ -1,0 +1,27 @@
+\ A*B+C (unsigned add)
+\ 94/08/16 adapted from timesplus.ins by JRM
+
+anew task-timesplusunsigned.ins
+
+_RED
+dspp{
+ins{
+
+DFID_TIMESPLUSUNSIGNED dspp-function-id !
+$" timesplusunsigned.dsp" ins-name !
+
+
+ALLOC.OUTPUT Output
+$ FFFF8000 $ 7FFF $ 7FFF ALLOC.KNOB InputA
+$ FFFF8000 $ 7FFF $ 7FFF ALLOC.KNOB InputB
+0 $ FFFF $ 7FFF ALLOC.KNOB InputC
+14 ALLOC.TICKS
+
+    InputC _A #$ 8000 _+
+    InputA _A InputB _A ACCUME _CLIP _*+
+    Output _A _= ACCUME #$ 8000 _-
+
+	\ cf timesplus: Output _A _= InputA _A InputB _A  InputC _A  _CLIP _*+
+
+}ins
+}dspp

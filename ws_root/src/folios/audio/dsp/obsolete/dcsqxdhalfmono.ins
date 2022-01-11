@@ -1,0 +1,145 @@
+\ @(#) dcsqxdhalfmono.ins 95/11/16 1.10
+\ $Id: dcsqxdhalfmono.ins,v 1.9 1995/01/20 21:27:52 peabody Exp $
+\ DCSQXHALFDMONO.INS
+\ DeCompress SQuare eXact/Delta MONOphonic sample, half sample rate
+\
+\
+\ State 0: get 16 bit sample, decode high, interpolate with previous
+\ State 1: output previous decode.
+\ State 2: decode low, interpolate with previous
+\ State 3: output previous decode.
+
+\ By: Phil Burk, with Steve Hayes
+\ Copyright 3DO 1992
+\
+\ 930907 PLB Added back in FIFOSTATUS check, optimized using _TRA.
+\ 940510 PLB Change Scratch to I_Scratch
+
+\\\	NOAUTODOC -private -class DSP -name dcsqxdhalfmono.dsp
+\\\	OBSOLETE - Play a SQuare/eXact/Delta monophonic compressed 22,050 Hz sample.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument plays a SQuare/eXact/Delta monophonic compressed sample at
+\\\	    a fixed rate. This is a 2:1 compression. The compression is done by SquashSnd
+\\\	    or SoundHack. This instrument plays a sample that was recorded at 22,050 Hz,
+\\\	    playing it back at 44,100 hertz with interpolated values between samples to
+\\\	    keep the sampled sound's original pitch and duration.
+\\\
+\\\	  Knobs -enumerated
+\\\
+\\\	    Amplitude
+\\\	        0..0x7FFF. Defaults to 0x7FFF.
+\\\
+\\\	  Outputs -enumerated
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs -enumerated
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 64
+\\\
+\\\	    Code: 62 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  Caveats
+\\\
+\\\	    dcsqxdvarmono.dsp is actually more efficient than this instrument.
+\\\
+\\\	  See Also
+\\\
+\\\	    dcsqxdvarmono.dsp, dcsqxdmono.dsp, dcsqxdstereo.dsp, dcsqxdhalfstereo.dsp
+\\\
+
+include? DFID_DCSQXDHALFMONO function_ids.j
+
+anew task-dcsqxdhalfmono.ins
+
+_RED
+dspp{
+ins{
+
+DFID_DCSQXDHALFMONO dspp-function-id !
+$" dcsqxdhalfmono.dsp" ins-name !
+
+dspp-echo off
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    CurState     \ are we on or between samples, left or right
+ALLOC.IMEM    dc_accum  \ accumulate sample
+ALLOC.IMEM    dc_hold   \ hold sample from FIFO
+ALLOC.IMEM    dc_byte   \ byte shifted hi
+ALLOC.IMEM    dc_square  \ x*ABS(x)
+ALLOC.IMEM    PrevValue    \ previous for interpolation, expanded to 16 bits
+ALLOC.OUTPUT Output
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+64 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A _TRA	\ address of FIFO status
+	_BEQ: @NODATA				\ branch to be offset
+
+\ ---------------------------------------------------------
+	CurState _%A #$ 0001 _+    \ increment state
+	_NOP
+	ACCUME #$ 0001 _AND
+	_BNE: @StatesOdd
+
+	CurState _A #$ 0002 _AND
+	_BNE: @State2
+
+\ -----------------------------------------------------------------
+\ 0  => get new 16 bit word,  interpolated prev -> high
+	dc_hold _A  _= InFIFO _A _TRL    \ get 16 bits from FIFO0
+	dc_byte _A _= ACCUME #$ FF00 _AND   \ mask off high byte
+	_JUMP: @Decode
+
+	\ -----------------------------------------------------------------
+_LABEL: @State2
+\ 2  => use low byte, interpolate
+	dc_byte _A _= dc_hold _A 8 _<<' _TRL  \ shift into high position, State 2
+
+\ Decode byte in accumulator
+_LABEL: @Decode
+	ACCUME _TRA  \ take absolute value
+	_BGE: @PosByte
+	_NOP         \ needed cuz next instruction is one word
+	ACCUME _NEG  \ negate if negative
+
+_LABEL: @PosByte
+	dc_square _A _= ACCUME dc_byte _A _*  \ square data value
+	dc_byte _A #$ 0100 _AND               \ odd or even ?
+	_BEQ: @ExactMode
+\ add to previous value
+	dc_square _A   dc_accum _%A   _CLIP _+
+	_JUMP: @DecodeDone
+
+_LABEL: @ExactMode
+	dc_accum _A _= dc_square _A _TRL
+
+_LABEL: @DecodeDone
+	I_Scratch _A _= ACCUME #$ 0000 _+
+	ACCUME 1 _>>>' _TRA         \ arithmetic shift right
+	PrevValue _A #$ 4000 ACCUME _*+      \ p/2 + h/2   \ interpolate
+	_NOP
+	PrevValue _A I_Scratch _A _MOVE
+	_JUMP: @Done
+	_NOP
+
+\ -----------------------------------------------------------------
+_LABEL: @StatesOdd
+\ 1 & 3  => play previouslt decode value
+	PrevValue _A _TRA
+
+_LABEL: @Done
+	Output _A _= ACCUME Amplitude _A _*	\  scale output
+
+	_NOP
+_LABEL: @NODATA
+}ins
+}dspp

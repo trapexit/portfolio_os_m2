@@ -1,0 +1,125 @@
+\ @(#) sampler_adp4_v1.ins 96/08/01 1.21
+\ $Id: sampler_adpcm_v1.ins,v 1.5 1995/01/20 20:20:23 peabody Exp $
+\ ADPCM with variable rate
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_adp4_v1.dsp
+\\\	Variable-rate mono sample player with ADPCM 4:1 decompression.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument plays a sample, at variable rate, that has been previously
+\\\	    compressed to a 4-bit ADP4 format. Use SquashSnd to compress
+\\\	    the sample.
+\\\
+\\\	  Knobs
+\\\
+\\\	    SampleRate - AUDIO_SIGNAL_TYPE_SAMPLE_RATE
+\\\	        SampleRate in Hertz. Range is 0.0 to 44100.0. Default is 44100.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 97
+\\\
+\\\	    Code: 9 words per instrument + 80 words shared overhead
+\\\
+\\\	    Data: 11 words per instrument + 98 words shared overhead
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  Caveats
+\\\
+\\\	    Unlike most other sample player instruments this one doesn't support playing
+\\\	    the sample above the system sample rate.
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_v1.dsp(@), sampler_cbd2_v1.dsp(@), sampler_sqs2_v1.dsp(@)
+
+include? DFID_SAMPLER_ADP4_V1 function_ids.j
+include? ADPCM_REG_StepSize sub_decode_adp4.j
+include? ADPCM_REG_CurState sub_sampler_adp4_v1.j
+
+\ 960614 PLB Changed FIFO to 8 bit granularity.
+\            Reduced ticks 106->97
+
+anew task-sampler_adp4_v1.ins
+echo off
+dspp-echo off
+dspp-debug off
+_BULLDOG
+
+dspp{
+ins{
+
+DFID_SAMPLER_ADP4_V1 dspp-function-id !
+$" sampler_adp4_v1.dsp" ins-name !
+
+\ ADPCM stream parsing variables
+
+ADPCM_BASE_DATA_REG ADPCM_NUM_DATA_REGS ALLOC.RBASE#  DataRBase
+
+\ Bind ports to registers so we can connect to them.
+ALLOC.OUTPUT      Output
+	ADPCM_REG_Output ADPCM_BASE_DATA_REG - DataRBase Output BIND.RESOURCE
+$ 8000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 SampleRate
+	ADPCM_REG_SampleRate ADPCM_BASE_DATA_REG - DataRBase SampleRate BIND.RESOURCE
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+	ADPCM_REG_Amplitude ADPCM_BASE_DATA_REG - DataRBase Amplitude BIND.RESOURCE
+
+\ Bind named resources to registers so we can initialize them at StartInstrument()
+
+0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT Phase
+	ADPCM_REG_Phase ADPCM_BASE_DATA_REG - DataRBase Phase BIND.RESOURCE
+0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT OldVal    \ previous for interpolation, expanded to 16 bits
+	ADPCM_REG_OldVal ADPCM_BASE_DATA_REG - DataRBase OldVal BIND.RESOURCE
+0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT NewVal    \ current for interpolation, expanded to 16 bits
+	ADPCM_REG_NewVal ADPCM_BASE_DATA_REG - DataRBase NewVal BIND.RESOURCE
+1 DRSC_AT_START ALLOC.VARIABLE.DEFAULT CurState
+	ADPCM_REG_CurState ADPCM_BASE_DATA_REG - DataRBase CurState BIND.RESOURCE
+
+7 DRSC_AT_START ALLOC.VARIABLE.DEFAULT StepSize
+	ADPCM_REG_StepSize ADPCM_BASE_DATA_REG - DataRBase StepSize BIND.RESOURCE
+0 DRSC_AT_START ALLOC.VARIABLE.DEFAULT StepIndex
+	ADPCM_REG_StepIndex ADPCM_BASE_DATA_REG - DataRBase StepIndex BIND.RESOURCE
+
+\ allocate a FIFO then bind registers to allocated FIFO
+DRSC_INFIFO_SUBTYPE_8BIT ALLOC.INFIFO.SUBTYPE  InFIFO
+
+\ $" sub_sampler_adp4_v1.dsp" ALLOC.DYNAMIC.LINKS  \ shouldn't have to DLNK sub_decode_adp4.dsp but we do!!!
+$" sub_decode_adp4.dsp,sub_sampler_adp4_v1.dsp" ALLOC.DYNAMIC.LINKS
+
+97 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A _TRA  \ skip if no data in FIFO
+	_BEQ: NoData
+
+	DataRBase ADPCM_BASE_DATA_REG _RBASE#
+\ Set FIFO addresses because in Pass 1 silicon, the Data and Status are not 4 byte aligned.
+	ADPCM_REG_FIFO_Data_Addr _reg  InFIFO _# _MOVE
+	_JSR:	sub_sampler_adp4_v1
+
+_LABEL: NoData
+
+}ins
+}dspp

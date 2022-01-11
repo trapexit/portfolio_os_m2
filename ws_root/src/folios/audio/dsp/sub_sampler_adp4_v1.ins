@@ -1,0 +1,65 @@
+\ @(#) sub_sampler_adp4_v1.ins 96/08/01 1.7
+\
+\ ADP4 parser subroutine used by "sampler_adp4_v1.ins"
+\
+\ Author: Phil Burk
+\ Copyright 1993,4,5 3DO
+\ All Rights Reserved
+
+include? DFID_SAMPLER_ADP4_V1 function_ids.j
+include? ADPCM_REG_StepSize sub_decode_adp4.j
+include? ADPCM_REG_CurState sub_sampler_adp4_v1.j
+
+anew task-sub_sampler_adp4_v1.ins
+
+dspp-echo off
+_BULLDOG
+
+dspp{
+ins{
+
+DHDR_F_PRIVILEGED DHDR_F_SHARED or dspp-header-flags !
+DFID_SUB_SAMPLER_ADP4_V1 dspp-function-id !
+$" sub_sampler_adp4_v1.dsp" ins-name !
+
+$" sub_decode_adp4.dsp" ALLOC.DYNAMIC.LINKS
+
+_EXPORT _LABEL: sub_sampler_adp4_v1
+
+\ Calculate phase increment
+	ADPCM_REG_Phase _%reg ADPCM_REG_SampleRate _reg _+
+\ Determine whether to decompress another samples
+	_BPL:	@Interpolate
+
+\ Phase went negative so we need to decode another nibble.
+	ADPCM_REG_Phase _%reg $ 8000 _# _- \ wrap back to positive phase
+
+\ decide which nibble to decode
+	ADPCM_REG_CurState _%reg  $ 0001 _#  _XOR
+	_BNE: @State1
+
+\ State0 =============
+	ADPCM_REG_SampleHolder _reg  _= ADPCM_REG_FIFO_Data_Addr _[reg] _TRL  \ get 16 bits from FIFO, leave in ACCUME
+	_JUMP: @DECODE_NIBBLE
+
+\ State1 =============
+_LABEL: @State1
+	ADPCM_REG_SampleHolder _reg 4 _<<' _TRL
+
+_LABEL: @DECODE_NIBBLE
+	ADPCM_REG_OldVal _reg  ADPCM_REG_NewVal _reg  _MOVE   \ save for interpolation
+	_JSR:  sub_decode_adp4
+\ result is left in ADPCM_REG_NewVal _reg
+
+\ ------------------------------------------
+_LABEL: @Interpolate
+	ADPCM_REG_Phase _reg ADPCM_REG_OldVal _reg ADPCM_REG_OldVal _reg _*-	\ old*(frac-1)	= old*frac-old
+	ADPCM_REG_NewVal _reg ADPCM_REG_Phase _reg ACCUME _*-		\ interpolate output value
+
+	ADPCM_REG_Output _reg _= ACCUME ADPCM_REG_Amplitude _reg _*	\  scale output
+	_RTS
+
+_ENDEXT
+}ins
+}dspp
+

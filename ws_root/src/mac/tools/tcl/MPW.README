@@ -1,0 +1,42 @@
+
+These sources were ported to MPW 3.2 by Tim Endres.
+The sources will make ONLY under MPW3.2 or later, but NOT earlier.
+
+Please refer to the manuals and documents provided with the
+tickle package for extensive information about these sources.
+
+
+The sources will build a library for tcl under MPW 3.2. This
+library may be included in any application to include the tcl
+scripting language, but you must build an interface for the user
+to access tcl. In MPW, this source will build an MPW Tool that
+provides a simple shell in MPW. It will also build a simple user
+application using MPW's SIOW package. The application "tickle"
+demonstrates a more Macintosh oriented example of a user interface.
+
+There are several features added to tcl just for the Macintosh.
+One is that ability to "capture" what is considered ouput to
+"the terminal". This is the "stdout" and "stderr" output of tcl.
+This allows you to capture this output and send it to a place
+appropriate for your application. Refer to the sources in
+"tclUnixAZ.c" for notes on the use of this feature. The other
+big improvement is the Macintosh support in tclGlob.c.
+
+If you find any missing routines, please email for them.
+
+The tcl extensions that are provided by the tickle application
+are not yet available for general consumption. You do not need
+these to add tcl to your application, but you do want them ultimately
+since they add a great deal of functionality and there will allow
+for script compatability with the large pool of tickle scripts
+being written. I expect to have these extensions available for
+general use after a round of improvements and bugs fixes after
+this release. That will hopefully be this summer/fall. Those wishing
+to be abused by early beta versions may send email and ask, but
+I make no promises, as my time is very limited.
+
+If you have difficulties compiling, email to tickle@ice.com.
+Bug reports to tickle@ice.com.
+
+
+tim.

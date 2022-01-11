@@ -1,0 +1,191 @@
+#####################################
+##
+##      @(#) BuildSubscriberSLib 96/06/04 1.1
+##
+#####################################
+#
+#####################################
+#   File:       BuildSubscriberLib
+#
+#	Contains:	Script for building the SubscriberShuttle library
+#
+#####################################
+#
+#####################################
+#		Symbol definitions
+#####################################
+
+	set	LIBRARIAN	"dar"	# archive maintainer
+
+# Note: This creates library file from scratch. To replace files have
+# been updated, use the -rcu option.  Using -rcu option may be slower
+# than creating the library from scratch.
+	set LibOptions	"-cq"   # Quickly appends files and don't display
+                            # any message when a new archive name
+                            # is created.
+
+	set	Library		"libsubscribershuttle"
+		
+	set	ObjectDir	":Objects:"
+	
+	unset RelBranchSwitch
+	set	RelBranchSwitch "-DRELATIVE_BRANCHING=1"
+
+# Since these Diab C options won't fit into one variable (I think the limit is 2
+32 characters),
+# they will be split into GlobalCBaseOptions and GlobalCBaseOptions1
+set GlobalCBaseOptions = "-I¶"{3doincludes}¶""
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"audio:" 
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"file: "
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"graphics: "
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"hardware:	"
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"international: "	#
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"streaming: "			#
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"kernel: "				#
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"lib3DO: "				#
+#set GlobalCBaseOptions = "{GlobalCBaseOptions} -I¶"{3doincludes}¶"misc: "				#
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -c "										# MANDATORY	only run the c compiler, don't exec the linker
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -WDDTARGET=PPC602 "					# MANDATORY	Tells the compiler you're building for the 602 (which is 603 safe)
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Xstring-align=1 "						# RECOMMENDED word aligns strings
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Xdouble-warning -Xuse-float "		# RECOMMENDED produces single precision instructions/constants
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Ximport "								# RECOMMENDED forces headers to be included only once
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Xstrict-ansi "							# RECOMMENDED unless you are building code to be released, then its MANDATORY
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Xunsigned-char "						# ? forces string constants to be unsigned char?
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -XO -Xunroll=1 -Xtest-at-bottom "	# ? Optimizations on, unroll loops (but not too aggressively), test loop conditional at bottom
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Xextend-args=0 "						# ?
+set GlobalCBaseOptions = "{GlobalCBaseOptions} -Xforce-prototypes "					# RECOMMENDED
+set GlobalCBaseOptions1 "-Xinline=5 "                                          #
+ ? 5 levels of inline/macro expansion
+set GlobalCBaseOptions1 "{GlobalCBaseOptions1} -Xno-libc-inlining -Xno-recognize
+-lib"   # MANDATORY(?) Don't use any compiler built in functions/inlines
+set GlobalCBaseOptions1 "{GlobalCBaseOptions1} -Xno-bss=2"                     #
+ MANDATORY(?)
+set GlobalCBaseOptions1 "{GlobalCBaseOptions1} -Xlint=0x10"                    #
+ RECOMMENDED lovely commentary on your code quality
+set GlobalCBaseOptions1 "{GlobalCBaseOptions1} -Xtrace-table=0"                #
+ ? Don't generate traceback tables.  This is like macsbug names for you macheads
+
+set GlobalCBaseOptions1 "{GlobalCBaseOptions1} {RelativeBranchSwitch}"
+#
+# For symbolic debugging.
+# Using the -g compile option will generate debug information that the
+# dldnew linker incorrectly modifies. The resulting .elf file will
+# not be usable by 3DODebug for symbolic debugging.  This is a bug
+# in the Linker and until the Linker is fixed, DO NOT use the -g option.
+	#set GlobalCSymOption	'-g -DDEBUG '
+	set GlobalCSymOption	'-DDEBUG '
+	
+#####################################
+# Save exit status so we can 
+# restore it when done
+#####################################
+	set OldExit {Exit}
+	set Exit 0
+	
+#####################################
+#	Delete all object files for a 
+#   "clean" build completely from source
+#####################################
+	If "{1}" == "clean"
+		# Delete subscriber library
+		delete -y -i "{Library}.a"
+
+		# Create library file from scratch.
+		Unset LibOptions
+		Set LibOptions	"-qc"
+
+		# Delete object files in each directory.
+		Begin
+				For SubsDir in `Files -d`
+				Delete -y -i "{SubsDir}"Å.o
+			End
+		End ·· Dev:Null
+	End
+
+#####################################
+#	Build the Subscriber found in 
+#   each of the folders
+#####################################
+
+	For SubsDir in `Files -d`
+	
+		# Get the Subscriber name
+	
+		(Evaluate "{SubsDir}" =~ /Å:(Å)¨1:/ ) ·· Dev:Null
+		Set SubsName "{¨1}"
+	
+		# Build the Subscribers and utilities
+	
+		If "{SubsName}" != "Objects"	 ¶
+			AND "{SubsName}" != "CPakSubscriber"	¶
+			AND "{SubsName}" != For_InControl_User
+		
+			Directory "{SubsDir}"
+			If `exists "{SubsName}".a.make ³³ Dev:Null`
+				Echo "Building {SubsName} ..."
+		
+				make {SubsName} -f {SubsName}.make 				¶
+					-d RelBranchSwitch="{RelBranchSwitch}"		¶
+					-d GlobalCSymOption="{GlobalCSymOption}"	¶
+					-d GlobalCBaseOptions={GlobalCNoSymOption}" ¶
+					-d GlobalCBaseOptions1="{GlobalCBaseOptions1}" > {SubsName}.makeout
+				{SubsName}.makeout
+
+				#Exit, if any error occurred.
+				If ({status} != 0)
+					Delete -i {SubsName}.makeout
+					exit
+				End
+
+				Delete -i {SubsName}.makeout
+
+			End #If make file exits
+
+			# Reset directory	
+			Directory "::"
+		
+		End #if {SubsName} is not Objects and CPakSubscriber and For_InControl_User
+	End
+
+#####################################
+#		Build a makefile to 
+#		construct the library
+#####################################
+
+	# build a list of object files to be librarified
+
+	Echo "Building SubscriberShuttle Library ..."
+
+	echo DESTINATION	= '"{3doLibs}{M2LibRelease}:"'			> {Library}.a.make
+
+	echo -n OBJECTS		=										>> {Library}.a.make
+	
+	For ObjFiles in `Files -f -s {ObjectDir}Å.o`
+		echo "	" {ObjectDir}{ObjFiles} "			"'¶'		>> {Library}.a.make
+	End
+
+	echo  "		"												>> {Library}.a.make
+	echo  "		"												>> {Library}.a.make
+	
+	echo {Library}.a		Ä	'"{DESTINATION}"'{Library}.a	>> {Library}.a.make
+	echo '"{DESTINATION}"'{Library}.a	Ä	'{OBJECTS}' 		>> {Library}.a.make
+	echo "	" delete -i '"{Targ}"' 								>> {Library}.a.make
+	echo "	" {LIBRARIAN} {LibOptions} '"{Targ}"' '{OBJECTS}'	>> {Library}.a.make
+
+	make {Library}.a -f {Library}.a.make 						> {Library}.a.makeout
+
+	{Library}.a.makeout
+	Delete -i {Library}.a.make
+	Delete -i {Library}.a.makeout
+
+#####################################
+# Restore exit status
+#####################################
+	set Exit {OldExit}
+
+#####################################
+# Say we're finished
+#####################################
+	echo "BuildSubscriberSLib finished."
+	beep -1F,30 e,30 C,60
+

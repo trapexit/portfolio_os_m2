@@ -1,0 +1,113 @@
+#
+#	File:		3dstosdf.make
+#   Target:     3dstosdf
+#	Written by:	Ravinder Reddy
+#   Created:    Tuesday, September 13, 1994 04:46:30 PM
+#
+#   Copyright 3DO Company, 1993, 1994
+#   All rights reserved.
+#
+#		Change History (most recent first):
+#		<1+>	 9/29/94	Reddy	create a seperate "objects" folder
+
+#####################################
+#	Symbol definitions
+#####################################
+
+App				= 3dstosdf
+DebugFlag		= 0
+ObjectDir		= :objects:Mac:
+ReleaseDir		= :bin:Mac:
+HGReleaseDir		= ::release:Mac:
+CPLUS			= SCpp
+LINK			= Link
+
+#####################################
+#	Default compiler options
+#####################################
+
+LOptions			= -model far -br on -d
+COptions            = -model far -mc68020
+
+#####################################
+#	Object files
+#####################################
+
+OBJECTS			=	 ¶
+					{ObjectDir}mpwmain3ds.cc.o ¶
+					{ObjectDir}TlA3dsfile.cc.o ¶
+					{ObjectDir}TlBasicTypes.cc.o ¶
+					{ObjectDir}TlCharacter.cc.o ¶
+					{ObjectDir}TlFacetList.cc.o ¶
+					{ObjectDir}TlGroup.cc.o ¶
+					{ObjectDir}TlMaterial.cc.o ¶
+					{ObjectDir}TlModel.cc.o ¶
+					{ObjectDir}TlSurface.cc.o ¶
+					{ObjectDir}TlLight.cc.o ¶
+					#{ObjectDir}TlPrimitives.cc.o ¶
+					{ObjectDir}TlTexture.cc.o ¶
+					{ObjectDir}TlTransform.cc.o ¶
+					{ObjectDir}TlVtxList.cc.o
+
+LIBS			=	 ¶
+		"{Libraries}"IntEnv.o ¶
+		"{CLibraries}"StdCLib.o ¶
+		"{Libraries}"MacRuntime.o ¶
+		#"{CLibraries}"Math.o ¶
+		"{Libraries}"MathLib.o ¶
+		#"{CLibraries}"CSANELib.o ¶
+		#"{CLibraries}"Complex.o ¶
+		"{CLibraries}"CPluslib.o ¶
+		"{CLibraries}"IOStreams.o ¶
+		#"{Libraries}"Unmangle.o			¶
+		#"{Libraries}"ToolLibs.o ¶
+		#"{Libraries}"Runtime.o ¶
+		"{Libraries}"Interface.o ¶
+
+#####################################
+#	Default build rules
+#####################################
+
+All				Ä	{App}
+
+{ObjectDir}		Ä	:
+
+
+.cc.o	Ä	.cc
+	echo "Compiling {Default}.cc"
+	{CPLUS} {COptions} -o {TargDir}{Default}.cc.o {DepDir}{Default}.cc
+
+#####################################
+#	Target build rules
+#####################################	
+{App} Ä Makefile.Mac {OBJECTS}
+	echo "Linking 3dstosdf"
+	{LINK} {LOptions} ¶
+		{OBJECTS} ¶
+		{LIBS} ¶
+		-o {Targ}
+	SetFile {Targ} -c 'MPS ' -t MPST
+	echo "Rezzing"
+	Rez -append :3dstosdf.r -o "{App}"
+	Duplicate -y "{App}" "{ReleaseDir}"
+	Duplicate -y "{App}" "{HGReleaseDir}"
+
+#####################################
+#	Additional Target Dependencies
+#####################################
+
+{ObjectDir}mpwmain3ds.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlA3dsfile.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlBasicTypes.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlCharacter.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlFacetList.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlGroup.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlMaterial.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlModel.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlSurface.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlLight.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlTexture.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlTransform.cc.o			Ä	Makefile.Mac
+{ObjectDir}Primitives.cc.o			Ä	Makefile.Mac
+{ObjectDir}TlVtxList.cc.o			Ä	Makefile.Mac
+

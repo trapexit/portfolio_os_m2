@@ -1,0 +1,16 @@
+// @(#) tstation.recipe 96/08/23 1.1
+//
+// Recipe for building test station card.
+// Just set some defines and include "generic.recipe".
+
+#define	VOLUME_NAME		TSTATION_CART
+#define	FSTYPE			romdisk
+#define	VOLSIZE			16
+#define	BLOCK_SIZE		4
+#define	DIR_BLOCK_SIZE		512
+#define	BLUEPRINT		tstation.blueprint
+#define	DEVDIPIR_NAME		dipir.tstation
+#define	DEVDIPIR_COMPONENT_ID	44 /*DIPIRID_TSTATION*/
+#define	DEVICON_NAME		tstation.icon
+
+#include "generic.recipe"

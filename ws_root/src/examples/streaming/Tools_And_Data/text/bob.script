@@ -1,0 +1,24 @@
+# 
+# @(#) bob.script 96/05/01 1.3
+#
+
+# To produce bob.chk, run MPEGAudioChunkifier using
+# bob.mpa, an MPEG audio elementary stream file:
+ MPEGAudioChunkifier -i bob.mpa -o bob.chk
+
+#
+# weavescript for bach_m.stream
+#
+set WeaveScript 						¶
+  'mediablocksize 2048					¶n¶
+	streamblocksize 32768				¶n¶
+	streambuffers 8						¶n¶
+	streamstarttime 0					¶n¶
+	streamerdeltapri -10				¶n¶
+	dataacqdeltapri -9					¶n¶
+	subscriber MPAU 11					¶n¶
+	audioclockchan 0					¶n¶
+	enableaudiomask 0x1					¶n¶
+	writestreamheader					¶n¶
+	file bob.chk 1 0					¶n'
+echo "{WeaveScript}" | weaver -o "{3doremote}"examples:streaming:playsa:bob.stream

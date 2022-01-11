@@ -1,0 +1,23 @@
+MAGIC 8
+EXPORTS 0=CreateTextState
+EXPORTS 1=DeleteTextState
+EXPORTS 2=DrawText
+EXPORTS 3=DrawString
+EXPORTS 4=GetStringExtent
+EXPORTS 5=GetCharacterData
+EXPORTS 6=MoveText
+EXPORTS 7=GetTextPosition
+EXPORTS 8=ScaleText
+EXPORTS 9=GetTextScale
+EXPORTS 10=RotateText
+EXPORTS 11=GetTextAngle
+EXPORTS 12=GetTextExtent
+EXPORTS 13=TrackTextBounds
+EXPORTS 14=SetTextColor
+EXPORTS 15=SetClipBox
+EXPORTS 16=TransformText
+EXPORTS 17=CreateTextStencil
+EXPORTS 18=DrawTextStencil
+EXPORTS 19=GetTextStateFromStencil
+EXPORTS 20=DeleteTextStencil
+

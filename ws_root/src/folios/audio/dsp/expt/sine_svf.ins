@@ -1,0 +1,46 @@
+\ $Id: svfilter.ins,v 1.7 1994/06/09 08:19:07 phil Exp $
+\ Sine Generator based on State Variable Filter
+\ Phil Burk
+\ Copyright 1994 3DO
+\
+
+include? DFID_RESERVED1 function_ids.j
+
+anew task-sine_svf.ins
+
+_RED
+dspp{
+ins{
+
+DFID_RESERVED1 dspp-function-id !
+$" sine_svf.dsp" ins-name !
+
+\ ************************************************************************************
+
+_RED
+dspp{
+	
+dspp-echo on
+	
+$ -8000 $ 7FFF $ 400 ALLOC.KNOB Frequency
+-1 0 0 Frequency set.knob.calc   \ illegal TweakKnob
+
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+ALLOC.IMEM  CordicCos
+ALLOC.IMEM  CordicSin
+ALLOC.OUTPUT Output
+
+CordicCos  DINI_AT_START  $ 7FFF  INIT.RESOURCE  CordicCos_NAME
+CordicSin  DINI_AT_START       0  INIT.RESOURCE  CordicSin_NAME
+
+14 ALLOC.TICKS
+
+\ Perform Sine/Cosine calculation
+	Frequency _A CordicCos _A CordicSin _%A _CLIP _*+   \ b = (a*f) + b
+	Frequency _A ACCUME _*
+	CordicCos _%A ACCUME _CLIP _-	                    \ a = a - (f*b)
+	
+	Output _A _= ACCUME Amplitude _A _*
+	
+}ins
+}dspp

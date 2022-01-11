@@ -1,0 +1,71 @@
+\ @(#) latch.ins 96/03/11 1.7
+\ Instrument Template for Latch
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Arithmetic -name latch.dsp
+\\\	Passes its input to output if gate held above zero.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument acts as a wire if the Gate input is greater than zero.
+\\\	    If the gate is less than or equal to zero, then the output is held steady.
+\\\	    This can be used basically a sample and hold circuit.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Gate - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        If greater than zero, signal passes, otherwise held.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        -1.0 to +1.0
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -1.0 to +1.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 9
+\\\
+\\\	    Code: 7 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    noise.dsp(@), impulse.dsp(@), randomhold.dsp(@)
+
+include? DFID_LATCH function_ids.j
+
+anew task-latch.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_LATCH dspp-function-id !
+$" latch.dsp" ins-name !
+
+ALLOC.INPUT Input
+0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Gate
+ALLOC.OUTPUT Output
+9 ALLOC.TICKS
+
+	Gate _A _TRA
+	_BLE:	Done
+	Output _A   Input _A   _MOVE   \ pass input to output
+_LABEL: Done
+
+}ins
+}dspp

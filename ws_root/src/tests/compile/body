@@ -1,0 +1,15 @@
+/*
+ * @(#) body 95/10/20 1.2
+ */
+
+main(int argc, char **argv)
+{
+    printf("Hello world\n");
+
+    if (argc > 3)
+    {
+	printf("Why are you passing arguments %s\n", **argv);
+    }
+}
+
+

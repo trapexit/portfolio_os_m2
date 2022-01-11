@@ -1,0 +1,28 @@
+#Top level makeit script for the Mac
+#Recursively builds the texture libraries and tools in the right order
+
+set exit 0 
+
+directory :ifflib:
+makeit.Mac {1} {2}
+directory ::
+directory :txtlib:src:
+makeit.Mac {1} {2}
+directory :::
+directory :txttools:
+makeit.Mac {1} {2}
+directory :merc_specific:
+makeit.Mac {1} {2}
+directory :::
+directory :lightwave:
+makeit.Mac {1} {2}
+directory ::
+directory :3dstosdf:
+makeit.Mac {1} {2}
+directory ::
+directory :gmerc:
+makeit {1} {2}
+directory ::
+set exit 1
+
+exit 0

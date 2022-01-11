@@ -1,0 +1,73 @@
+# @(#) depend 96/07/16 1.27
+#
+# Build file trailer for automagic depends
+# NOTE: If you blow away ".CSdepends",
+# either rerun "gmake depends" or
+# blow away the object files.
+#
+
+########################################################################
+# {{{ Rule to build depends. Disable when DO_NOT_BUILD_DEPENDS is defined
+
+ifndef DO_NOT_BUILD_DEPENDS
+
+ifndef AUTO_DEPEND_C_FILES
+AUTO_DEPEND_C_FILES=	${filter-out ${DO_NOT_BUILD},${CSRC}}
+endif
+
+ifndef AUTO_DEPEND_S_FILES
+AUTO_DEPEND_S_FILES=	${filter-out ${DO_NOT_BUILD},${SSRC}}
+endif
+
+depends: depends.down depends.post
+depends.down:
+depends.here:
+depends.post: ${OBJDIR}
+ifneq (0, ${words ${AUTO_DEPEND_C_FILES} ${AUTO_DEPEND_S_FILES}})
+ifneq (0, ${words ${AUTO_DEPEND_C_FILES}})
+	@${foreach file, ${AUTO_DEPEND_C_FILES}, touch ${OBJDIR}/${file}.cdep ; ${MAKEDEPEND} -f${OBJDIR}/${file}.cdep ${MDFLAGS} ${file}; }
+	@${CAT} ${OBJDIR}/*.cdep 						| \
+	${GREP} 'o: ' 							| \
+	${GREP} -v ' /usr/include/'					| \
+	${GREP} -v ' Types.h$$'						| \
+	${SED} 's;^\(.*\).o: ;$${O}\1.o $${O}\1.co: ;g'			| \
+	${SED} 's;${SRC};$${SRC};g' 					| \
+	${SORT} -u	> ${OBJDIR}/.CSdepends
+endif
+ifneq (0, ${words ${AUTO_DEPEND_S_FILES}})
+	@${foreach file, ${AUTO_DEPEND_S_FILES}, touch ${OBJDIR}/${file}.sdep ; ${MAKEDEPEND} -f${OBJDIR}/${file}.sdep ${MDFLAGS} ${file}; }
+	@${CAT} ${OBJDIR}/*.sdep 						| \
+	${GREP} 'o: ' 							| \
+	${GREP} -v ' /usr/include/'					| \
+	${GREP} -v ' Types.h$$'						| \
+	${SED} 's;^\(.*\).o: ;$${O}\1.so: ;g'				| \
+	${SED} 's;${SRC};$${SRC};g' 					| \
+	${SORT} -u	>> ${OBJDIR}/.CSdepends
+endif
+	-@${RM} ${OBJDIR}/*.cdep* ${OBJDIR}/*.sdep*
+else
+	@${TRUE}
+endif
+
+else
+
+# when DO_NOT_BUILD_DEPENDS is defined, do nothing for depends target.
+depends:
+	@${TRUE}
+
+endif
+
+# }}}
+
+
+ifndef IGNORE_AUTODEPENDS
+dotCSdepends =	${wildcard ${OBJDIR}/.CSdepends}
+ifneq (0, ${words ${dotCSdepends}})
+O=	${OBJDIR:%=%/}
+include ${dotCSdepends}
+
+clean: clean.depend
+clean.depend:
+	${RM} ${dotCSdepends}
+endif
+endif

@@ -1,0 +1,139 @@
+\ @(#) soft_limit.ins 95/11/16 1.4
+\ $Id: soft_limit.ins,v 1.5 1994/08/25 22:40:27 peabody Exp $
+\ Interpolating table lookup
+\ Phil Burk
+\ Copyright 1994 3DO
+\
+
+\ !!! make public when ready
+\\\	NOAUTODOC -private -class DSP -name soft_limit.dsp
+\\\	Interpolate to provide gain with soft limit.
+\\\
+\\\	  Function
+\\\
+\\\	    !!!
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: !!!
+\\\
+\\\	    Code: !!! words
+
+include? DFID_soft_limit function_ids.j
+anew task-soft_limit.ins
+
+dspp-echo off
+_RED
+dspp{
+ins.file{
+ins.main{
+
+
+DFID_SOFT_LIMIT_S dspp-function-id !
+$" soft_limit.dsp" ins-name !
+
+ALLOC.IMEM   Input
+ALLOC.OUTPUT Output
+ALLOC.RBASE	  SoftLimitRBASE
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+56 ALLOC.TICKS
+
+\ assign registers
+3 \ start at register 4
+1+ dup constant    regOldVal
+1+ dup constant    regNewVal   \ hold sample from FIFO
+1+ dup constant    regFraction
+1+ dup constant    regInput
+drop
+
+	SoftLimitRBASE _RBASE
+	regInput _reg Input _A _MOVE
+	_JSR:	SubSoftLimit
+	Output _A _= ACCUME Amplitude _A _* \ scale loudness
+
+}ins.main
+
+\ ===================== SUBSOFTLIMIT =================================
+ins.shared{
+
+DFID_SUB_SOFT_LIMIT_S dspp-function-id !
+\ only do a half wave lookup to take advantage of symmetry
+17 constant LOOKUPTABLE_SIZE
+LOOKUPTABLE_SIZE ALLOC.IMEM.ARRAY    LookupTable
+ALLOC.IMEM    TempData   \ scratch value that can be shared
+
+\ Returns result in ACCUME
+
+_EXPORT _LABEL: SubSoftLimit
+
+\ initialise array
+create LOOKUPTABLE-INIT    \ data table for init
+ $ 0000 , \ 0
+ $ 6666 , \ 1
+ $ 75C2 , \ 2
+ $ 7851 , \ 3
+ $ 7999 , \ 4
+ $ 7AE0 , \ 5
+ $ 7B56 , \ 6
+ $ 7BCC , \ 7
+ $ 7C42 , \ 8
+ $ 7CBB , \ 9
+ $ 7D31 , \ 10
+ $ 7DA7 , \ 11
+ $ 7E1D , \ 12
+ $ 7E96 , \ 13
+ $ 7F0C , \ 14
+ $ 7F82 , \ 15
+ $ 7FFB , \ 16
+
+\ name_of_array    flags          data_table  number_entries                     name
+ LookupTable       DINI_AT_ALLOC LOOKUPTABLE-INIT LOOKUPTABLE_SIZE   INIT.RESOURCE.ARRAY INIT.STEPS
+
+\ ************************************************************************************
+\ remove data=$8000 values using clipping
+	regInput _reg _CLIP _--
+	regInput _reg _= ACCUME 1 _# _+
+
+\ calculate absolute value for symmetric half wave lookup
+	_BGE: @PosValue1
+	ACCUME _NEG
+
+_LABEL: @PosValue1
+	TempData _A _=A  \ save for fraction
+\ Extract IntPortion from Input as an array index
+	ACCUME 8 _>>' _TRA
+	ACCUME $ 00F0 _#  4 _>>' _AND
+	I_Scratch _A _= ACCUME LookupTable _# _+   \ gen address in table
+	regFraction _reg _= ACCUME $ 0001 _# _+   \ use Fraction as a pointer
+	_NOP
+	regOldVal _reg  I_Scratch _[A] _MOVE       \ perform table lookup
+	regNewVal _reg  regFraction _[reg] _MOVE   \ lookup next value, may be guard
+	_NOP
+	regFraction _reg _= TempData _A $ 0FFF _# 3 _<<' _AND
+
+_LABEL: @Interpolate
+	ACCUME regOldVal _reg regOldVal _reg _*-     \ old*(frac-1) = old*frac-old
+	TempData _A _= regNewVal _reg regFraction _reg ACCUME _*-   \ interpolate new value
+	regInput _reg _TRA
+	_BGE: @PosValue2
+	TempData _A _NEG
+	_RTS
+_LABEL: @PosValue2
+	TempData _A _TRA
+	_RTS
+	_ENDEXT
+}ins.shared
+}ins.file
+}dspp

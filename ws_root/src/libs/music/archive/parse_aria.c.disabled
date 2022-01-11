@@ -1,0 +1,389 @@
+/* @(#) parse_aria.c.disabled 95/08/22 1.1 */
+/* $Id: audio_samples.c,v 1.97 1995/03/02 07:40:14 phil Exp phil $ */
+/****************************************************************
+**
+** Parse ARIA Instrument Files
+**
+** By:  Phil Burk
+**
+** Copyright (c) 1992, 3DO Company.
+** This program is proprietary and confidential.
+**
+****************************************************************/
+
+
+#include <audio/audio.h>
+#include <audio/iff_fs_tools.h>
+#include <audio/musicerror.h>
+#include <file/filefunctions.h>
+#include <file/filesystem.h>
+#include <kernel/mem.h>             /* AllocMem() */
+#include <stdio.h>
+#include <misc/frac16.h>
+
+#define PRT(x)  { printf x; }
+#define DBUG(x)  /* PRT(x) */
+#define ERR(x)   PRT(x)
+
+#ifdef AF_COMPILE_PARSER
+/* Prototypes */
+	int32 HandleAIFFChunk( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize );
+	int32 HandleATNVChunk ( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize );
+	int32 HandleATNVForm ( iff_control *iffc, uint32 FormType , uint32 FormSize );
+	int32 HandleATSMChunk ( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize );
+	int32 HandleATSMForm ( iff_control *iffc, uint32 FormType , uint32 FormSize );
+	int32 HandleDMASignal( int32 Signals );
+	int32 HandleENVLChunk( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize );
+	int32 LoadAIFFSample (AudioSample *asmp, char *filename, int32 IfReadData, void *(*UserAllocator)());
+	int32 ParseAIFFForm( iff_control *iffc, int32 FormType, int32 FormSize );
+	int32 ParseENVLForm( iff_control *iffc, int32 FormType, int32 FormSize );
+	int32 internalLoadAIFFSample( AudioSample *asmp, iff_control *iffc, int32 IfReadData, int32 IfCompressed);
+
+/* Fragment from Handle3INSForm() ---------------------- */
+
+/* Load sample then attach it to previously created template. */
+		case ID_ATSM:
+			iffc->iffc_FormHandler = HandleATSMForm;
+			iffc->iffc_ChunkHandler = HandleATSMChunk;
+			Result = iffScanChunks( iffc, FormSize );
+			CHECKRSLT(("Handle3INSForm: Error scanning ATSM = 0x%x\n", Result));
+			if (tmplpc->tmplpc_TemplateItem != 0)
+			{
+				Result = AttachSample( tmplpc->tmplpc_TemplateItem, tmplpc->tmplpc_SlaveItem,
+					tmplpc->tmplpc_HookName);
+				CHECKRSLT(("Handle3INSForm: Error attaching sample = 0x%x\n", Result));
+			}
+			else
+			{
+				ERR(("Handle3INSForm: Sample before DSP Patch!\n"));
+				return AF_ERR_BADOFX;
+			}
+			break;
+
+/* Load envelope then attach it to previously created template. */
+		case ID_ATNV:
+			iffc->iffc_FormHandler = HandleATNVForm;
+			iffc->iffc_ChunkHandler = HandleATNVChunk;
+			Result = iffScanChunks( iffc, FormSize );
+			CHECKRSLT(("Handle3INSForm: Error scanning ATNV = 0x%x\n", Result));
+			if (tmplpc->tmplpc_TemplateItem != 0)
+			{
+				Result = AttachEnvelope( tmplpc->tmplpc_TemplateItem, tmplpc->tmplpc_SlaveItem,
+					tmplpc->tmplpc_HookName);
+				CHECKRSLT(("Handle3INSForm: Error attaching sample = 0x%x\n", Result));
+			}
+			else
+			{
+				ERR(("Handle3INSForm: Envelope before DSP Patch!\n"));
+				return AF_ERR_BADOFX;
+			}
+			break;
+#endif /* AF_COMPILE_PARSER */
+
+#if 0
+/******************************************************************/
+/* Make Sample Item, return in ATTParserContext context.   ********/
+/******************************************************************/
+int32 HandleATSMForm ( iff_control *iffc, uint32 FormType , uint32 FormSize )
+{
+	int32 Result;
+	TagArg Tags[2];
+	SampleParserContext LSContext;
+	TemplateParserContext *tmplpc;
+	AudioSample ASample;
+	int32 (*OldHandler)();
+
+DBUG(("HandleATSMForm: %.4s, %d\n",  &FormType, FormSize));
+
+/* Setup Parser. */
+	OldHandler = iffc->iffc_ChunkHandler;
+/* 940921 REDUNDANT	iffc->iffc_ChunkHandler = HandleAIFFChunk; */
+	tmplpc = (TemplateParserContext *) iffc->iffc_UserContext;
+
+	memset(&LSContext, 0, sizeof(SampleParserContext) );
+
+	LSContext.spc_IfReadData = TRUE;
+	LSContext.spc_Sample = &ASample;
+	LSContext.spc_CustomAllocMem = tmplpc->tmplpc_CustomAllocMem; /* 931216 */
+	LSContext.spc_IfLeaveInPlace = tmplpc->tmplpc_IfLeaveInPlace; /* 931216 */
+DBUG(("HandleATSMForm: set LSContext.spc_IfLeaveInPlace to %d\n", LSContext.spc_IfLeaveInPlace));
+	iffc->iffc_UserContext = (void *) &LSContext;
+
+/* Clear everything to begin. */
+	memset( (char *)&ASample, 0, sizeof(AudioSample) );
+	SetSampleDefaults ( &ASample );
+
+	Result = ParseAIFFForm( iffc, FormType, FormSize ); /* !!! Result not checked! */
+
+	ASample.smpi_CustomFreeMem = tmplpc->tmplpc_CustomFreeMem;
+	Tags[0].ta_Tag = AF_TAG_SAMPLE;
+	Tags[0].ta_Arg = (void *) &ASample;
+	Tags[1].ta_Tag =  0;
+	tmplpc->tmplpc_SlaveItem = CreateItem( MKNODEID(AUDIONODE,AUDIO_SAMPLE_NODE), Tags );
+
+/* restore iff parser */
+	iffc->iffc_ChunkHandler = OldHandler;
+	iffc->iffc_UserContext = (void *) tmplpc;
+
+	return Result;
+}
+
+/******************************************************************/
+int32 HandleATSMChunk ( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize )
+{
+	int32 Result = 0;
+	char *name;
+	TemplateParserContext *tmplpc;
+
+	tmplpc = (TemplateParserContext *) iffc->iffc_UserContext;
+
+DBUG(("HandleATSMChunk: %.4s, %d\n",  &ChunkType, ChunkSize));
+
+	switch(ChunkType)
+	{
+		case ID_HOOK:
+			name = (char *) &tmplpc->tmplpc_HookName;
+			if (ChunkSize < AF_MAX_NAME_SIZE)
+			{
+				Result = iffReadChunkData(iffc, name, ChunkSize);
+				CHECKRSLT(("Error reading CHUNK data = %d\n", Result));
+				name[ChunkSize] = '\0';
+				DBUG(("Hook = %s\n", name));
+			}
+			else
+			{
+				ERR(("HandleATSMChunk: HOOK name too large = %d\n", ChunkSize));
+				Result = AF_ERR_BADOFX;
+			}
+			break;
+	}
+
+error:
+	return Result;
+}
+/*****************************************************************/
+/* Load Envelope file and fill fields */
+
+typedef struct
+{
+	AudioEnvelope *lsc_Envelope;
+} LoadEnvelopeContext;
+
+/*****************************************************************/
+int32 LoadENVLEnvelope (AudioEnvelope *aenv, char *filename)
+{
+	iff_control iffcb;
+	LoadEnvelopeContext LSContext;
+	int32 Result;
+
+DBUG(("LoadENVLEnvelope( 0x%x, %s )\n",
+	aenv, filename));
+
+/* Setup Parser. */
+	iffcb.iffc_ChunkHandler = 0;
+	iffcb.iffc_FormHandler = ParseENVLForm;
+	LSContext.lsc_Envelope = aenv;
+	iffcb.iffc_UserContext = (void *) &LSContext;
+	iffcb.iffc_LastChanceDir = AudioBase->af_StartupDirectory;
+
+	Result = (int32) iffParseFile(&iffcb, filename);
+DBUG(("Done\n"));
+	if (Result < 0)
+	{
+		ERR(("LoadENVLEnvelope: Could not parse file = %s\n", filename));
+	}
+	return Result;
+}
+
+/******************************************************************/
+/* Make Envelope Item, return in ATSMParserContext context. ********/
+/******************************************************************/
+int32 HandleATNVForm ( iff_control *iffc, uint32 FormType , uint32 FormSize )
+{
+	int32 Result;
+	TagArg Tags[14];
+	LoadEnvelopeContext LEContext;
+	TemplateParserContext *tmplpc;
+	AudioEnvelope AEnvelope;
+	int32 ti;
+	int32 (*OldHandler)();
+	void *OldContext;
+
+	tmplpc = (TemplateParserContext *) iffc->iffc_UserContext;
+
+DBUG(("HandleATNVForm: %.4s, %d\n",  &FormType, FormSize));
+DBUG(("HandleATNVForm: iffc->iffc_ChunkHandler = 0x%x\n", iffc->iffc_ChunkHandler));
+
+/* Setup Parser. */
+	OldHandler = iffc->iffc_ChunkHandler;
+	iffc->iffc_ChunkHandler = HandleENVLChunk;
+
+	LEContext.lsc_Envelope = &AEnvelope;
+	OldContext = iffc->iffc_UserContext;
+	iffc->iffc_UserContext = &LEContext;
+
+	DefaultEnvelope ( &AEnvelope );
+
+	Result = ParseENVLForm( iffc, FormType, FormSize );
+
+	ti = 0;
+	Tags[ti].ta_Tag = AF_TAG_ADDRESS;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_Points;
+	Tags[ti].ta_Tag = AF_TAG_FRAMES;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_NumPoints;
+	Tags[ti].ta_Tag = AF_TAG_SUSTAINBEGIN;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_SustainBegin;
+	Tags[ti].ta_Tag = AF_TAG_SUSTAINEND;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_SustainEnd;
+	Tags[ti].ta_Tag = AF_TAG_SUSTAINTIME_FP;
+	Tags[ti++].ta_Arg = (void *) ConvertFP_TagData(AEnvelope.aenv_SustainTime);
+	Tags[ti].ta_Tag = AF_TAG_RELEASEJUMP;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_ReleaseJump;
+	Tags[ti].ta_Tag = AF_TAG_RELEASEBEGIN;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_ReleaseBegin;
+	Tags[ti].ta_Tag = AF_TAG_RELEASEEND;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_ReleaseEnd;
+	Tags[ti].ta_Tag = AF_TAG_RELEASETIME_FP;
+	Tags[ti++].ta_Arg = (void *) ConvertFP_TagData(AEnvelope.aenv_ReleaseTime);
+	Tags[ti].ta_Tag = AF_TAG_SET_FLAGS;
+	Tags[ti++].ta_Arg = (void *) AEnvelope.aenv_Flags;
+	Tags[ti].ta_Tag =  TAG_END;
+/* Don't overflow!*/
+    tmplpc->tmplpc_SlaveItem = CreateItem( MKNODEID(AUDIONODE,AUDIO_ENVELOPE_NODE), Tags );
+
+/* restore iff parser */
+	iffc->iffc_ChunkHandler = OldHandler;
+	iffc->iffc_UserContext = OldContext;
+
+	return Result;
+}
+
+/******************************************************************/
+int32 HandleATNVChunk ( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize )
+{
+	int32 Result = 0;
+	char *name;
+	TemplateParserContext *tmplpc;
+
+	tmplpc = (TemplateParserContext *) iffc->iffc_UserContext;
+
+DBUG(("HandleATNVChunk: %.4s, %d, level = %d\n",  &ChunkType, ChunkSize, iffc->iffc_Level));
+
+	switch(ChunkType)
+	{
+		case ID_HOOK:
+			name = (char *) &tmplpc->tmplpc_HookName;
+			if (ChunkSize < AF_MAX_NAME_SIZE)
+			{
+				Result = iffReadChunkData(iffc, name, ChunkSize);
+				CHECKRSLT(("Error reading CHUNK data = %d\n", Result));
+				name[ChunkSize] = '\0';
+				DBUG(("Hook = %s\n", name));
+			}
+			else
+			{
+				ERR(("HandleATNVChunk: HOOK name too large = %d\n", ChunkSize));
+				Result = AF_ERR_BADOFX;
+			}
+			break;
+	}
+
+error:
+	return Result;
+}
+
+
+/*****************************************************************/
+int32 ParseENVLForm( iff_control *iffc, int32 FormType, int32 FormSize )
+{
+	int32 Result;
+	int32 (*OldHandler)();
+/*	LoadEnvelopeContext *lsc; */
+
+	OldHandler = iffc->iffc_ChunkHandler;
+/*	lsc = (LoadEnvelopeContext *) iffc->iffc_UserContext;   @@@ not used */
+
+	iffc->iffc_ChunkHandler = HandleENVLChunk;
+
+	Result = iffScanChunks( iffc, FormSize );
+	iffc->iffc_ChunkHandler = OldHandler;
+	CHECKRSLT(("HandleENVLForm: Error scanning Envelope = 0x%x\n", Result));
+
+error:
+	return Result;
+}
+
+
+/*****************************************************************/
+int32 HandleENVLChunk( iff_control *iffc, uint32 ChunkType , uint32 ChunkSize )
+{
+	int32 Result;
+	AudioEnvelope *aenv;
+	LoadEnvelopeContext *lsc;
+	void *tmp;
+	ENVH_Chunk *envh;
+
+	lsc = (LoadEnvelopeContext *) iffc->iffc_UserContext;
+
+	aenv = lsc->lsc_Envelope;
+
+DBUG(("HandleENVLChunk: Chunk: %.4s, %d\n", &ChunkType, ChunkSize));
+
+	if (ChunkSize > 0)
+	{
+		tmp = EZMemAlloc(ChunkSize, MEMTYPE_ANY);
+		if (tmp == NULL)
+		{
+			ERR(("Could not allocate Envelope memory.\n"));
+			Result = AF_ERR_NOMEM;
+			goto error;
+		}
+		Result = iffReadChunkData(iffc, tmp, ChunkSize);
+		if (Result < 0)
+		{
+			ERR(("Error reading CHUNK data = 0x%x\n", Result));
+			goto error;
+		}
+	}
+	else
+	{
+		return 0;
+	}
+
+	switch(ChunkType)
+	{
+		case ID_PNTS:
+			aenv->aenv_Points = (DataTimePair *) tmp;
+DBUG(("Allocated Envelope points at 0x%x\n", aenv->aenv_Points ));
+			aenv->aenv_Flags |= AF_ENVF_FOLIO_OWNS;
+			break;
+
+/* Read values from COMM chunk */
+		case ID_ENVH:
+			envh = (ENVH_Chunk *) tmp;
+			aenv->aenv_NumPoints = envh->envh_NumPoints;
+			aenv->aenv_SustainBegin = envh->envh_SustainBegin;
+			aenv->aenv_SustainEnd = envh->envh_SustainEnd;
+			aenv->aenv_SustainTime = envh->envh_SustainTime;
+			aenv->aenv_ReleaseJump = envh->envh_ReleaseJump;
+			aenv->aenv_ReleaseBegin = envh->envh_ReleaseBegin;
+			aenv->aenv_ReleaseEnd = envh->envh_ReleaseEnd;
+			aenv->aenv_ReleaseTime = envh->envh_ReleaseTime;
+			aenv->aenv_Flags |= envh->envh_Flags;
+			EZMemFree( tmp );
+			break;
+
+		default:
+			if(tmp) EZMemFree( tmp );
+			ERR(("Unrecognized chunk = 0x%lx\n", ChunkType ));
+
+	}
+
+DBUG(("HandleENVLChunk: %d bytes remaining.\n",iffc->iffc_length));
+
+error:
+	return Result;
+
+}
+
+#endif

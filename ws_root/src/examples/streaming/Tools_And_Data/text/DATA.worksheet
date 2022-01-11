@@ -1,0 +1,53 @@
+### ***********************************************************
+## @(#) DATA.worksheet 96/03/15 1.2
+## compress, chunkify, and weave data for the DATA subscriber
+
+## set the directory where we want to do the work
+directory `getfilename -d`
+
+## setup some variables
+set	ORIGFILE	"Quotes"		# whatever file we want to compress and chunkify
+set	COMPFILE	"{ORIGFILE}.comp"
+set	CHUNKFILE	"{COMPFILE}.chunk"
+set WEAVEFILE	"data.stream"
+
+## compress the original file
+comp3do			"{ORIGFILE}" "{COMPFILE}"
+
+# chunk it into a bunch of output files.
+# ASSUMES: The data is short enough that these 6 files don't overlap on channel 0.
+# NOTE: The "-cs 999" sets the chunk size to 999 just to test that the DATAChunkify issues a warning
+#       about that. DATAChunkify should round it up to 1000 bytes.
+DATAChunkify -i {COMPFILE} -o {CHUNKFILE}1 -chan 0 -t 0		-to 100 -cs 999 -comp 3DOC -u DABA0001 
+DATAChunkify -i {COMPFILE} -o {CHUNKFILE}2 -chan 0 -t 480	-to 100 -cs 999 -comp 3DOC -u DABA0002 
+DATAChunkify -i {COMPFILE} -o {CHUNKFILE}3 -chan 0 -t 960	-to 100 -cs 999 -comp 3DOC -u DABA0003 
+DATAChunkify -i {COMPFILE} -o {CHUNKFILE}4 -chan 0 -t 1240	-to 100 -cs 999 -comp 3DOC -u DABA0004 
+DATAChunkify -i {COMPFILE} -o {CHUNKFILE}5 -chan 0 -t 1720	-to 100 -cs 999 -comp 3DOC -u DABA0005 
+DATAChunkify -i {COMPFILE} -o {CHUNKFILE}6 -chan 0 -t 2300	-to 100 -cs 999 -comp 3DOC -u DABA0006 
+
+##dumpstream -v -i {CHUNKFILE} > temp
+
+# now weave it
+set WeaveScript ¶
+	'writestreamheader								¶n¶
+	 streamblocksize	32768						¶n¶
+	 mediablocksize		2048						¶n¶
+	 streamstarttime	0							¶n¶
+	 streambuffers		6							¶n¶
+	 numsubsmessages	1000						¶n¶
+	 streamerdeltapri	6							¶n¶
+	 dataacqdeltapri	8							¶n¶
+	 subscriber			DATA 7						¶n¶
+	 file '"{CHUNKFILE}1"' 1 0						¶n¶
+	 file '"{CHUNKFILE}2"' 1 0						¶n¶
+	 file '"{CHUNKFILE}3"' 1 0						¶n¶
+	 file '"{CHUNKFILE}4"' 1 0						¶n¶
+	 file '"{CHUNKFILE}5"' 1 0						¶n¶
+	 file '"{CHUNKFILE}6"' 1 0						¶n '
+	 
+echo "{WeaveScript}" | weaver -o "{3DORemote}"Examples:Streaming:DataPlayer:{WEAVEFILE}
+
+# dumpstream -v -i "{3DORemote}Examples:Streaming:DataPlayer:{WEAVEFILE}" > temp; file temp
+
+### ***********************************************************
+

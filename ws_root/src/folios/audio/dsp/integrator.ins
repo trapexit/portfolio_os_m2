@@ -1,0 +1,99 @@
+\ @(#) integrator.ins 96/03/11 1.8
+\ Instrument Template for Integrator
+\
+\ Phil Burk
+\ Copyright 3DO 1995
+\ All Rights Reserved
+\ Proprietary and Confidential
+\
+
+\\\	AUTODOC -class DSP -group Control_Signal -name integrator.dsp
+\\\	Integrates an input signal (ramp generator).
+\\\
+\\\	  Description
+\\\
+\\\	    Adds its input to an internal accumulator. Accumulator is clipped at -1.0
+\\\	    and 1.0. Output can be scaled by an Amplitude and Offset so this instrument
+\\\	    can be used as a simple ramp. or envelope generator. Give it a positive
+\\\	    Input to make it go up and a negative Input to make it go down.
+\\\
+\\\	    This would typically be used by connecting the Output of the integrator to
+\\\	    the Amplitude knob of a sampler that you wanted to turn on or off. To slowly
+\\\	    turn up the sampler, set the Input of the integrator to a small positive
+\\\	    value, like 0.001. To slowly turn down the sampler, set the Input of the
+\\\	    integrator to a small negative value. This could be particularly useful in
+\\\	    streaming applications. This instrument requires less DSP resources than
+\\\	    envelope.dsp(@).
+\\\
+\\\	    If Amplitude=0.5 and Offset=0.5, then Output will range from 0.0 to 1.0.
+\\\
+\\\	    If Amplitude=1.0 and Offset=1.0, then Output will range from 0.0 to 2.0.
+\\\
+\\\	    If Amplitude=0.25 and Offset=0.25, then Output will range from 0.0 to 0.5.
+\\\
+\\\	    The following iterative formula is used:
+\\\
+\\\	    Accumulator = CLIP(Accumulator + Input)
+\\\
+\\\	    Output = (Accumulator * Amplitude) + Offset
+\\\
+\\\	    Whenever this instrument is started, the accumulator is set to -1.0. This
+\\\	    will result in an output of 0.0 if the Amplitude and Offset are set to
+\\\	    their default values.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Input - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 0.0.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 0.5.
+\\\
+\\\	    Offset - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 0.5.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -2.0 to +2.0 depending on Amplitude and Offset (result of multiply-
+\\\	        accumulate isn't clipped).
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 9
+\\\
+\\\	    Code: 9 words
+\\\
+\\\	    Data: 5 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V28
+\\\
+\\\	  See Also
+\\\
+\\\	    envelope.dsp(@), slew_rate_limiter.dsp(@), sawtooth.dsp(@)
+
+include? DFID_INTEGRATOR function_ids.j
+
+anew task-integrator.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_INTEGRATOR dspp-function-id !
+$" integrator.dsp" ins-name !
+
+$ 0000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Input
+$ 4000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+$ 4000 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Offset
+$ 8000 DRSC_AT_START ALLOC.VARIABLE.DEFAULT Phase \ so output starts at zero by default
+ALLOC.OUTPUT Output
+9 ALLOC.TICKS
+
+	Phase _%A Input _A _CLIP _+
+	Output _A _= ACCUME Amplitude _A Offset _A _*+
+
+}ins
+}dspp

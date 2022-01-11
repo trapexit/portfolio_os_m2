@@ -1,0 +1,74 @@
+\ @(#) sampler_16_f2.ins 96/03/11 1.16
+\ sampler_16_f2 - Instrument Template for Stereo Sample Player without rate conversion
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_16_f2.dsp
+\\\	Fixed-rate stereo 16-bit sample player.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument plays a stereophonic 16-bit sample at the instrument's
+\\\	    execution rate (e.g., 44100 samples/sec).
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        0.0 to 1.0. Defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 2 parts
+\\\	        Stereo output.
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 17
+\\\
+\\\	    Code: 14 words
+\\\
+\\\	    Data: 3 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_f1.dsp(@), sampler_16_v2.dsp(@)
+
+include? DFID_SAMPLER_16_F2 function_ids.j
+
+anew task-sampler_16_f2.ins
+
+dspp-echo off
+_BULLDOG
+dspp{
+ins{
+
+DFID_SAMPLER_16_F2 dspp-function-id !
+$" sampler_16_f2.dsp" ins-name !
+
+ALLOC.INFIFO  InFIFO
+2 ALLOC.OUTPUT.ARRAY Output
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+17 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A   #$ 0002 _-  \ are there at least two samples in FIFO
+	_BLT: NODATA                        \ if not forget it
+
+	Output 0 PART+ _A _= InFIFO _A Amplitude _A _*	\ direct from FIFO to Mixer
+	Output 1 PART+ _A _= InFIFO _A Amplitude _A _*	\ direct from FIFO to Mixer
+
+_LABEL: NODATA
+
+}ins
+}dspp

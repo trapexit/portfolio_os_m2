@@ -1,0 +1,55 @@
+\ @(#) input_accum.ins 96/03/26 1.10
+
+\\\	AUTODOC -class DSP -group Accumulator -name input_accum.dsp
+\\\	Loads the accumulator from an input.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument places the input value into the accumulator (Accum =
+\\\	    Input), where it can be subsequently used by other instruments in the
+\\\	    Accumulator group.
+\\\
+\\\	    This instrument can only be used within a patch.
+\\\	    It may not be used as a stand-alone instrument.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Input - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed input value. -1.0 to 1.0. Defaults to 0.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 4
+\\\
+\\\	    Code: 4 words
+\\\
+\\\	    Data: 1 word
+\\\
+\\\	  Implementation
+\\\
+\\\	    V30
+\\\
+\\\	  See Also
+\\\
+\\\	    output_accum.dsp(@), add_accum.dsp(@), multiply_accum.dsp(@),
+\\\	    subtract_accum.dsp(@)
+
+include? DFID_INPUT_ACCUM function_ids.j
+
+anew task-input_accum.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PATCHES_ONLY dspp-header-flags !
+
+DFID_ADD dspp-function-id !
+$" input_accum.dsp" ins-name !
+
+$ 0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Input
+4 ALLOC.TICKS
+
+	Input _A _TRA
+}ins
+}dspp

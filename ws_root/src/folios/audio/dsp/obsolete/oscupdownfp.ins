@@ -1,0 +1,95 @@
+\ @(#) oscupdownfp.ins 95/11/16 1.8
+\ $Id: oscupdownfp.ins,v 1.8 1995/01/20 20:20:23 peabody Exp $
+\ Oscillator with fixed point frequency control
+\ Phil Burk
+\ Copyright 1992 NTG
+\
+\ 931206 PLB Use _BCC @Interpolate instead
+
+\\\	NOAUTODOC -private -class DSP -name oscupdownfp.dsp
+\\\	OBSOLETE - External subroutine used by sampler.dsp instrument.
+\\\
+\\\	  Function
+\\\
+\\\	    This is an external subroutine used internally by the sampler.dsp instrument.
+\\\
+\\\	  Global Symbols Exported -enumerated
+\\\
+\\\	    OscUpDownFP (code)
+\\\	        Entry to function.
+\\\
+\\\	  Arguments
+\\\
+\\\	    !!!
+\\\
+\\\	  Results
+\\\
+\\\	    !!!
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 0
+\\\
+\\\	    Code: 22 words
+\\\
+
+include? PhaseInc OscUpDownFP.j
+
+\ R4 = FIFOPtr
+\ R5 = Phase
+\ R6 = OldVal
+\ R7 = NewVal
+\ R8 = PhaseInc
+include? DFID_OSCUPDOWNFP function_ids.j
+
+anew task-oscupdownfp.ins
+
+_RED
+dspp{
+ins{
+
+DFID_OSCUPDOWNFP dspp-function-id !
+$" oscupdownfp.dsp" ins-name !
+
+\ ************************************************************************************
+_EXPORT _LABEL: OscUpDownFP
+\ This version uses fixed point frequency that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ R5 contains the fractional phase as a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+\ It clumps the FIFO accesses to avoid DMA collisions.
+\
+\ Phase goes from 0->$7FFF
+\ If it goes minus, normalize the phase to 0=>$7FFF, take a sample.
+\ If it goes minus twice, take two samples.
+\ If it stays positive, just interpolate.
+
+\ Calculate phase increment
+	%R5 R8 _+
+\ Determine whether to get 0,1,or 2 samples
+	_BMI:	@Once
+	_BCC:	@Interpolate \ 931206 faster
+\	_BCS:	@Twice
+\	_JUMP:	@Interpolate
+
+_LABEL: @Twice
+\ Get two samples
+	R6 [R4]	_MOVE 	\ OldVal<-FIFO
+	_JUMP: @GetNewVal
+
+_LABEL: @Once
+\ Get one sample
+	%R5 #$ 8000	_-		\ wrap back to positive phase
+	R6 R7	_MOVE		\ OldVal<-newval
+_LABEL: @GetNewVal
+	R7 [R4] _MOVE		\ NewVal<-FIFO
+
+_LABEL: @Interpolate
+	R5 R6 R6 _*-		\ old*(frac-1)	= old*frac-old
+	R7 R5 ACCUME _*-	\
+	_RTS
+	_NOP
+
+	_ENDEXT
+}ins
+}dspp

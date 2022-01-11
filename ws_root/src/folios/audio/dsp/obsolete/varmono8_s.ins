@@ -1,0 +1,155 @@
+\ @(#) varmono8_s.ins 95/11/16 1.9
+\ $Id: varmono8_s.ins,v 1.5 1995/02/14 18:02:35 peabody Exp $
+\ 8 bit variable rate monophonic sample player
+\
+\ uses experimental shared routine
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+\
+\ 950213 PLB Added _ORG to prevent redundant code loading.
+
+
+\\\	NOAUTODOC -private -class DSP -name varmono8_s.dsp
+\\\	OBSOLETE - Rate-variable 8-bit sample player (shared).
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is a rate-variable 8-bit sample player. This is identical
+\\\	    to "varmono8.dsp" except that it uses a shared subroutine to reduce the
+\\\	    amount of code memory required. If you need several 8 bit sample players,
+\\\	    you may get more voices if you use this instrument instead of
+\\\	    "varmono8.dsp".
+\\\
+\\\	    This instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up. A rate of 0x8000 corresponds to one data sample per DAC sample
+\\\	    frame. 0xFFFF is the highest possible rate.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency                       Units are fixed point phase increment.
+\\\	                                    0x8000 equals the normal sample rate, with
+\\\	                                    1 sample per frame. Thus, you can go from
+\\\	                                    zero to one octave above the original.
+\\\
+\\\	    Amplitude                       Output amplitude in the range of 0 to 0x7FFF.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 44
+\\\
+\\\	    Code: 12 words per instrument + 36 words once for shared subroutine
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  See Also
+\\\
+\\\	    varmono8.dsp, varmono16.dsp, sampler.dsp
+\\\
+
+include? DFID_VARMONO8_S function_ids.j
+
+anew task-varmono8_s.ins
+
+\ dspp-echo on
+_RED
+dspp{
+$" varmono8_s.dsp" ins-name !  \ moved name setting here so file has it.
+ins.file{
+ins.main{
+DFID_VARMONO8_S dspp-function-id !
+
+ALLOC.RBASE	  OscRBASE
+ALLOC.INFIFO  InFIFO
+ALLOC.OUTPUT  Output
+$ 8000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 Amplitude
+44 ALLOC.TICKS
+
+3 \ start at register 4
+1+ dup constant    Toggle       \ are we on odd or even byte
+1+ dup constant    SampleHold   \ hold sample from FIFO
+1+ dup constant    OldVal
+1+ dup constant    NewVal
+1+ dup constant    FIFOPtr
+1+ dup constant    Phase
+drop
+
+	OscRBASE _RBASE
+	FIFOPtr _reg InFIFO _# _MOVE   \ %Q this should be done at load time!!!
+	Phase _%reg Frequency _A _+
+	_JSR:	SubVarMono8
+	Output _A _= ACCUME Amplitude _A _* \ scale loudness
+
+}ins.main
+
+\ ===================== SUBVARMONO8 =================================
+ins.shared{
+DFID_SUB_VARMONO8_S dspp-function-id !
+
+\ This version uses fixed point frequency that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ Phase contains the fractional phase as a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+
+\ On entry:
+\    ACCUME = Phase
+\    CC just set by phase increment operation
+
+	0 _ORG    \ reset code origin to save code space 950213
+
+_EXPORT _LABEL: SubVarMono8
+\ Determine whether to get 0,1,or 2 samples
+	_BMI:	@Once
+	_BCC:	@Interpolate
+
+\ ------------------------ Use up two samples ----------
+_LABEL: @Twice
+\ Get two samples
+	Toggle _reg _TRA   \ don't toggle cuz we get TWO
+	_BMI: @GetBothFromFIFO
+
+\ Process held sample
+	OldVal _reg _= SampleHold _reg 8 _<<' _TRL  \ shift into high position
+	_JUMP: @GetMSBFromFIFO
+
+_LABEL: @GetBothFromFIFO
+	SampleHold _reg  _= FIFOPtr _[reg] _TRL    \ get 16 bits from FIFO
+	OldVal _reg _= ACCUME #$ FF00 _AND    \ mask off high byte
+	_JUMP: @GetFromLSB
+
+\ ------------------------ Just get one new sample ----------
+_LABEL: @Once
+	Phase _%reg #$ 8000	_-          \ wrap back to positive phase !
+	OldVal _reg NewVal _reg	_MOVE   \ OldVal<-newval
+	Toggle _%reg #$ 8000 _+         \ alternate between neg and pos
+	_BMI: @GetFromLSB
+
+_LABEL: @GetMSBFromFIFO
+	SampleHold _reg  _= FIFOPtr _[reg] _TRL    \ get 16 bits from FIFO
+	NewVal _reg _= ACCUME #$ FF00 _AND    \ mask off high byte
+	_JUMP: @Interpolate
+
+_LABEL: @GetFromLSB
+	NewVal _reg _= SampleHold _reg 8 _<<' _TRL  \ shift into high position
+\ ----------------------------------------------------------
+_LABEL: @Interpolate
+	Phase _reg OldVal _reg OldVal _reg _*-      \ old*(frac-1)	= old*frac-old
+	NewVal _reg Phase _reg ACCUME _*-
+    _RTS
+
+	_ENDEXT
+}ins.shared
+}ins.file
+}dspp

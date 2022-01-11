@@ -1,0 +1,202 @@
+#
+# @(#) Makefile.Mac 96/11/19 1.10
+#
+#  Mac Makefile for the Mercury Tools
+#  Creates FAT tools
+
+BINDIR			=	:bin:Mac:
+LIBDIR			=	:::libs:Mac:
+OBJDIR			=	:objects:Mac:
+UTFPAGEOBJDIR	=   :::txtlib:src:objects:Mac:
+HGRELEASEDIR	=	:::release:Mac:
+
+M2TXLIB68K		= 	{LIBDIR}M2TXlib.68K.a
+M2TXLIBPPC		= 	{LIBDIR}M2TXlib.PPC.a
+IFFLIB68K		= 	{LIBDIR}IFFlib.68K.a
+IFFLIBPPC		= 	{LIBDIR}IFFlib.PPC.a
+CC68K = SC
+CCPPC = MRC
+
+# MPW 2.0
+#						"{PPCLibraries}"MathLib.xcoff ¶
+
+StdCLibsPPC		= ¶
+						"{SharedLibraries}"InterfaceLib ¶
+						"{SharedLibraries}"MathLib ¶
+						"{SharedLibraries}"StdCLib ¶
+						"{PPCLibraries}"StdCRuntime.o ¶
+						"{PPCLibraries}"PPCCRuntime.o
+
+StdCLibs68K		=	¶
+						"{CLibraries}"StdClib.o ¶
+ 						"{Libraries}"MacRuntime.o ¶
+#						"{Libraries}"MathLib.o ¶
+ 						"{Libraries}"Interface.o ¶
+ 						"{Libraries}"IntEnv.o
+					
+LIBRENAMES		=	-librename InterfaceLib.xcoff=InterfaceLib	¶
+					-librename StdCLib.xcoff=StdCLib			¶
+					-librename MathLib.xcoff=MathLib
+
+PPCLIBS		=	"{PPCLibraries}"PPCToolLibs.o ¶
+				{StdCLibsPPC} ¶
+				{M2TXLIBPPC} ¶
+				{IFFLIBPPC} 
+
+68KLIBS		=	"{Libraries}"ToolLibs.o ¶
+				{StdCLibs68K} ¶
+				{M2TXLIB68K} ¶
+				{IFFLIB68K} 
+
+TOOLS	= ¶
+		utfcat ¶
+		utfpipcat ¶
+		utfpipsub ¶
+		utfquantmany ¶
+		utfsplit ¶
+		utfunpage
+		
+PPCOBJS = ¶
+		{OBJDIR}utfcat.c.o ¶
+		{OBJDIR}utfpipcat.c.o ¶
+		{OBJDIR}utfpipsub.c.o ¶
+		{OBJDIR}utfquantmany.c.o ¶
+		{OBJDIR}utfsplit.c.o ¶
+		{OBJDIR}utfunpage.c.o
+
+68KOBJS = ¶
+		{OBJDIR}utfcat.o ¶
+		{OBJDIR}utfpipcat.o ¶
+		{OBJDIR}utfpipsub.o ¶
+		{OBJDIR}utfquantmany.o ¶
+		{OBJDIR}utfsplit.o ¶
+		{OBJDIR}utfunpage.o
+		
+PPCUTFPAGEOBJS = ¶
+	{OBJDIR}utfpage.c.o ¶
+	{UTFPAGEOBJDIR}futil.c.o ¶
+	{UTFPAGEOBJDIR}LWToken.c.o ¶
+	{UTFPAGEOBJDIR}page.c.o ¶
+	{UTFPAGEOBJDIR}SDFTexBlend.c.o
+
+68KUTFPAGEOBJS = ¶
+	{OBJDIR}utfpage.o ¶
+	{UTFPAGEOBJDIR}futil.o ¶
+	{UTFPAGEOBJDIR}LWToken.o ¶
+	{UTFPAGEOBJDIR}page.o ¶
+	{UTFPAGEOBJDIR}SDFTexBlend.o 
+
+PPCUTFSDFPAGEOBJS = ¶
+	{OBJDIR}utfsdfpage.c.o ¶
+	{UTFPAGEOBJDIR}futil.c.o ¶
+	{UTFPAGEOBJDIR}LWToken.c.o ¶
+	{UTFPAGEOBJDIR}page.c.o ¶
+	{UTFPAGEOBJDIR}SDFTexBlend.c.o
+
+68KUTFSDFPAGEOBJS = ¶
+	{OBJDIR}utfsdfpage.o ¶
+	{UTFPAGEOBJDIR}futil.o ¶
+	{UTFPAGEOBJDIR}LWToken.o ¶
+	{UTFPAGEOBJDIR}page.o ¶
+	{UTFPAGEOBJDIR}SDFTexBlend.o 
+
+#####################################
+#	Default compiler and linker options
+#####################################
+IncludeFlags	=   -i :::txtlib:include: -i :::ifflib:
+68KCOptions		=	-mc68020 -model far -r {IncludeFlags} -d applec -d NO_64_BIT_SCALARS -d TEXTOOLS_VERISION=¶"3.1b1¶"
+68KLOptions		=	-model far -t MPST -c 'MPS ' -br on
+
+PPCCOptions		=	-opt speed {IncludeFlags} -d applec -d NO_64_BIT_SCALARS -d TEXTOOLS_VERISION=¶"3.1b1¶"
+PPCLOptions		=	-outputformat xcoff -d -c 'MPS ' -t MPST -main __start -mf
+
+#####################################
+#	Default build rules
+#####################################
+{OBJDIR}	Ä	:
+
+.o			Ä	.c
+	echo "Compiling 68K {Default}.c"; ¶
+	{CC68K} {68KCOptions} -o {OBJDIR}{Default}.o {DepDir}{Default}.c
+
+.c.o			Ä	.c
+	echo "Compiling PPC {Default}.c"; ¶
+	{CCPPC} {PPCCOptions} -o {OBJDIR}{Default}.c.o {DepDir}{Default}.c
+
+#####################################
+# Build all of the MPW tools
+#####################################
+complete 	Ä FATutfpage FATutfsdfpage clitools
+All		Ä	complete
+
+clitools ÄÄ {68KOBJS} {PPCOBJS}
+	for i in {TOOLS};
+		echo "Linking "{i}; ¶
+		PPCLink {OBJDIR}{i}.c.o -o {i}.xcoff ¶
+		{PPCLIBS} ¶
+		{LIBRENAMES} ¶
+		{PPCLOptions};
+		makePEF {i}.xcoff -o {BINDIR}{i} {PEFOptions};
+		Link {OBJDIR}{i}.o -o {BINDIR}{i} ¶
+		{68KLIBS} ¶
+		{68KLOptions};
+		echo "Rezzing";
+		Rez -d APPNAME=¶"{i}¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}{i};
+		duplicate -y {BINDIR}{i} {HGRELEASEDIR}{i};
+		echo "{i} complete" ;
+		delete -i {i}.xcoff;
+	end
+
+FATutfpage ÄÄ {68KUTFPAGEOBJS} {PPCUTFPAGEOBJS}
+	echo "Linking utfpage FAT"; 
+	PPCLink {PPCUTFPAGEOBJS} -o utfpage.xcoff ¶
+	{PPCLIBS} ¶
+	{LIBRENAMES} ¶
+	{PPCLOptions};
+	makePEF -o {BINDIR}utfpage {PEFOptions} utfpage.xcoff;
+	Link {68KUTFPAGEOBJS} -o {BINDIR}utfpage ¶
+	{68KLIBS} ¶
+	"{Libraries}"MathLib.o ¶
+	{68KLOptions};
+	echo "Rezzing";
+	Rez -d APPNAME=¶"utfpage¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}utfpage;
+	duplicate -y {BINDIR}utfpage {HGRELEASEDIR}utfpage;
+	echo "utfpage complete" ; ¶
+	delete -i utfpage.xcoff
+
+FATutfsdfpage ÄÄ {68KUTFSDFPAGEOBJS} {PPCUTFSDFPAGEOBJS}
+	echo "Linking utfsdfpage FAT"; 
+	PPCLink {PPCUTFSDFPAGEOBJS} -o utfsdfpage.xcoff ¶
+	{PPCLIBS} ¶
+	{LIBRENAMES} ¶
+	{PPCLOptions};
+	makePEF -o {BINDIR}utfsdfpage {PEFOptions} utfsdfpage.xcoff;
+	Link {68KUTFSDFPAGEOBJS} -o {BINDIR}utfsdfpage ¶
+	{68KLIBS} "{Libraries}"MathLib.o ¶
+	{68KLOptions};
+	echo "Rezzing";
+	Rez -d APPNAME=¶"utfsdfpage¶" -a "{Rincludes}"SIOW.r -a tools.r -o {BINDIR}utfsdfpage;
+	duplicate -y {BINDIR}utfsdfpage {HGRELEASEDIR}utfsdfpage;
+	echo "utfsdfpage complete" ; ¶
+	delete -i utfsdfpage.xcoff
+
+
+#####################################
+# Scrub all old objects and binaries
+#####################################
+clean			Ä
+	set exit 0;
+	delete -i {OBJDIR}Å ;
+	set exit 1
+	
+clobber			Ä
+	set exit 0;
+	for i in {TOOLS};
+		delete -i {BINDIR}{i};
+		delete -i {HGRELEASEDIR}{i};
+	end;
+	delete -i {BINDIR}utfpage;
+	delete -i {BINDIR}utfsdfpage;
+	delete -i {HGRELEASEDIR}utfpage;
+	delete -i {HGRELEASEDIR}utfsdfpage;
+	set exit 1

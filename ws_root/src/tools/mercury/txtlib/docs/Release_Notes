@@ -1,0 +1,136 @@
+Texture Library Release Notes
+
+M2 textures are stored in a mod 4 IFF format called UTF.  To help developers create, 
+convert, and process files in this format, an M2 Texture Library is being provided.  In
+this release there are Mac MPW (68K and PPC) and SGI link libraries as well as include
+files to help developers write their own texture tools. 
+Among the libraries features:
+-Resizing with several different filters to ease creation of MIP maps.
+-Color quantization
+-Palette remapping
+-Texture compression with the ability to lock certain settings across several textures
+-Sub-texture extraction across multiple levels of detail.
+
+To help developers get started, several basic conversion and manipulation tools have 
+been included along with their source code. 
+
+Version 1.0a2  
+7/25/95
+===============================
+
+*The previous version of the library would set the NumColors field of M2TXPIP to one 
+greater than the actual number of colors, this caused problems if someone blindly 
+read the number of colors without range checking as they would step outside the 
+M2TXPIP data structure.
+*The TAB attributes set by the library were out of sync with the system software.  Any
+UTF files relying on the default texture attributes for PIP(Alpha|Color|SSB) select 
+would be incorrect and should be regenerated.  To update existing UTF files generated
+before this version, simply write them out with any tool.  Performing utfflip twice 
+would leave the texture unchanged except for correcting the Texture Attributes Block.
+
+Version 1.0a3 
+8/7/95
+===============================
+*M2TXHeader_GetF and M2TXHeader_SetF functions exist for the following new flags: 
+HasNoDCI, HasNoTAB, HasNoDAB, and HasNoLR.  These flags only exist in the library (they
+have no equivalent in the file format) and serve the purpose of suppressing certain 
+chunks during file output.
+*M2TXRaw_DitherDown function has been added to reduce the bitdepth of literal channels.
+The function can turn a 24 bit color image into a 15 bit color image.  It can also turn
+a 7 bit alpha channel into a 4 bit alpha channel.  Dithering is user selectable between
+Floyd-Steinberg and ordered dithering.
+A new tool called utflitdown has been added that uses the above function.
+
+Version 1.0a5 
+10/14/95
+===============================
+*M2TXIndex_ToUncompr function would not work if the target UTF texture type was literal
+and not indexed.  This has been fixed.
+*TAB and DAB manipulation functions have been exposed to the user and the headers are 
+in the M2TXattr.h file.  For TAB and DAB attributes, see the Command List Toolkit 
+documentation.
+*All I/O functions will set proper file type and creator when run on the Mac.  The file
+type will be set to "3DOt" (for a UTF texture) and the creator will be "Rean" which is 
+Post Pro.
+
+
+Version 1.0a6
+12/18/95
+===============================
+M2 Texture Library changes
+*All previous versions of the libraries handled "transparent" formats (formats with the 
+IsTrans flag set) incorrectly.  Any compressed data should be regenerated with this new 
+library or with tools compiled with this new library.
+*M2TX_Init function incorrectly set the default DCI constants to be White/Opaque/SSB 
+OFF, it now sets them to be Black/Opaque/SSB OFF which should be the default.
+*M2TX_UncomprToM2TXRaw and M2TX_ComprToM2TXRaw improperly handled the case of 
+converting an indexed image.  This has been fixed.
+*Version 1.0a5 had a bug that prevented the Mac version to overwrite existing files, 
+this bug has been fixed.
+*M2TXRaw_MakePIP had a bug that allowed only the first call in a session to be 
+successful.  Subsequent calls in a session would give erroneous output.  This has been
+fixed.
+*M2TX_Print now prints out the number of colors present in a PIP (not just the size).
+
+
+Version 1.0a7
+1/18/96
+===============================
+*A bug in the Mac version of M2TX_WriteFile would cause the function to fail if the file
+already existed (i.e. it was impossible to overwrite an existing file).
+
+Version 1.0a8
+2/29/96
+===============================
+*A bug in the M2TX_WriteFile would fail to work if the destination file was on a 
+remotely-mounted disk.  This has been fixed for version 1.0a8.
+*M2TX_ComprToM2TXRaw had a problem with files that had alpha or ssb values in DCI 
+constants.  It would choose the wrong value when decompressing the data.  This has been
+fixed for version 1.0a8.
+*M2TX_FindBestDCI and M2TX_FindBestDCIPIP could incorrectly assign alpha and ssb values
+to DCI color constants.   This has been fixed for version 1.0a8.
+
+Version 1.0a9
+3/8/96
+===============================
+The M2 Texture Library is now built with 3DO's MPW 3.0 environment (SC and MrC).
+
+*M2TXRaw_FindPIP was changed so that it doesn't reset the number of colors in a PIP 
+when it's called so that it can be called multiple times and accumulate colors.  It is
+now necessary to set the number of colors in a PIP before calling M2TXRaw_FindPIP for
+the first time.
+
+
+Version 1.0a9m1
+3/22/96
+===============================
+Due to some instabilities in 3DO's MPW 3.0 environment, the M2 Texture Library is now 
+built with 3DO's MPW 2.0 environment (SC and MrC).
+
+*M2TX_Copy function has been added. It copies all the data structures from one M2TX 
+texture to another.  This is more reliable than letting a tool copy each structure 
+individually since new structures may be added in the future.  Using M2TX_Copy allows a
+tool to be updated with a simple recompile.
+
+Version 1.0a9m2
+4/5/96
+===============================
+
+*The previous version had a bug that would cause a Mac file written to a 
+previously-created file to stay the size of the larger of the two files.  The data in 
+the files was correct, but the file would often be larger than it needed to be.  This 
+has been fixed for this release.
+
+Version 2.0d3
+5/10/96
+===============================
+*The M2TX structure has two new chunks, M2PG and PCLT which are for the handling of 
+texture pages (Mercury).
+*The Library has been updated to use the new IFF Library (which was updated to more
+closely match M2's IFF Folio).
+
+Version 3.0
+8/10/96
+===============================
+*The Library has been updated to the allow for compressed textures to be in texture pages.  This affects the M2PG and PCLT chunks.  The library can read the older versions of the chunks but only write out the newer versions.  Any Mercury texture readers (like routines contained in tex_read.c for helloworld and viewer) must be updated to parse the new versions of the M2PG and PCLT chunks.
+

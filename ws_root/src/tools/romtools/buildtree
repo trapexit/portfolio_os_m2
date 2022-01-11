@@ -1,0 +1,111 @@
+#!/usr/local/bin/perl
+
+@sccsid = split(" ", "@(#) buildtree 96/03/26 1.3");
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+$revision = shift(@sccsid);
+
+print("\nbuildtree\n");
+print("Version 2, revision $revision\n");
+print("By Drew Shell\n");
+print("The 3DO Company - 1996\n\n");
+
+chop($launchdir = `/bin/pwd`);
+$cppcommand = "/usr/lib/cpp -B -DLAUNCHDIR=$launchdir";
+
+$! = 1;
+if (!($filename = shift)) {
+	print("Usage: buildtree blueprintfile [args...]\n");
+	print("\n");
+	print("Builds a UNIX directory tree based on plan found in blueprintfile.\n");
+	print("Blueprintfile is preprocessed using cpp.\n");
+	print("All args are passed as is to cpp when blueprintfile is parsed.\n");
+	print("Only one buildtree directive is allowed per line in blueprintfile.\n");
+	print("File and directory related directives may be preceded by whitespace.\n");
+	print("\n");
+	print("Supported buildtree directives:\n");
+	print("  CMDWARGS {Command}    Execute Command as a system call with parent's args\n");
+	print("  COMMAND {Command}     Execute Command as a system call\n");
+	print("  PARSEOFF              Disable directive parsing (but not cpp features)\n");
+	print("  PARSEON               Re-enable directive parsing\n");
+	print("  Dirname {             Create directory Dirname containing files up to matching }\n");
+	print("  Filename Pathname     Copy file at Pathname to Filename\n");
+	print("  Linkname -> Pathname  Soft link Linkname to Pathname\n");
+	print("  Filename TOUCH        Do a touch of Filename\n");
+	print("  }                     Terminate a directory\n");
+	die("\n");
+}
+
+while ($arg = shift) {
+	$commandargs = join(" ", $commandargs, $arg);
+}
+print("Commandline args for cpp pass = $commandargs\n\n");
+$filestring = `$cppcommand $filename $commandargs`;
+$filestring =~ s/#.*\n//g;
+@blueprint = split(" ", $filestring);
+
+$parsing = 0;
+&TreeEntry();
+print("buildtree exiting without error\n\n");
+
+
+sub TreeEntry {
+
+	local($parent);
+
+	while ($token = shift(@blueprint)) {
+		if ($token eq "PARSEOFF") {
+			$parsingoff = 1;
+		} elsif ($token eq "PARSEON") {
+			$parsingoff = 0;
+		} elsif ($parsingoff) {
+		} elsif ($token eq "}") {
+			return;
+		} elsif (($token eq "COMMAND") || ($token eq "CMDWARGS")) {
+			$directive = $token;
+			while (($token = shift(@blueprint)) ne "{") { }
+			$command = shift(@blueprint);
+			while (($token = shift(@blueprint)) ne "}") {
+				$command = join(" ", $command, $token);
+			}
+			if ($directive eq "CMDWARGS") {
+				$command = join(" ", $command, $commandargs);
+			}
+			system($command);
+		} else {
+			$entryname = $token;
+			die ("Format error\n") if !($token = shift(@blueprint));
+			if ($token eq "{") {
+				$parent = `pwd`;
+				chop($parent);
+				`mkdir $entryname`;
+				chdir($entryname);
+				&TreeEntry;
+				chdir($parent);
+			} elsif ($token eq "TOUCH") {
+				`touch $entryname`;
+			} elsif ($token eq "->") {
+				die ("Format error\n") if !($token = shift(@blueprint));
+				&ExpandFileName($token);
+				die("Error, nonexistent file ($token)\n") if !(-r $token);
+				symlink($token, $entryname);
+			} else {
+				&ExpandFileName($token);
+				die("Error, nonexistent file ($token)\n") if !(-r $token);
+				`/bin/cp $token $entryname`;
+			}
+		}
+	}
+}
+
+
+sub ExpandFileName {
+	if ($token =~ /[\~\$]/) {
+		$token = `/bin/csh -cf 'set nonomatch; unset noglob; unset noclobber; glob $token'`;
+	} else {
+		$token = join('/', $launchdir, $token) if !($token =~ /^\//);
+	}
+}
+
+

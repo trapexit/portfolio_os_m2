@@ -1,0 +1,7 @@
+@(#) archive.txt 96/02/22 1.1
+
+audio examples archive
+
+The files in this directory are here for archival purposes. They represent
+technology that may become part of future examples, but are not being
+distributed as such at the moment.

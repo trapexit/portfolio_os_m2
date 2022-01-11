@@ -1,0 +1,102 @@
+\ @(#) sampler_cbd2_f1.ins 96/05/16 1.16
+\ Play sample compressed using Cubix eXact Delta compression
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_cbd2_f1.dsp
+\\\	Fixed-rate mono sample player with CBD2 2:1 decompression.
+\\\
+\\\	  Description
+\\\
+\\\	    Fixed-rate mono CBD2-format sample player.
+\\\
+\\\	    This instrument plays a sample, at a fixed rate, that has been previously
+\\\	    compressed to the 8-bit CBD2 format. Run SoundHack or SquashSnd to compress
+\\\	    the sample.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        0..1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 32
+\\\
+\\\	    Code: 29 words
+\\\
+\\\	    Data: 5 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_f1.dsp(@), sampler_adp4_v1.dsp(@), sampler_cbd2_f2.dsp(@),
+\\\	    sampler_sqs2_f1.dsp(@)
+
+include? DFID_SAMPLER_CBD2_F1 function_ids.j
+
+\ 960515 PLB Changed FIFO to 8 bit granularity.
+\            Reduced ticks 45->32, code 42->29, data 7->5
+
+anew task-sampler_cbd2_f1.ins
+
+_BULLDOG
+dspp{
+ins{
+
+dspp-echo off
+DFID_SAMPLER_CBD2_F1 dspp-function-id !
+
+$" sampler_cbd2_f1.dsp" ins-name !
+
+DRSC_INFIFO_SUBTYPE_8BIT ALLOC.INFIFO.SUBTYPE  InFIFO
+
+ALLOC.VARIABLE dc_previous  \ previously decoded sample
+ALLOC.VARIABLE dc_byte      \ byte shifted hi
+ALLOC.VARIABLE dc_cubed     \ x*x*x
+ALLOC.OUTPUT Output
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+32 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A _TRA	      \ check to see if any data in FIFO
+	_BEQ: NODATA                          \ branch to be offset
+	dc_byte _A _= InFIFO _A _TRL
+
+	_NOP   \ how many of these do we need?  !!!
+	_NOP
+\	_NOP
+	ACCUME dc_byte _A _*  \ square data value
+	dc_cubed _A _= ACCUME dc_byte _A _*  \ cube data value
+	dc_byte _A #$ 0100 _AND              \ odd or even ?
+	_BEQ: ExactMode
+
+\ Delta mode, use previous_sample + x**3 as the next sample
+	dc_cubed _A   dc_previous _%A   _CLIP _+
+	_JUMP: AllDone
+
+\ Exact mode, use x**3 as the next sample
+_LABEL: ExactMode
+	dc_previous _A _= dc_cubed _A _TRL
+
+_LABEL: AllDone
+\ ------------------------------------------
+
+	Output _A _= ACCUME Amplitude _A _*	\  to Mixer
+
+_LABEL: NODATA
+}ins
+}dspp

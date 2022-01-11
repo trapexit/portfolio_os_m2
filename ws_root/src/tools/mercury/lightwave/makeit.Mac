@@ -1,0 +1,20 @@
+set exit 0; ¶
+#	Make sure the object directory always exists
+If "`Exists -d ":bin:"`" == ""
+	newfolder :bin:
+End
+If "`Exists -d ":bin:Mac:"`" == ""
+	newfolder :bin:Mac:
+End
+If "`Exists -d ":objects:"`" == ""
+	newfolder :objects:
+End
+If "`Exists -d ":objects:Mac:"`" == ""
+	newfolder :objects:Mac:
+End
+
+make -f Makefile.Mac {1} {2} > makeout; ¶
+makeout; ¶
+delete makeout; ¶
+set exit 1; ¶
+exit 0

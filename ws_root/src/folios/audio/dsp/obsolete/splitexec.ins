@@ -1,0 +1,29 @@
+\ @(#) splitexec.ins 95/04/14 1.4
+\ $Id: splitexec.ins,v 1.2 1995/01/06 19:33:21 phil Exp $
+\ SPLITEXEC - for splitting rate execution between odd and even frames
+\
+
+include? I_MixLeft dspp_map.j
+include? DFID_SPLITEXEC function_ids.j
+
+anew task-splitexec.ins
+
+_GREEN
+dspp{
+ins{
+
+DFID_SPLITEXEC dspp-function-id !
+$" splitexec.dsp" ins-name !
+dspp-echo off
+
+0 $ FFFF 1 ALLOC.KNOB CountMask
+
+10 ALLOC.TICKS
+
+	I_FrameCount _A CountMask _A _AND
+	ACCUME _TRA
+	_BEQ: Done
+_LABEL: Done
+	
+}ins
+}dspp

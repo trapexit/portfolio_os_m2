@@ -1,0 +1,131 @@
+*****************************************************************************
+**
+**  @(#) AudioNotes.txt 96/03/01 1.6
+**  $Id: audio.notes,v 1.3 1995/03/27 19:25:44 phil Exp $
+**
+**  Miscellaneous internal notes for Audio Folio, Music Library,
+**  and related audio goodies.
+**
+**  By: Bill Barton and Phil Burk
+**
+**  NOTE: This file is purely for internal documentation and is not be
+**  distributed to developers.
+**
+**  Copyright (c) 1994, 3DO Company.
+**  This information is proprietary and confidential.
+**
+*****************************************************************************
+
+950323 - Moved to Teamware
+	The audiofolio, audio.h, audio_lib.c and some tests
+	and examples have been moved to Teamware for M2 development.
+	These files have been marked as "teamware2".
+
+Interrim music.lib build notes
+    Set up (assuming music2_1_1 is the marked release name)
+        # create work space
+        make_package newmusiclib audio /opera/port1_3_fc1
+
+        # set up custom links
+        cd newmusiclib
+        rm -f GNU* .autodepends
+        ln -s .top/src/audio .audio
+        ln -s .audio/GNUmakefile .audio/GNUmakefile.master .audio/.autodepends .
+
+        # populate w/ 1.3 stuff
+        gmake BUILD_REL=port1_3 prep
+
+        # remove stuff we don't care about and link to .audio where possible
+        rm -rf audiofolio dsp
+        ln -s .audio/audiofolio .
+
+        # set up 2.1 musiclib area and build music.dlib
+        cd musiclib
+        gmake cleanest unprep
+        rm -f GNU*
+        co -rmusic2_1_1 GNUmakefile GNUmakefile.master
+        gmake BUILD_REL=music2_1_1 prep depend music.dlib
+
+950906 ====================================================================
+
+Shared Library Templates - How it works....
+
+Abbreviated data structures:
+
+typedef struct AudioFolio
+	List        af_TemplateList;
+
+typedef struct AudioInsTemplate
+	void    *aitp_DeviceTemplate;   /* Device specific information. */
+	List     aitp_InstrumentList;   /* List of Instruments allocated from this template. */
+	List     aitp_Attachments;      /* List of attached items. */
+
+typedef struct DSPPTemplate
+	int32    dtmp_ShareCount;     /* This can be shared. Last one frees it. */
+	int32    dtmp_DynamicLinkNamesSize;  /* Size of chunk including NUL terminator. */
+	char     *dtmp_DynamicLinkNames;
+
+Load First Template with sharing
+- Search for existing template fails.
+- Parse file
+- Create DSPPTemplate and AudioInsTemplate
+- Scan dtmp_DynamicLinkNames and call FindAndOpenNamedItem() for each name.
+- Load shared template
+- OpenCount for each gets set to one.
+
+Load Second Template with sharing
+- Search for existing template succeeds.
+- Create AudioInsTemplate using preloaded template
+
+Load First Instrument with Sharing
+- Create Instrument from Template
+- Scan dtmp_DynamicLinkNames and create an instrument if none present.
+- Open Instrument Resources and increment reference count.
+
+Free Template with sharing
+- free dependant instruments
+- scan referenced templates, decrement share count, delete if last client
+
+
+950706 ==================================================================
+
+DMA redesign
+
+Primary DMA transactions:
+- Play block A once, then stop.
+- Play block A once, then loop on block B.
+- Play block A once, then play block B once.
+- Play block A once, then loop on block B, interrupt when A->B.
+- Play block A once, then play block B once, interrupt when A->B.
+- While looping on A, set next loop to B.
+- While looping on A, set play block B once.
+- While looping on A, set next loop to B, interrupt when A->B.
+- While looping on A, set play block B once, interrupt when A->B.
+
+Matrix:
+Set block A - easy.
+Set next block, Addr, Cnt, IfActive, IfLoop, IfInterrupt
+
+Race condition!!!
+If A looping, and we want to interrupt when A->B, then we
+1) clear DMANEXT interrupt
+2) set B's NextAddr, NextCnt, IntEnable.
+3) A finishes and B starts, => interrupt.
+
+If step (3) comes between (1) and (2) then interrupt will be set and
+we will get interrupt as soon as we enable it at step (2).  But B addresses
+will not have been read yet!  Must, therefore, disable ALL interrupts,
+then disable DMA around steps (1) & (2).
+
+Hardware should have way to clear old A interrupt
+at same time B is set and B interrupt is enabled!
+
+Ideal low level DMA prototypes:
+
+dsphSetInitialDMA( chan, addr,cnt );
+dsphSetNextDMA( chan, nextAddr,nextCnt,Flags );
+if (nextAddr == NULL) then clear nextValid flag in hardware
+Flags
+	DSPH_F_DMA_LOOP - goes forever, default is single play
+	DSPH_F_DMA_INT_DISABLE - disable interrupt
+	DSPH_F_DMA_INT_ENABLE - enable interrupt

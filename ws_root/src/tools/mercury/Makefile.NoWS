@@ -1,0 +1,142 @@
+#
+#
+#
+SHELL = /bin/sh
+
+LIBDIR = libs
+TOOLSDIR = txttools
+LIGHTDIR = lightwave
+MERCTOOLSDIR = $(TOOLSDIR)/merc_specific
+
+LIBPBM = libpbm.a
+LIBPGM = libpgm.a
+LIBPPM = libppm.a
+
+R64DEC = r64dec
+R64ENC = r64enc
+
+DECODE_LIBS = \
+	$(LIBDIR)/Sun/$(LIBPBM)	\
+	$(LIBDIR)/Sun/$(LIBPGM)	\
+	$(LIBDIR)/Sun/$(LIBPPM) \
+	$(LIBDIR)/SGI/$(LIBPBM)	\
+	$(LIBDIR)/SGI/$(LIBPGM)	\
+	$(LIBDIR)/SGI/$(LIBPPM) \
+	$(LIBDIR)/Mac/$(LIBPBM)	\
+	$(LIBDIR)/Mac/$(LIBPGM)	\
+	$(LIBDIR)/Mac/$(LIBPPM) \
+	$(TOOLSDIR)/tools.rsrc   \
+	$(LIGHTDIR)/tools.rsrc   \
+	$(MERCTOOLSDIR)/tools.rsrc
+
+ENCODE_LIBS = ${DECODE_LIBS:%=%.r64}
+
+all:	$(DECODE_LIBS)
+
+# Must be on an SGI for this !
+SGI:
+	cd ifflib 		; \
+	gmake -f Makefile.SGI	; \
+	cd .. 			; \
+	cd txtlib/src 		; \
+	gmake -f Makefile.SGI	; \
+	cd ../..		; \
+	cd txttools		; \
+	gmake -f Makefile.SGI	; \
+	cd merc_specific	; \
+	gmake -f Makefile.SGI	; \
+	cd ../..		; \
+	cd lightwave		; \
+	gmake -f Makefile.SGI	; \
+	cd ..
+	
+Sun:
+	cd ifflib 		; \
+	gmake -f Makefile.Sun	; \
+	cd .. 			; \
+	cd txtlib/src 		; \
+	gmake -f Makefile.Sun	; \
+	cd ../..		; \
+	cd txttools		; \
+	gmake -f Makefile.Sun	; \
+	cd merc_specific	; \
+	gmake -f Makefile.Sun	; \
+	cd ../..		; \
+	cd lightwave		; \
+	gmake -f Makefile.Sun	; \
+	cd ..
+	
+
+encode: $(ENCODE_LIBS)
+
+decode: $(DECODE_LIBS)
+
+clean:
+	cd ifflib 		; \
+	gmake -f Makefile.SGI clean	; \
+	gmake -f Makefile.Sun clean	; \
+	cd .. 			; \
+	cd txtlib/src 		; \
+	gmake -f Makefile.SGI clean	; \
+	gmake -f Makefile.Sun clean	; \
+	cd ../..		; \
+	cd txttools		; \
+	gmake -f Makefile.SGI clean	; \
+	gmake -f Makefile.Sun clean	; \
+	cd merc_specific	; \
+	gmake -f Makefile.SGI clean	; \
+	gmake -f Makefile.Sun clean	; \
+	cd ../..		; \
+	cd lightwave		; \
+	gmake -f Makefile.SGI clean	; \
+	gmake -f Makefile.Sun clean	; \
+	cd ..
+	
+clobber:	
+	cd ifflib 		; \
+	gmake -f Makefile.SGI clobber	; \
+	gmake -f Makefile.Sun clobber	; \
+	cd .. 			; \
+	cd txtlib/src 		; \
+	gmake -f Makefile.SGI clobber	; \
+	gmake -f Makefile.Sun clobber	; \
+	cd ../..		; \
+	cd txttools		; \
+	gmake -f Makefile.SGI clobber	; \
+	gmake -f Makefile.Sun clobber	; \
+	cd merc_specific	; \
+	gmake -f Makefile.SGI clobber	; \
+	gmake -f Makefile.Sun clobber	; \
+	cd ../..		; \
+	cd lightwave		; \
+	gmake -f Makefile.SGI clobber	; \
+	gmake -f Makefile.Sun clobber	; \
+	cd ..
+
+
+%.a: %.a.r64
+	-${R64DEC} < $< > $@
+
+%.a.r64: %.a
+	-${R64ENC} < $< > $@
+
+%.rsrc: %.rsrc.r64
+	-${R64DEC} < $< > $@
+
+%.rsrc.r64: %.rsrc
+	-${R64ENC} < $< > $@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

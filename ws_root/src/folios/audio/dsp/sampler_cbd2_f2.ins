@@ -1,0 +1,127 @@
+\ @(#) sampler_cbd2_f2.ins 96/03/11 1.9
+\ Play sample compressed using CuBic Delta 2:1 compression
+\
+\ By: Phil Burk
+\ Copyright 3DO 1992
+
+\ @@@ Maybe make cbd2 a shared subroutine for mono and quad versions.
+\     But this is not often used more than once in an app.
+\     Just once for soundtrack.
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_cbd2_f2.dsp
+\\\	Fixed-rate stereo sample player with CBD2 2:1 decompression.
+\\\
+\\\	  Description
+\\\
+\\\	    Fixed-rate stereo CBD2-format sample player.
+\\\
+\\\	    This instrument plays a sample, at a fixed rate, that has been previously
+\\\	    compressed to the 8-bit CBD2 format. Run SoundHack or SquashSnd to compress
+\\\	    the sample.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to 1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output - 2 parts
+\\\	        Stereo output.
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 69
+\\\
+\\\	    Code: 48 words
+\\\
+\\\	    Data: 6 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_16_f2.dsp(@), sampler_cbd2_f1.dsp(@)
+
+include? DFID_SAMPLER_CBD2_F2 function_ids.j
+
+anew task-sampler_cbd2_f2.ins
+
+_BULLDOG
+dspp{
+ins{
+
+dspp-echo off
+DFID_SAMPLER_CBD2_F2 dspp-function-id !
+
+$" sampler_cbd2_f2.dsp" ins-name !
+
+_IMPORT ALLOC.VARIABLE   gScratch1
+_IMPORT ALLOC.VARIABLE   gScratch2
+
+: Hold16Bits gScratch1 ;  \ compressed 16 bit sample
+: CompressedByte gScratch2 ;  \ compressed byte
+
+2 ALLOC.VARIABLE.ARRAY Previous
+ALLOC.VARIABLE  PreviousTemp
+2 ALLOC.OUTPUT.ARRAY Output
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+ALLOC.INFIFO InFIFO
+
+69 ALLOC.TICKS
+
+	InFIFO FIFOSTATUS+ _A _TRA	             \ check to see if any data in FIFO
+	_BEQ: AllDone
+
+	Hold16Bits _A  _= InFIFO _A _TRL             \ get 16 bits from FIFO
+
+	PreviousTemp _A  Previous 0 PART+ _A _MOVE   \ move to shared area
+	CompressedByte _A _= ACCUME #$ FF00 _AND     \ mask off high byte
+	_JSR:  DecodeCBD2
+	Previous 0 PART+ _A  PreviousTemp _A  _MOVE  \ move result from shared area to channel storage
+	Output 0 PART+ _A _=A
+
+	PreviousTemp _A  Previous 1 PART+ _A _MOVE   \ move to shared area
+	CompressedByte _A _= 	Hold16Bits _A  8 _<<' _TRL   \ mask off low byte
+	_JSR:  DecodeCBD2
+	Previous 1 PART+ _A  PreviousTemp _A  _MOVE  \ move result from shared area to channel storage
+	Output 1 PART+ _A _=A
+
+	_JUMP: AllDone
+
+\ --------- DecodeCBD2 SUBROUTINE --------------------------------------------
+\ On entry:
+\     ACCUME = CompressedByte = compressed byte value
+\ On exit:
+\     ACCUME = scaled output
+\ ------------------------------------------- DECODE
+_LABEL: DecodeCBD2
+
+	ACCUME #$ 0100 _AND                 \ odd or even ?
+	_BEQ: @ExactMode
+\ Delta mode, use previous_sample + x**3 as the next sample
+	CompressedByte _A  CompressedByte _A _*               \ square data value
+	ACCUME CompressedByte _A PreviousTemp _%A _CLIP _*+   \ cube data value + previous
+	_JUMP: ScaleResult
+
+\ Exact mode, use x**3 as the next sample
+_LABEL: @ExactMode
+	CompressedByte _A  CompressedByte _A _*             \ square data value
+	PreviousTemp _A _= ACCUME CompressedByte _A  _*   \ cube data value
+
+_LABEL: ScaleResult
+	ACCUME Amplitude _A _*	                      \  scale output
+	_RTS
+
+_LABEL: AllDone
+
+}ins
+}dspp

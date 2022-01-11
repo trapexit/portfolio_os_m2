@@ -1,0 +1,102 @@
+p\ @(#) interp_table17.ins 95/11/16 1.4
+\ $Id: interp_table17.ins,v 1.5 1994/08/25 22:40:27 peabody Exp $
+\ Interpolating table lookup
+\ Phil Burk
+\ Copyright 1994 3DO
+\
+
+\ !!! make public when ready
+\\\	NOAUTODOC -private -class DSP -name interp_table17.dsp
+\\\	Interpolate into 17 member table.
+\\\
+\\\	  Function
+\\\
+\\\	    !!!
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: !!!
+\\\
+\\\	    Code: !!! words
+
+include? DFID_interp_table17 function_ids.j
+anew task-interp_table17.ins
+
+_RED
+dspp{
+ins{
+
+
+2 dspp-function-id !
+$" interp_table17.dsp" ins-name !
+
+17 constant LOOKUPTABLE_SIZE
+ALLOC.OUTPUT Output
+LOOKUPTABLE_SIZE ALLOC.IMEM.ARRAY    LookupTable
+ALLOC.IMEM    Input
+ALLOC.IMEM     OldVal
+ALLOC.IMEM     NewVal
+ALLOC.IMEM     Fraction
+\ ALLOC.IMEM     IntPortion
+0 $ 7FFF $ 7FFF ALLOC.KNOB Amplitude
+25 ALLOC.TICKS
+
+\ initialise StepSizes array
+create LOOKUPTABLE-INIT_1    \ data table for init
+   $ -8000 , $ -7F00 , $ -7E00 , $ -7C00 ,
+   $ -7800 , $ -7000 , $ -6000 , $ -4000 ,
+   $ 0000 , $ 4000 , $ 6000 , $ 7000 ,
+   $ 7800 , $ 7C00 , $ 7E00 , $ 7F00 ,
+   $ 7FFF ,   \ guard point for interpolation
+
+create LOOKUPTABLE-INIT    \ data table for init
+   $ -8000 , $ -7F80 , $ -7F00 , $ -7E00 ,
+   $ -7C00 , $ -7800 , $ -7000 , $ -6000 ,
+   $ 0000 , $ 6000 , $ 7000 , $ 7800 ,
+   $ 7C00 , $ 7E00 , $ 7F00 , $ 7F80 ,
+   $ 7FFF ,   \ guard point for interpolation
+
+\ name_of_array    flags          data_table  number_entries                     name
+ LookupTable       DINI_AT_ALLOC LOOKUPTABLE-INIT LOOKUPTABLE_SIZE   INIT.RESOURCE.ARRAY INIT.STEPS
+
+\ ************************************************************************************
+\ Extract Fraction and IntPortion from Input
+\	IntPortion _A _= Input _A $ 0008 _# $ 000F _# _*AND
+	$ 308 _A _= Input _A $ 8000 _# 8 _>>' _+  \ convert to unsigned
+	$ 309 _A _= ACCUME $ 00F0 _#  4 _>>' _AND
+	I_Scratch _A _= ACCUME LookupTable _# _+   \ address in table
+	Fraction _A _= ACCUME $ 0001 _# _+   \ use Fraction as a pointer
+	_NOP
+	OldVal _A  I_Scratch _[A] _MOVE
+	NewVal _A  Fraction _[A] _MOVE
+	_NOP
+	Fraction _A _= Input _A $ 0FFF _# 3 _<<' _AND
+
+_LABEL: @Interpolate
+\ Phase is still in accumulator!!!
+	ACCUME OldVal _A OldVal _A _*-		\ old*(frac-1)	= old*frac-old
+	NewVal _A Fraction _A ACCUME _*-		\ interpolate new value
+	Output _A _= ACCUME Amplitude _A _*  \ scale output
+	_ENDEXT
+}ins
+}dspp

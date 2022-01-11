@@ -1,0 +1,143 @@
+#
+# @(#) Makefile.Dos 96/11/19 1.10
+#
+SHELL = /bin/sh
+
+PLATFORM = Dos
+BINDIR = bin/$(PLATFORM)
+LIBDIR = ../libs/$(PLATFORM)
+OBJDIR = ../txtlib/src/objects/$(PLATFORM)
+HGRELEASEDIR = ../release/$(PLATFORM)
+
+CP = cp
+RM = rm -f
+MD = mkdir
+
+M2TXLIB = M2TXlib.a
+IFFLIB = IFFlib.a
+LIBPPM = libppm.a
+LIBPBM = libpbm.a
+LIBPGM = libpgm.a
+LIBTIFF = $(LIBDIR)/libtiff.a
+
+INCLUDES = -I../txtlib/include -I../ifflib/ -I.
+
+LIBS = $(LIBDIR)/$(M2TXLIB) $(LIBDIR)/$(IFFLIB) -lm
+PPMLIBS = $(LIBDIR)/$(LIBPPM) $(LIBDIR)/$(LIBPBM) $(LIBDIR)/$(LIBPGM)
+
+CC = gcc
+
+CCFLAGS = -ansi -DINTEL -DTEXTOOLS_VERISION='"3.1b1"' $(INCLUDES)
+
+
+AUTOMAGIC_DIR = \
+	bin     \
+	$(BINDIR)	\
+	$(HGRELEASEDIR)
+
+TOOLS = \
+	$(BINDIR)/psdtoutf.exe \
+	$(BINDIR)/quantizer.exe \
+	$(BINDIR)/quanttopip.exe \
+	$(BINDIR)/sgitoutf.exe \
+	$(BINDIR)/utfaclean.exe \
+	$(BINDIR)/utfaddlod.exe \
+	$(BINDIR)/utfapip.exe \
+	$(BINDIR)/utfcompress.exe \
+	$(BINDIR)/utfinfo.exe \
+	$(BINDIR)/utffit.exe \
+	$(BINDIR)/utfflip.exe \
+	$(BINDIR)/utflitdown.exe \
+	$(BINDIR)/utfmakelod.exe \
+	$(BINDIR)/utfmakepip.exe \
+	$(BINDIR)/utfmakesame.exe \
+	$(BINDIR)/utfmerge.exe \
+	$(BINDIR)/utfmipcat.exe \
+	$(BINDIR)/utfmodpip.exe \
+	$(BINDIR)/utfpopfine.exe \
+	$(BINDIR)/utfresize.exe \
+	$(BINDIR)/utfstrip.exe \
+	$(BINDIR)/utfuncompress.exe \
+	$(BINDIR)/utfunmip.exe \
+	$(HGRELEASEDIR)/psdtoutf.exe \
+	$(HGRELEASEDIR)/quantizer.exe \
+	$(HGRELEASEDIR)/quanttopip.exe \
+	$(HGRELEASEDIR)/sgitoutf.exe \
+	$(HGRELEASEDIR)/utfaclean.exe \
+	$(HGRELEASEDIR)/utfaddlod.exe \
+	$(HGRELEASEDIR)/utfapip.exe \
+	$(HGRELEASEDIR)/utfcompress.exe \
+	$(HGRELEASEDIR)/utfinfo.exe \
+	$(HGRELEASEDIR)/utffit.exe \
+	$(HGRELEASEDIR)/utfflip.exe \
+	$(HGRELEASEDIR)/utflitdown.exe \
+	$(HGRELEASEDIR)/utfmakelod.exe \
+	$(HGRELEASEDIR)/utfmakepip.exe \
+	$(HGRELEASEDIR)/utfmakesame.exe \
+	$(HGRELEASEDIR)/utfmerge.exe \
+	$(HGRELEASEDIR)/utfmipcat.exe \
+	$(HGRELEASEDIR)/utfmodpip.exe \
+	$(HGRELEASEDIR)/utfpopfine.exe \
+	$(HGRELEASEDIR)/utfresize.exe \
+	$(HGRELEASEDIR)/utfstrip.exe \
+	$(HGRELEASEDIR)/utfuncompress.exe \
+	$(HGRELEASEDIR)/utfunmip.exe
+
+all: ${AUTOMAGIC_DIR} $(TOOLS) \
+	$(BINDIR)/utfatmod.exe $(BINDIR)/tifftoutf.exe \
+	$(BINDIR)/ppmtoutf.exe $(BINDIR)/utftoppm.exe	\
+	$(HGRELEASEDIR)/utfatmod.exe $(HGRELEASEDIR)/tifftoutf.exe \
+	$(HGRELEASEDIR)/ppmtoutf.exe $(HGRELEASEDIR)/utftoppm.exe
+
+${AUTOMAGIC_DIR}:
+	[ -d $@ ] || ${MD} $@
+
+$(BINDIR)/%.exe: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(HGRELEASEDIR)/%.exe: %.c
+	$(CC) $(CCFLAGS) -o $@ $< ${LIBS}
+
+$(BINDIR)/ppmtoutf.exe: ppmtoutf.c
+	$(CC) -DMSDOS -DSYSV -o $@ ppmtoutf.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+$(BINDIR)/utftoppm.exe: utftoppm.c
+	$(CC) -o -DMSDOS -DSYSV $@ utftoppm.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+$(HGRELEASEDIR)/ppmtoutf.exe: ppmtoutf.c
+	$(CC) -DMSDOS -DSYSV -o $@ ppmtoutf.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+$(HGRELEASEDIR)/utftoppm.exe: utftoppm.c
+	$(CC) -o -DMSDOS -DSYSV $@ utftoppm.c $(CCFLAGS) ${LIBS} $(PPMLIBS)
+
+ATMODOBJS = \
+	$(OBJDIR)/futil.o \
+	$(OBJDIR)/LWToken.o \
+	$(OBJDIR)/SDFTexBlend.o
+
+$(BINDIR)/utfatmod.exe: $(ATMODOBJS) utfatmod.c
+	$(CC) $(CCFLAGS) -o $@ utfatmod.c $(ATMODOBJS) ${LIBS}
+
+$(BINDIR)/tifftoutf.exe: tifftoutf.c
+	$(CC) $(CCFLAGS) -o $@ tifftoutf.c ${LIBS} $(LIBTIFF)
+
+$(HGRELEASEDIR)/utfatmod.exe: $(ATMODOBJS) utfatmod.c
+	$(CC) $(CCFLAGS) -o $@ utfatmod.c $(ATMODOBJS) ${LIBS}
+
+$(HGRELEASEDIR)/tifftoutf.exe: tifftoutf.c
+	$(CC) $(CCFLAGS) -o $@ tifftoutf.c ${LIBS} $(LIBTIFF)
+
+depends:
+	makedepend -- $(INCLUDES)
+
+clean:
+
+clobber:
+	$(RM) $(TOOLS) \
+	$(BINDIR)/utfatmod.exe $(BINDIR)/ppmtoutf.exe \
+	$(BINDIR)/utftoppm.exe $(BINDIR)/tifftoutf.exe \
+	$(HGRELEASEDIR)/utfatmod.exe $(HGRELEASEDIR)/ppmtoutf.exe \
+	$(HGRELEASEDIR)/utftoppm.exe $(HGRELEASEDIR)/tifftoutf.exe
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

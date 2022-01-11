@@ -1,0 +1,84 @@
+\ @(#) rednoise.ins 96/03/11 1.16
+\ $Id: rednoise.ins,v 1.10 1995/01/20 21:27:52 peabody Exp $
+\ Instrument Template for RedNoise
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	AUTODOC -class DSP -group Sound_Synthesis -name rednoise.dsp
+\\\	Red noise generator.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument interpolates straight line segments between pseudo-random
+\\\	    numbers to produce "red" noise. It is a grittier alternative to the white
+\\\	    generator noise.dsp(@). It is also useful as a slowly changing random
+\\\	    control generator for natural sounds.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency - AUDIO_SIGNAL_TYPE_OSC_FREQ
+\\\	        Frequency in Hertz. Range is -22050.0 to +22050.0. Default is 440.0.
+\\\	        Controls how frequently a new random value is chosen.
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        -1.0 to +1.0, defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        -1.0 to +1.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 24
+\\\
+\\\	    Code: 21 words
+\\\
+\\\	    Data: 6 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V20
+\\\
+\\\	  See Also
+\\\
+\\\	    noise.dsp(@), randomhold.dsp(@), rednoise_lfo.dsp(@)
+
+include? DFID_REDNOISE function_ids.j
+
+anew task-rednoise.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_REDNOISE dspp-function-id !
+$" rednoise.dsp" ins-name !
+
+$ 8000 440 22050 */ KNOB_TYPE_OSC_FREQ ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Amplitude
+DRSC_TYPE_HW_NOISE CONNECT.HARDWARE  HardNoise
+ALLOC.VARIABLE NoisePhase
+ALLOC.VARIABLE OldNoise
+ALLOC.VARIABLE NewNoise
+_IMPORT ALLOC.VARIABLE gScratch1   \ fractional phase
+ALLOC.OUTPUT Output
+24 ALLOC.TICKS
+
+	NoisePhase _%A Frequency _A _+
+	_BCC:	@InterpNoise
+
+	OldNoise _A NewNoise _A _MOVE    \ leave ACCUME untouched
+	NewNoise _A HardNoise _A _MOVE   \ get new Noise target
+
+_LABEL: @InterpNoise
+	gScratch1 _A _= ACCUME 1 _>>' _TRL    \ logical right shift, U2/
+	ACCUME OldNoise _A OldNoise _A _*-   \ old*(frac-1)	= old*frac-old
+	NewNoise _A gScratch1 _A ACCUME	_*-  \ new*frac - (old*frac-old)
+	Output _A _= ACCUME Amplitude _A _*
+
+}ins
+}dspp

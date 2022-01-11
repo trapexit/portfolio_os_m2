@@ -1,0 +1,9 @@
+# @(#) datafiles 96/09/09 1.3
+# Variables for multiple binary and text data files.
+
+# Defaults to a list of files with the same base names as all the .R64 files in the directory.
+ifndef TARGET_NAMES
+TARGET_NAMES =		${R64FILES:%.R64=%} ${notdir ${EXTRA_SRC}}
+endif
+
+include ${CODEMGR_WS}/ws_root/variables/generic

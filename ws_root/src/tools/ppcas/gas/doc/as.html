@@ -1,0 +1,3903 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.39
+     from as.texinfo on 27 November 1995 -->
+
+<TITLE>Using ppcas</TITLE>
+</HEAD>
+<BODY>
+<H1>Using ppcas</H1>
+
+<P>
+The Free Software Foundation Inc.  thanks The Nice Computer
+Company of Australia for loaning Dean Elsner to write the
+first (Vax) version of <CODE>as</CODE> for Project GNU.
+The proprietors, management and staff of TNCCA thank FSF for
+distracting the boss while they got some work
+done.
+<P>
+
+</P>
+<P>
+Copyright (C) 1991, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+
+</P>
+<P>
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+</P>
+<P>
+Permission is granted to copy and distribute modified versions of this manual
+under the conditions for verbatim copying, provided that the entire resulting
+derived work is distributed under the terms of a permission notice identical to
+this one.
+
+</P>
+<P>
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions.
+
+</P>
+
+
+
+<H1><A NAME="SEC1" HREF="as_toc.html#SEC1">Overview</A></H1>
+<P>
+This manual is a user guide to the GNU assembler <CODE>ppcas</CODE>.
+This version of the manual describes <CODE>ppcas</CODE> configured to generate
+code for Power PC architectures.
+
+</P>
+<P>
+<A NAME="IDX1"></A>
+<A NAME="IDX2"></A>
+<A NAME="IDX3"></A>
+Here is a brief summary of how to invoke <CODE>ppcas</CODE>.  For details,
+see section <A HREF="as.html#SEC9">Command-Line Options</A>.
+
+</P>
+
+<PRE>
+ppcas [ -a[dhlns][=file] ] [ -D ]  [ --defsym <VAR>sym</VAR>=<VAR>val</VAR> ]
+ [ -f ] [ --help ] [ -I <VAR>dir</VAR> ] [ -J ] [ -K ] [ -L ]
+ [ -o <VAR>objfile</VAR> ] [ -R ] [ --statistics ] [ -v ] [ -version ]
+ [ --version ] [ -W ] [ -w ] [ -x ] [ -Z ]
+ [ -- | <VAR>files</VAR> ... ]
+</PRE>
+
+<DL COMPACT>
+
+<DT><CODE>-a[dhlns]</CODE>
+<DD>
+Turn on listings, in any of a variety of ways:
+
+<DL COMPACT>
+
+<DT><CODE>-ad</CODE>
+<DD>
+omit debugging directives
+
+<DT><CODE>-ah</CODE>
+<DD>
+include high-level source
+
+<DT><CODE>-al</CODE>
+<DD>
+include assembly
+
+<DT><CODE>-an</CODE>
+<DD>
+omit forms processing
+
+<DT><CODE>-as</CODE>
+<DD>
+include symbols
+
+<DT><CODE>=file</CODE>
+<DD>
+set the name of the listing file
+</DL>
+
+You may combine these options; for example, use <SAMP>`-aln'</SAMP> for assembly
+listing without forms processing.  The <SAMP>`=file'</SAMP> option, if used, must be
+the last one.  By itself, <SAMP>`-a'</SAMP> defaults to <SAMP>`-ahls'</SAMP>---that is, all
+listings turned on.
+
+<DT><CODE>-D</CODE>
+<DD>
+Ignored.  This option is accepted for script compatibility with calls to
+other assemblers.
+
+<DT><CODE>--defsym <VAR>sym</VAR>=<VAR>value</VAR></CODE>
+<DD>
+Define the symbol <VAR>sym</VAR> to be <VAR>value</VAR> before assembling the input file.
+<VAR>value</VAR> must be an integer constant.  As in C, a leading <SAMP>`0x'</SAMP>
+indicates a hexadecimal value, and a leading <SAMP>`0'</SAMP> indicates an octal value.
+
+<DT><CODE>-f</CODE>
+<DD>
+"fast"---skip whitespace and comment preprocessing (assume source is
+compiler output).
+
+<DT><CODE>--help</CODE>
+<DD>
+Print a summary of the command line options and exit.
+
+<DT><CODE>-I <VAR>dir</VAR></CODE>
+<DD>
+Add directory <VAR>dir</VAR> to the search list for <CODE>.include</CODE> directives.
+
+<DT><CODE>-J</CODE>
+<DD>
+Don't warn about signed overflow.
+
+<DT><CODE>-K</CODE>
+<DD>
+This option is accepted but has no effect on the Power PC family.
+
+<DT><CODE>-L</CODE>
+<DD>
+Keep (in the symbol table) local symbols, starting with <SAMP>`L'</SAMP>.
+
+<DT><CODE>-o <VAR>objfile</VAR></CODE>
+<DD>
+Name the object-file output from <CODE>ppcas</CODE> <VAR>objfile</VAR>.
+
+<DT><CODE>-R</CODE>
+<DD>
+Fold the data section into the text section.
+
+<DT><CODE>--statistics</CODE>
+<DD>
+Print the maximum space (in bytes) and total time (in seconds) used by
+assembly.
+
+<DT><CODE>-v</CODE>
+<DD>
+<DT><CODE>-version</CODE>
+<DD>
+Print the <CODE>as</CODE> version.
+
+<DT><CODE>--version</CODE>
+<DD>
+Print the <CODE>as</CODE> version and exit.
+
+<DT><CODE>-W</CODE>
+<DD>
+Suppress warning messages.
+
+<DT><CODE>-w</CODE>
+<DD>
+Ignored.
+
+<DT><CODE>-x</CODE>
+<DD>
+Ignored.
+
+<DT><CODE>-Z</CODE>
+<DD>
+Generate an object file even after errors.
+
+<DT><CODE>-- | <VAR>files</VAR> ...</CODE>
+<DD>
+Standard input, or source files to assemble.
+
+</DL>
+
+
+
+<H2><A NAME="SEC2" HREF="as_toc.html#SEC2">Structure of this Manual</A></H2>
+
+<P>
+<A NAME="IDX4"></A>
+This manual is intended to describe what you need to know to use
+GNU <CODE>ppcas</CODE>.  We cover the syntax expected in source files, including
+notation for symbols, constants, and expressions; the directives that
+<CODE>ppcas</CODE> understands; and of course how to invoke <CODE>ppcas</CODE>.
+
+</P>
+<P>
+We also cover special features in the Power PC
+configuration of <CODE>ppcas</CODE>, including assembler directives.
+
+</P>
+<P>
+<A NAME="IDX5"></A>
+On the other hand, this manual is <EM>not</EM> intended as an introduction
+to programming in assembly language--let alone programming in general!
+In a similar vein, we make no attempt to introduce the machine
+architecture; we do <EM>not</EM> describe the instruction set, standard
+mnemonics, registers or addressing modes that are standard to a
+particular architecture.
+
+</P>
+
+
+
+<H2><A NAME="SEC3" HREF="as_toc.html#SEC3">ppcas, the GNU Assembler</A></H2>
+
+<P>
+GNU <CODE>as</CODE> is really a family of assemblers.
+This manual describes <CODE>ppcas</CODE>, a member of that family which is
+configured for the Power PC architectures.
+If you use (or have used) the GNU assembler on one architecture, you
+should find a fairly similar environment when you use it on another
+architecture.  Each version has much in common with the others,
+including object file formats, most assembler directives (often called
+<STRONG>pseudo-ops</STRONG>) and assembler syntax.
+</P>
+<P>
+<A NAME="IDX6"></A>
+<CODE>ppcas</CODE> is primarily intended to assemble the output of the
+GNU C compiler <CODE>gcc</CODE> for use by the linker
+<CODE>link3do</CODE>.  Nevertheless, we've tried to make <CODE>ppcas</CODE>
+assemble correctly everything that other assemblers for the same
+machine would assemble.
+
+</P>
+<P>
+Unlike older assemblers, <CODE>ppcas</CODE> is designed to assemble a source
+program in one pass of the source file.  This has a subtle impact on the
+<KBD>.org</KBD> directive (see section <A HREF="as.html#SEC96"><CODE>.org <VAR>new-lc</CODE> , <VAR>fill</VAR></VAR></A>).
+
+</P>
+
+
+<H2><A NAME="SEC4" HREF="as_toc.html#SEC4">Object File Formats</A></H2>
+
+<P>
+<A NAME="IDX7"></A>
+The GNU assembler can be configured to produce several alternative
+object file formats.  For the most part, this does not affect how you
+write assembly language programs; but directives for debugging symbols
+are typically different in different file formats.  See section <A HREF="as.html#SEC47">Symbol Attributes</A>.
+On the Power PC, <CODE>ppcas</CODE> is configured to produce
+ELF format object files.
+
+</P>
+
+
+<H2><A NAME="SEC5" HREF="as_toc.html#SEC5">Command Line</A></H2>
+
+<P>
+<A NAME="IDX8"></A>
+After the program name <CODE>ppcas</CODE>, the command line may contain
+options and file names.  Options may appear in any order, and may be
+before, after, or between file names.  The order of file names is
+significant.
+
+</P>
+<P>
+<A NAME="IDX9"></A>
+<A NAME="IDX10"></A>
+<TT>`--'</TT> (two hyphens) by itself names the standard input file
+explicitly, as one of the files for <CODE>ppcas</CODE> to assemble.
+
+</P>
+<P>
+<A NAME="IDX11"></A>
+Except for <SAMP>`--'</SAMP> any command line argument that begins with a
+hyphen (<SAMP>`-'</SAMP>) is an option.  Each option changes the behavior of
+<CODE>ppcas</CODE>.  No option changes the way another option works.  An
+option is a <SAMP>`-'</SAMP> followed by one or more letters; the case of
+the letter is important.   All options are optional.
+
+</P>
+<P>
+Some options expect exactly one file name to follow them.  The file
+name may either immediately follow the option's letter (compatible
+with older assemblers) or it may be the next command argument (GNU
+standard).  These two command lines are equivalent:
+
+</P>
+
+<PRE>
+ppcas -o my-object-file.o mumble.s
+ppcas -omy-object-file.o mumble.s
+</PRE>
+
+
+
+<H2><A NAME="SEC6" HREF="as_toc.html#SEC6">Input Files</A></H2>
+
+<P>
+<A NAME="IDX12"></A>
+<A NAME="IDX13"></A>
+<A NAME="IDX14"></A>
+We use the phrase <STRONG>source program</STRONG>, abbreviated <STRONG>source</STRONG>, to
+describe the program input to one run of <CODE>ppcas</CODE>.  The program may
+be in one or more files; how the source is partitioned into files
+doesn't change the meaning of the source.
+
+</P>
+<P>
+The source program is a concatenation of the text in all the files, in the
+order specified.
+
+</P>
+<P>
+Each time you run <CODE>ppcas</CODE> it assembles exactly one source
+program.  The source program is made up of one or more files.
+(The standard input is also a file.)
+
+</P>
+<P>
+You give <CODE>ppcas</CODE> a command line that has zero or more input file
+names.  The input files are read (from left file name to right).  A
+command line argument (in any position) that has no special meaning
+is taken to be an input file name.
+
+</P>
+<P>
+If you give <CODE>ppcas</CODE> no file names it attempts to read one input file
+from the <CODE>ppcas</CODE> standard input, which is normally your terminal.  You
+may have to type <KBD>ctl-D</KBD> to tell <CODE>ppcas</CODE> there is no more program
+to assemble.
+
+</P>
+<P>
+Use <SAMP>`--'</SAMP> if you need to explicitly name the standard input file
+in your command line.
+
+</P>
+<P>
+If the source is empty, <CODE>ppcas</CODE> produces a small, empty object
+file.
+
+</P>
+
+<H3>Filenames and Line-numbers</H3>
+
+<P>
+<A NAME="IDX15"></A>
+<A NAME="IDX16"></A>
+There are two ways of locating a line in the input file (or files) and
+either may be used in reporting error messages.  One way refers to a line
+number in a physical file; the other refers to a line number in a
+"logical" file.  See section <A HREF="as.html#SEC8">Error and Warning Messages</A>.
+
+</P>
+<P>
+<STRONG>Physical files</STRONG> are those files named in the command line given
+to <CODE>ppcas</CODE>.
+
+</P>
+<P>
+<STRONG>Logical files</STRONG> are simply names declared explicitly by assembler
+directives; they bear no relation to physical files.  Logical file names
+help error messages reflect the original source file, when <CODE>ppcas</CODE>
+source is itself synthesized from other files.
+See section <A HREF="as.html#SEC63"><CODE>.app-file <VAR>string</CODE></VAR></A>.
+
+</P>
+
+
+<H2><A NAME="SEC7" HREF="as_toc.html#SEC7">Output (Object) File</A></H2>
+
+<P>
+<A NAME="IDX17"></A>
+<A NAME="IDX18"></A>
+<A NAME="IDX19"></A>
+<A NAME="IDX20"></A>
+Every time you run <CODE>ppcas</CODE> it produces an output file, which is
+your assembly language program translated into numbers.  This file
+is the object file.  Its default name is
+<CODE>a.out</CODE>.
+<CODE>b.out</CODE> when <CODE>ppcas</CODE> is configured for the Intel 80960.
+You can give it another name by using the <CODE>-o</CODE> option.  Conventionally,
+object file names end with <TT>`.o'</TT>.  The default name is used for historical
+reasons: older assemblers were capable of assembling self-contained programs
+directly into a runnable program.  (For some formats, this isn't currently
+possible, but it can be done for the <CODE>a.out</CODE> format.)
+
+</P>
+<P>
+<A NAME="IDX21"></A>
+<A NAME="IDX22"></A>
+The object file is meant for input to the linker <CODE>link3do</CODE>.  It contains
+assembled program code, information to help <CODE>link3do</CODE> integrate
+the assembled program into a runnable file, and (optionally) symbolic
+information for the debugger.
+
+</P>
+
+
+
+<H2><A NAME="SEC8" HREF="as_toc.html#SEC8">Error and Warning Messages</A></H2>
+
+<P>
+<A NAME="IDX23"></A>
+<A NAME="IDX24"></A>
+<A NAME="IDX25"></A>
+<CODE>ppcas</CODE> may write warnings and error messages to the standard error
+file (usually your terminal).  This should not happen when  a compiler
+runs <CODE>ppcas</CODE> automatically.  Warnings report an assumption made so
+that <CODE>ppcas</CODE> could keep assembling a flawed program; errors report a
+grave problem that stops the assembly.
+
+</P>
+<P>
+<A NAME="IDX26"></A>
+Warning messages have the format
+
+</P>
+
+<PRE>
+file_name:<B>NNN</B>:Warning Message Text
+</PRE>
+
+<P>
+<A NAME="IDX27"></A>
+(where <B>NNN</B> is a line number).  If a logical file name has been given
+(see section <A HREF="as.html#SEC63"><CODE>.app-file <VAR>string</CODE></VAR></A>) it is used for the filename,
+otherwise the name of the current input file is used.  If a logical line
+number was given
+(see section <A HREF="as.html#SEC89"><CODE>.line <VAR>line-number</CODE></VAR></A>)
+then it is used to calculate the number printed,
+otherwise the actual line in the current source file is printed.  The
+message text is intended to be self explanatory (in the grand Unix
+tradition).
+
+</P>
+<P>
+<A NAME="IDX28"></A>
+Error messages have the format
+
+<PRE>
+file_name:<B>NNN</B>:FATAL:Error Message Text
+</PRE>
+
+<P>
+The file name and line number are derived as for warning
+messages.  The actual message text may be rather less explanatory
+because many of them aren't supposed to happen.
+
+</P>
+
+
+<H1><A NAME="SEC9" HREF="as_toc.html#SEC9">Command-Line Options</A></H1>
+
+<P>
+<A NAME="IDX29"></A>
+This chapter describes command-line options available in <EM>all</EM>
+versions of the GNU assembler; see section <A HREF="as.html#SEC112">PowerPC Dependent Features</A>, for options specific
+to the Power PC.
+
+</P>
+<P>
+If you are invoking <CODE>ppcas</CODE> via the GNU C compiler (version 2), you
+can use the <SAMP>`-Wa'</SAMP> option to pass arguments through to the
+assembler.  The assembler arguments must be separated from each other
+(and the <SAMP>`-Wa'</SAMP>) by commas.  For example:
+
+</P>
+
+<PRE>
+gcc -c -g -O -Wa,-alh,-L file.c
+</PRE>
+
+<P>
+emits a listing to standard output with high-level
+and assembly source.
+
+</P>
+<P>
+Usually you do not need to use this <SAMP>`-Wa'</SAMP> mechanism, since many compiler
+command-line options are automatically passed to the assembler by the compiler.
+(You can call the GNU compiler driver with the <SAMP>`-v'</SAMP> option to see
+precisely what options it passes to each compilation pass, including the
+assembler.)
+
+</P>
+
+
+
+<H2><A NAME="SEC10" HREF="as_toc.html#SEC10">Enable Listings: <CODE>-a[dhlns]</CODE></A></H2>
+
+<P>
+<A NAME="IDX30"></A>
+<A NAME="IDX31"></A>
+<A NAME="IDX32"></A>
+<A NAME="IDX33"></A>
+<A NAME="IDX34"></A>
+<A NAME="IDX35"></A>
+<A NAME="IDX36"></A>
+<A NAME="IDX37"></A>
+
+</P>
+<P>
+These options enable listing output from the assembler.  By itself,
+<SAMP>`-a'</SAMP> requests high-level, assembly, and symbols listing.
+You can use other letters to select specific options for the list:
+<SAMP>`-ah'</SAMP> requests a high-level language listing,
+<SAMP>`-al'</SAMP> requests an output-program assembly listing, and
+<SAMP>`-as'</SAMP> requests a symbol table listing.
+High-level listings require that a compiler debugging option like
+<SAMP>`-g'</SAMP> be used, and that assembly listings (<SAMP>`-al'</SAMP>) be requested
+also.
+
+</P>
+<P>
+Use the <SAMP>`-ad'</SAMP> option to omit debugging directives from the
+listing.
+
+</P>
+<P>
+Once you have specified one of these options, you can further control
+listing output and its appearance using the directives <CODE>.list</CODE>,
+<CODE>.nolist</CODE>, <CODE>.psize</CODE>, <CODE>.eject</CODE>, <CODE>.title</CODE>, and
+<CODE>.sbttl</CODE>.
+The <SAMP>`-an'</SAMP> option turns off all forms processing.
+If you do not request listing output with one of the <SAMP>`-a'</SAMP> options, the
+listing-control directives have no effect.
+
+</P>
+<P>
+The letters after <SAMP>`-a'</SAMP> may be combined into one option,
+<EM>e.g.</EM>, <SAMP>`-aln'</SAMP>.
+
+</P>
+
+
+<H2><A NAME="SEC11" HREF="as_toc.html#SEC11"><CODE>-D</CODE></A></H2>
+
+<P>
+<A NAME="IDX38"></A>
+This option has no effect whatsoever, but it is accepted to make it more
+likely that scripts written for other assemblers also work with
+<CODE>ppcas</CODE>.
+
+</P>
+
+
+<H2><A NAME="SEC12" HREF="as_toc.html#SEC12">Work Faster: <CODE>-f</CODE></A></H2>
+
+<P>
+<A NAME="IDX39"></A>
+<A NAME="IDX40"></A>
+<A NAME="IDX41"></A>
+<SAMP>`-f'</SAMP> should only be used when assembling programs written by a
+(trusted) compiler.  <SAMP>`-f'</SAMP> stops the assembler from doing whitespace
+and comment preprocessing on
+the input file(s) before assembling them.  See section <A HREF="as.html#SEC23">Preprocessing</A>.
+
+</P>
+
+<BLOCKQUOTE>
+<P>
+<EM>Warning:</EM> if you use <SAMP>`-f'</SAMP> when the files actually need to be
+preprocessed (if they contain comments, for example), <CODE>ppcas</CODE> does
+not work correctly.
+</BLOCKQUOTE>
+
+
+
+<H2><A NAME="SEC13" HREF="as_toc.html#SEC13"><CODE>.include</CODE> search path: <CODE>-I</CODE> <VAR>path</VAR></A></H2>
+
+<P>
+<A NAME="IDX42"></A>
+<A NAME="IDX43"></A>
+<A NAME="IDX44"></A>
+<A NAME="IDX45"></A>
+Use this option to add a <VAR>path</VAR> to the list of directories
+<CODE>ppcas</CODE> searches for files specified in <CODE>.include</CODE>
+directives (see section <A HREF="as.html#SEC83"><CODE>.include "<VAR>file</CODE>"</VAR></A>).  You may use <CODE>-I</CODE> as
+many times as necessary to include a variety of paths.  The current
+working directory is always searched first; after that, <CODE>ppcas</CODE>
+searches any <SAMP>`-I'</SAMP> directories in the same order as they were
+specified (left to right) on the command line.
+
+</P>
+
+
+<H2><A NAME="SEC14" HREF="as_toc.html#SEC14">Difference Tables: <CODE>-K</CODE></A></H2>
+
+<P>
+<A NAME="IDX46"></A>
+On the Power PC family, this option is allowed, but has no effect.  It is
+permitted for compatibility with the GNU assembler on other platforms,
+where it can be used to warn when the assembler alters the machine code
+generated for <SAMP>`.word'</SAMP> directives in difference tables.  The Power PC
+family does not have the addressing limitations that sometimes lead to this
+alteration on other platforms.
+
+</P>
+
+
+
+<H2><A NAME="SEC15" HREF="as_toc.html#SEC15">Include Local Labels: <CODE>-L</CODE></A></H2>
+
+<P>
+<A NAME="IDX47"></A>
+<A NAME="IDX48"></A>
+Labels beginning with <SAMP>`L'</SAMP> (upper case only) are called <STRONG>local
+labels</STRONG>. See section <A HREF="as.html#SEC45">Symbol Names</A>.  Normally you do not see such labels when
+debugging, because they are intended for the use of programs (like
+compilers) that compose assembler programs, not for your notice.
+Normally both <CODE>ppcas</CODE> and <CODE>link3do</CODE> discard such labels, so you do not
+normally debug with them.
+
+</P>
+<P>
+This option tells <CODE>ppcas</CODE> to retain those <SAMP>`L...'</SAMP> symbols
+in the object file.  Usually if you do this you also tell the linker
+<CODE>link3do</CODE> to preserve symbols whose names begin with <SAMP>`L'</SAMP>.
+
+</P>
+<P>
+By default, a local label is any label beginning with <SAMP>`L'</SAMP>, but each
+target is allowed to redefine the local label prefix.
+
+</P>
+
+
+
+<H2><A NAME="SEC16" HREF="as_toc.html#SEC16">Name the Object File: <CODE>-o</CODE></A></H2>
+
+<P>
+<A NAME="IDX49"></A>
+<A NAME="IDX50"></A>
+<A NAME="IDX51"></A>
+There is always one object file output when you run <CODE>ppcas</CODE>.  By
+default it has the name
+<TT>`a.out'</TT>.
+<TT>`a.out'</TT>.
+You use this option (which takes exactly one filename) to give the
+object file a different name.
+
+</P>
+<P>
+Whatever the object file is called, <CODE>ppcas</CODE> overwrites any
+existing file of the same name.
+
+</P>
+
+
+<H2><A NAME="SEC17" HREF="as_toc.html#SEC17">Join Data and Text Sections: <CODE>-R</CODE></A></H2>
+
+<P>
+<A NAME="IDX52"></A>
+<A NAME="IDX53"></A>
+<A NAME="IDX54"></A>
+<A NAME="IDX55"></A>
+<A NAME="IDX56"></A>
+<CODE>-R</CODE> tells <CODE>ppcas</CODE> to write the object file as if all
+data-section data lives in the text section.  This is only done at
+the very last moment:  your binary data are the same, but data
+section parts are relocated differently.  The data section part of
+your object file is zero bytes long because all its bytes are
+appended to the text section.  (See section <A HREF="as.html#SEC36">Sections and Relocation</A>.)
+
+</P>
+<P>
+When you specify <CODE>-R</CODE> it would be possible to generate shorter
+address displacements (because we do not have to cross between text and
+data section).  We refrain from doing this simply for compatibility with
+older versions of <CODE>ppcas</CODE>.  In future, <CODE>-R</CODE> may work this way.
+
+</P>
+
+
+
+<H2><A NAME="SEC18" HREF="as_toc.html#SEC18">Display Assembly Statistics: <CODE>--statistics</CODE></A></H2>
+
+<P>
+<A NAME="IDX57"></A>
+<A NAME="IDX58"></A>
+<A NAME="IDX59"></A>
+<A NAME="IDX60"></A>
+Use <SAMP>`--statistics'</SAMP> to display two statistics about the resources used by
+<CODE>ppcas</CODE>: the maximum amount of space allocated during the assembly
+(in bytes), and the total execution time taken for the assembly (in CPU
+seconds).
+
+</P>
+
+
+<H2><A NAME="SEC19" HREF="as_toc.html#SEC19">Announce Version: <CODE>-v</CODE></A></H2>
+
+<P>
+<A NAME="IDX61"></A>
+<A NAME="IDX62"></A>
+<A NAME="IDX63"></A>
+<A NAME="IDX64"></A>
+You can find out what version of as is running by including the
+option <SAMP>`-v'</SAMP> (which you can also spell as <SAMP>`-version'</SAMP>) on the
+command line.
+
+</P>
+
+
+<H2><A NAME="SEC20" HREF="as_toc.html#SEC20">Suppress Warnings: <CODE>-W</CODE></A></H2>
+
+<P>
+<A NAME="IDX65"></A>
+<A NAME="IDX66"></A>
+<A NAME="IDX67"></A>
+<CODE>ppcas</CODE> should never give a warning or error message when
+assembling compiler output.  But programs written by people often
+cause <CODE>ppcas</CODE> to give a warning that a particular assumption was
+made.  All such warnings are directed to the standard error file.
+If you use this option, no warnings are issued.  This option only
+affects the warning messages: it does not change any particular of how
+<CODE>ppcas</CODE> assembles your file.  Errors, which stop the assembly, are
+still reported.
+
+</P>
+
+
+<H2><A NAME="SEC21" HREF="as_toc.html#SEC21">Generate Object File in Spite of Errors: <CODE>-Z</CODE></A></H2>
+<P>
+<A NAME="IDX68"></A>
+<A NAME="IDX69"></A>
+After an error message, <CODE>ppcas</CODE> normally produces no output.  If for
+some reason you are interested in object file output even after
+<CODE>ppcas</CODE> gives an error message on your program, use the <SAMP>`-Z'</SAMP>
+option.  If there are any errors, <CODE>ppcas</CODE> continues anyways, and
+writes an object file after a final warning message of the form <SAMP>`<VAR>n</VAR>
+errors, <VAR>m</VAR> warnings, generating bad object file.'</SAMP>
+
+</P>
+
+
+<H1><A NAME="SEC22" HREF="as_toc.html#SEC22">Syntax</A></H1>
+
+<P>
+<A NAME="IDX70"></A>
+<A NAME="IDX71"></A>
+This chapter describes the machine-independent syntax allowed in a
+source file.  <CODE>ppcas</CODE> syntax is similar to what many other
+assemblers use; it is inspired by the BSD 4.2
+assembler.
+
+</P>
+
+
+
+<H2><A NAME="SEC23" HREF="as_toc.html#SEC23">Preprocessing</A></H2>
+
+<P>
+<A NAME="IDX72"></A>
+The <CODE>ppcas</CODE> internal preprocessor:
+
+<UL>
+<LI>
+
+<A NAME="IDX73"></A>
+ 
+adjusts and removes extra whitespace.  It leaves one space or tab before
+the keywords on a line, and turns any other whitespace on the line into
+a single space.
+
+<A NAME="IDX74"></A>
+<LI>
+
+removes all comments, replacing them with a single space, or an
+appropriate number of newlines.
+
+<A NAME="IDX75"></A>
+<LI>
+
+converts character constants into the appropriate numeric values.
+</UL>
+
+<P>
+It does not do macro processing, include file handling, or
+anything else you may get from your C compiler's preprocessor.  You can
+do include file processing with the <CODE>.include</CODE> directive
+(see section <A HREF="as.html#SEC83"><CODE>.include "<VAR>file</CODE>"</VAR></A>).  You can use the GNU C compiler driver
+to get other "CPP" style preprocessing, by giving the input file a
+<SAMP>`.S'</SAMP> suffix.  See section `Options Controlling the Kind of Output' in <CITE>Using GNU CC</CITE>.
+
+</P>
+<P>
+Excess whitespace, comments, and character constants
+cannot be used in the portions of the input text that are not
+preprocessed.
+
+</P>
+<P>
+<A NAME="IDX76"></A>
+<A NAME="IDX77"></A>
+<A NAME="IDX78"></A>
+<A NAME="IDX79"></A>
+If the first line of an input file is <CODE>#NO_APP</CODE> or if you use the
+<SAMP>`-f'</SAMP> option, whitespace and comments are not removed from the input file.
+Within an input file, you can ask for whitespace and comment removal in
+specific portions of the by putting a line that says <CODE>#APP</CODE> before the
+text that may contain whitespace or comments, and putting a line that says
+<CODE>#NO_APP</CODE> after this text.  This feature is mainly intend to support
+<CODE>asm</CODE> statements in compilers whose output is otherwise free of comments
+and whitespace.
+
+</P>
+
+
+<H2><A NAME="SEC24" HREF="as_toc.html#SEC24">Whitespace</A></H2>
+
+<P>
+<A NAME="IDX80"></A>
+<STRONG>Whitespace</STRONG> is one or more blanks or tabs, in any order.
+Whitespace is used to separate symbols, and to make programs neater for
+people to read.  Unless within character constants
+(see section <A HREF="as.html#SEC29">Character Constants</A>), any whitespace means the same
+as exactly one space.
+
+</P>
+
+
+<H2><A NAME="SEC25" HREF="as_toc.html#SEC25">Comments</A></H2>
+
+<P>
+<A NAME="IDX81"></A>
+There are two ways of rendering comments to <CODE>ppcas</CODE>.  In both
+cases the comment is equivalent to one space.
+
+</P>
+<P>
+Anything from <SAMP>`/*'</SAMP> through the next <SAMP>`*/'</SAMP> is a comment.
+This means you may not nest these comments.
+
+</P>
+
+<PRE>
+/*
+  The only way to include a newline ('\n') in a comment
+  is to use this sort of comment.
+*/
+
+/* This sort of comment does not nest. */
+</PRE>
+
+<P>
+<A NAME="IDX82"></A>
+Anything from the <STRONG>line comment</STRONG> character to the next newline
+is considered a comment and is ignored.  The line comment character is
+<SAMP>`#'</SAMP> on the PowerPC;
+see section <A HREF="as.html#SEC112">PowerPC Dependent Features</A>.  
+</P>
+
+<P>
+<A NAME="IDX83"></A>
+<A NAME="IDX84"></A>
+<A NAME="IDX85"></A>
+To be compatible with past assemblers, lines that begin with <SAMP>`#'</SAMP> have a
+special interpretation.  Following the <SAMP>`#'</SAMP> should be an absolute
+expression (see section <A HREF="as.html#SEC53">Expressions</A>): the logical line number of the <EM>next</EM>
+line.  Then a string (see section <A HREF="as.html#SEC30">Strings</A>) is allowed: if present it is a
+new logical file name.  The rest of the line, if any, should be whitespace.
+
+</P>
+<P>
+If the first non-whitespace characters on the line are not numeric,
+the line is ignored.  (Just like a comment.)
+
+</P>
+
+<PRE>
+                          # This is an ordinary comment.
+# 42-6 "new_file_name"    # New logical file name
+                          # This is logical line # 36.
+</PRE>
+
+<P>
+This feature is deprecated, and may disappear from future versions
+of <CODE>ppcas</CODE>.
+
+</P>
+
+
+<H2><A NAME="SEC26" HREF="as_toc.html#SEC26">Symbols</A></H2>
+
+<P>
+<A NAME="IDX86"></A>
+No symbol may begin with a digit.  Case is significant.
+There is no length limit: all characters are significant.  Symbols are
+delimited by characters not in that set, or by the beginning of a file
+(since the source program must end with a newline, the end of a file is
+not a possible symbol delimiter).  See section <A HREF="as.html#SEC42">Symbols</A>.
+<A NAME="IDX87"></A>
+
+</P>
+
+
+<H2><A NAME="SEC27" HREF="as_toc.html#SEC27">Statements</A></H2>
+
+<P>
+<A NAME="IDX88"></A>
+<A NAME="IDX89"></A>
+<A NAME="IDX90"></A>
+A <STRONG>statement</STRONG> ends at a newline character (<SAMP>`\n'</SAMP>) or at a
+semicolon (<SAMP>`;'</SAMP>).  The newline or semicolon is considered part of
+the preceding statement.  Newlines and semicolons within character
+constants are an exception: they do not end statements.
+
+</P>
+<P>
+<A NAME="IDX91"></A>
+<A NAME="IDX92"></A>
+It is an error to end any statement with end-of-file:  the last
+character of any input file should be a newline.
+</P>
+<P>
+<A NAME="IDX93"></A>
+<A NAME="IDX94"></A>
+<A NAME="IDX95"></A>
+You may write a statement on more than one line if you put a
+backslash (<KBD>\</KBD>) immediately in front of any newlines within the
+statement.  When <CODE>ppcas</CODE> reads a backslashed newline both
+characters are ignored.  You can even put backslashed newlines in
+the middle of symbol names without changing the meaning of your
+source program.
+
+</P>
+<P>
+An empty statement is allowed, and may include whitespace.  It is ignored.
+
+</P>
+<P>
+<A NAME="IDX96"></A>
+<A NAME="IDX97"></A>
+A statement begins with zero or more labels, optionally followed by a
+key symbol which determines what kind of statement it is.  The key
+symbol determines the syntax of the rest of the statement.  If the
+symbol begins with a dot <SAMP>`.'</SAMP> then the statement is an assembler
+directive: typically valid for any computer.  If the symbol begins with
+a letter the statement is an assembly language <STRONG>instruction</STRONG>: it
+assembles into a machine language instruction.
+
+</P>
+<P>
+<A NAME="IDX98"></A>
+<A NAME="IDX99"></A>
+A label is a symbol immediately followed by a colon (<CODE>:</CODE>).
+Whitespace before a label or after a colon is permitted, but you may not
+have whitespace between a label's symbol and its colon. See section <A HREF="as.html#SEC43">Labels</A>.
+
+</P>
+
+
+<PRE>
+label:     .directive    followed by something
+another_label:           # This is an empty statement.
+           instruction   operand_1, operand_2, ...
+</PRE>
+
+
+
+<H2><A NAME="SEC28" HREF="as_toc.html#SEC28">Constants</A></H2>
+
+<P>
+<A NAME="IDX100"></A>
+A constant is a number, written so that its value is known by
+inspection, without knowing any context.  Like this:
+
+<PRE>
+.byte  74, 0112, 092, 0x4A, 0X4a, 'J, '\J # All the same value.
+.ascii "Ring the bell\7"                  # A string constant.
+.octa  0x123456789abcdef0123456789ABCDEF0 # A bignum.
+.float 0f-314159265358979323846264338327\
+95028841971.693993751E-40                 # - pi, a flonum.
+</PRE>
+
+
+
+<H3><A NAME="SEC29" HREF="as_toc.html#SEC29">Character Constants</A></H3>
+
+<P>
+<A NAME="IDX101"></A>
+<A NAME="IDX102"></A>
+There are two kinds of character constants.  A <STRONG>character</STRONG> stands
+for one character in one byte and its value may be used in
+numeric expressions.  String constants (properly called string
+<EM>literals</EM>) are potentially many bytes and their values may not be
+used in arithmetic expressions.
+
+</P>
+
+
+
+<H4><A NAME="SEC30" HREF="as_toc.html#SEC30">Strings</A></H4>
+
+<P>
+<A NAME="IDX103"></A>
+<A NAME="IDX104"></A>
+A <STRONG>string</STRONG> is written between double-quotes.  It may contain
+double-quotes or null characters.  The way to get special characters
+into a string is to <STRONG>escape</STRONG> these characters: precede them with
+a backslash <SAMP>`\'</SAMP> character.  For example <SAMP>`\\'</SAMP> represents
+one backslash:  the first <CODE>\</CODE> is an escape which tells
+<CODE>ppcas</CODE> to interpret the second character literally as a backslash
+(which prevents <CODE>ppcas</CODE> from recognizing the second <CODE>\</CODE> as an
+escape character).  The complete list of escapes follows.
+
+</P>
+<P>
+<A NAME="IDX105"></A>
+<A NAME="IDX106"></A>
+<DL COMPACT>
+
+<DT><KBD>\b</KBD>
+<DD>
+<A NAME="IDX107"></A>
+ <A NAME="IDX108"></A>
+ 
+Mnemonic for backspace; for ASCII this is octal code 010.
+
+<A NAME="IDX109"></A>
+<A NAME="IDX110"></A>
+<DT><KBD>\f</KBD>
+<DD>
+Mnemonic for FormFeed; for ASCII this is octal code 014.
+
+<A NAME="IDX111"></A>
+<A NAME="IDX112"></A>
+<DT><KBD>\n</KBD>
+<DD>
+Mnemonic for newline; for ASCII this is octal code 012.
+
+<A NAME="IDX113"></A>
+<A NAME="IDX114"></A>
+<DT><KBD>\r</KBD>
+<DD>
+Mnemonic for carriage-Return; for ASCII this is octal code 015.
+
+<A NAME="IDX115"></A>
+<A NAME="IDX116"></A>
+<DT><KBD>\t</KBD>
+<DD>
+Mnemonic for horizontal Tab; for ASCII this is octal code 011.
+
+<A NAME="IDX117"></A>
+<A NAME="IDX118"></A>
+<DT><KBD>\ <VAR>digit</VAR> <VAR>digit</VAR> <VAR>digit</VAR></KBD>
+<DD>
+An octal character code.  The numeric code is 3 octal digits.
+For compatibility with other Unix systems, 8 and 9 are accepted as digits:
+for example, <CODE>\008</CODE> has the value 010, and <CODE>\009</CODE> the value 011.
+
+<A NAME="IDX119"></A>
+<A NAME="IDX120"></A>
+<DT><KBD>\\</KBD>
+<DD>
+Represents one <SAMP>`\'</SAMP> character.
+
+<A NAME="IDX121"></A>
+<A NAME="IDX122"></A>
+<DT><KBD>\"</KBD>
+<DD>
+Represents one <SAMP>`"'</SAMP> character.  Needed in strings to represent
+this character, because an unescaped <SAMP>`"'</SAMP> would end the string.
+
+<DT><KBD>\ <VAR>anything-else</VAR></KBD>
+<DD>
+Any other character when escaped by <KBD>\</KBD> gives a warning, but
+assembles as if the <SAMP>`\'</SAMP> was not present.  The idea is that if
+you used an escape sequence you clearly didn't want the literal
+interpretation of the following character.  However <CODE>ppcas</CODE> has no
+other interpretation, so <CODE>ppcas</CODE> knows it is giving you the wrong
+code and warns you of the fact.
+</DL>
+
+<P>
+Which characters are escapable, and what those escapes represent,
+varies widely among assemblers.  The current set is what we think
+the BSD 4.2 assembler recognizes, and is a subset of what most C
+compilers recognize.  If you are in doubt, do not use an escape
+sequence.
+
+</P>
+
+
+<H4><A NAME="SEC31" HREF="as_toc.html#SEC31">Characters</A></H4>
+
+<P>
+<A NAME="IDX123"></A>
+<A NAME="IDX124"></A>
+<A NAME="IDX125"></A>
+A single character may be written as a single quote immediately
+followed by that character.  The same escapes apply to characters as
+to strings.  So if you want to write the character backslash, you
+must write <KBD>'\\</KBD> where the first <CODE>\</CODE> escapes the second
+<CODE>\</CODE>.  As you can see, the quote is an acute accent, not a
+grave accent.  A newline
+(or semicolon <SAMP>`;'</SAMP>)
+immediately following an acute accent is taken as a literal character
+and does not count as the end of a statement.  The value of a character
+constant in a numeric expression is the machine's byte-wide code for
+that character.  <CODE>ppcas</CODE> assumes your character code is ASCII:
+<KBD>'A</KBD> means 65, <KBD>'B</KBD> means 66, and so on. 
+</P>
+
+
+<H3><A NAME="SEC32" HREF="as_toc.html#SEC32">Number Constants</A></H3>
+
+<P>
+<A NAME="IDX126"></A>
+<A NAME="IDX127"></A>
+<CODE>ppcas</CODE> distinguishes three kinds of numbers according to how they
+are stored in the target machine.  <EM>Integers</EM> are numbers that
+would fit into an <CODE>int</CODE> in the C language.  <EM>Bignums</EM> are
+integers, but they are stored in more than 32 bits.  <EM>Flonums</EM>
+are floating point numbers, described below.
+
+</P>
+
+
+
+<H4><A NAME="SEC33" HREF="as_toc.html#SEC33">Integers</A></H4>
+<P>
+<A NAME="IDX128"></A>
+<A NAME="IDX129"></A>
+
+</P>
+<P>
+<A NAME="IDX130"></A>
+<A NAME="IDX131"></A>
+A binary integer is <SAMP>`0b'</SAMP> or <SAMP>`0B'</SAMP> followed by zero or more of
+the binary digits <SAMP>`01'</SAMP>.
+
+</P>
+<P>
+<A NAME="IDX132"></A>
+<A NAME="IDX133"></A>
+An octal integer is <SAMP>`0'</SAMP> followed by zero or more of the octal
+digits (<SAMP>`01234567'</SAMP>).
+
+</P>
+<P>
+<A NAME="IDX134"></A>
+<A NAME="IDX135"></A>
+A decimal integer starts with a non-zero digit followed by zero or
+more digits (<SAMP>`0123456789'</SAMP>).
+
+</P>
+<P>
+<A NAME="IDX136"></A>
+<A NAME="IDX137"></A>
+A hexadecimal integer is <SAMP>`0x'</SAMP> or <SAMP>`0X'</SAMP> followed by one or
+more hexadecimal digits chosen from <SAMP>`0123456789abcdefABCDEF'</SAMP>.
+
+</P>
+<P>
+Integers have the usual values.  To denote a negative integer, use
+the prefix operator <SAMP>`-'</SAMP> discussed under expressions
+(see section <A HREF="as.html#SEC58">Prefix Operator</A>).
+
+</P>
+
+
+<H4><A NAME="SEC34" HREF="as_toc.html#SEC34">Bignums</A></H4>
+
+<P>
+<A NAME="IDX138"></A>
+<A NAME="IDX139"></A>
+A <STRONG>bignum</STRONG> has the same syntax and semantics as an integer
+except that the number (or its negative) takes more than 32 bits to
+represent in binary.  The distinction is made because in some places
+integers are permitted while bignums are not.
+
+</P>
+
+
+<H4><A NAME="SEC35" HREF="as_toc.html#SEC35">Flonums</A></H4>
+<P>
+<A NAME="IDX140"></A>
+<A NAME="IDX141"></A>
+<A NAME="IDX142"></A>
+
+</P>
+<P>
+<A NAME="IDX143"></A>
+A <STRONG>flonum</STRONG> represents a floating point number.  The translation is
+indirect: a decimal floating point number from the text is converted by
+<CODE>ppcas</CODE> to a generic binary floating point number of more than
+sufficient precision.  This generic floating point number is converted
+to a particular computer's floating point format (or formats) by a
+portion of <CODE>ppcas</CODE> specialized to that computer.
+
+</P>
+<P>
+A flonum is written by writing (in order)
+
+<UL>
+<LI>
+
+The digit <SAMP>`0'</SAMP>.
+
+<LI>
+
+A letter, to tell <CODE>ppcas</CODE> the rest of the number is a flonum.
+
+<LI>
+
+An optional sign: either <SAMP>`+'</SAMP> or <SAMP>`-'</SAMP>.
+
+<LI>
+
+An optional <STRONG>integer part</STRONG>: zero or more decimal digits.
+
+<LI>
+
+An optional <STRONG>fractional part</STRONG>: <SAMP>`.'</SAMP> followed by zero
+or more decimal digits.
+
+<LI>
+
+An optional exponent, consisting of:
+
+
+<UL>
+<LI>
+
+An <SAMP>`E'</SAMP> or <SAMP>`e'</SAMP>.
+<LI>
+
+Optional sign: either <SAMP>`+'</SAMP> or <SAMP>`-'</SAMP>.
+<LI>
+
+One or more decimal digits.
+</UL>
+
+</UL>
+
+<P>
+At least one of the integer part or the fractional part must be
+present.  The floating point number has the usual base-10 value.
+
+</P>
+<P>
+<CODE>ppcas</CODE> does all processing using integers.  Flonums are computed
+independently of any floating point hardware in the computer running
+<CODE>ppcas</CODE>.
+
+</P>
+<P>
+into a field whose width depends on which assembler directive has the
+bit-field as its argument.  Overflow (a result from the bitwise and
+requiring more binary digits to represent) is not an error; instead,
+more constants are generated, of the specified width, beginning with the
+least significant digits.
+</P>
+<P>
+The directives <CODE>.byte</CODE>, <CODE>.hword</CODE>, <CODE>.int</CODE>, <CODE>.long</CODE>,
+<CODE>.short</CODE>, and <CODE>.word</CODE> accept bit-field arguments.
+
+</P>
+
+
+<H1><A NAME="SEC36" HREF="as_toc.html#SEC36">Sections and Relocation</A></H1>
+<P>
+<A NAME="IDX144"></A>
+<A NAME="IDX145"></A>
+
+</P>
+
+
+
+<H2><A NAME="SEC37" HREF="as_toc.html#SEC37">Background</A></H2>
+
+<P>
+Roughly, a section is a range of addresses, with no gaps; all data
+"in" those addresses is treated the same for some particular purpose.
+For example there may be a "read only" section.
+
+</P>
+<P>
+<A NAME="IDX146"></A>
+<A NAME="IDX147"></A>
+The linker <CODE>link3do</CODE> reads many object files (partial programs) and
+combines their contents to form a runnable program.  When <CODE>ppcas</CODE>
+emits an object file, the partial program is assumed to start at address 0.
+<CODE>link3do</CODE> assigns the final addresses for the partial program, so that
+different partial programs do not overlap.  This is actually an
+oversimplification, but it suffices to explain how <CODE>ppcas</CODE> uses
+sections.
+
+</P>
+<P>
+<CODE>link3do</CODE> moves blocks of bytes of your program to their run-time
+addresses.  These blocks slide to their run-time addresses as rigid
+units; their length does not change and neither does the order of bytes
+within them.  Such a rigid unit is called a <EM>section</EM>.  Assigning
+run-time addresses to sections is called <STRONG>relocation</STRONG>.  It includes
+the task of adjusting mentions of object-file addresses so they refer to
+the proper run-time addresses.
+
+</P>
+<P>
+<A NAME="IDX148"></A>
+An object file written by <CODE>ppcas</CODE> has at least three sections, any
+of which may be empty.  These are named <STRONG>text</STRONG>, <STRONG>data</STRONG> and
+<STRONG>bss</STRONG> sections.
+
+</P>
+<P>
+<CODE>ppcas</CODE> can also generate whatever other named sections you specify
+using the <SAMP>`.section'</SAMP> directive (@xref{Section,,<CODE>.section</CODE>}).
+If you do not use any directives that place output in the <SAMP>`.text'</SAMP>
+or <SAMP>`.data'</SAMP> sections, these sections still exist, but are empty.
+
+</P>
+<P>
+<CODE>ppcas</CODE> can also generate whatever other named sections you
+specify using the <SAMP>`.space'</SAMP> and <SAMP>`.subspace'</SAMP> directives.  See
+<CITE>HP9000 Series 800 Assembly Language Reference Manual</CITE>
+(HP 92432-90001) for details on the <SAMP>`.space'</SAMP> and <SAMP>`.subspace'</SAMP>
+assembler directives.
+
+</P>
+
+<P>
+Within the object file, the text section starts at address <CODE>0</CODE>, the
+data section follows, and the bss section follows the data section.
+
+</P>
+
+<P>
+To let <CODE>link3do</CODE> know which data changes when the sections are
+relocated, and how to change that data, <CODE>ppcas</CODE> also writes to the
+object file details of the relocation needed.  To perform relocation
+<CODE>link3do</CODE> must know, each time an address in the object
+file is mentioned:
+
+<UL>
+<LI>
+
+Where in the object file is the beginning of this reference to
+an address?
+<LI>
+
+How long (in bytes) is this reference?
+<LI>
+
+Which section does the address refer to?  What is the numeric value of
+
+<PRE>
+(<VAR>address</VAR>) - (<VAR>start-address of section</VAR>)?
+</PRE>
+
+<LI>
+
+Is the reference to an address "Program-Counter relative"?
+</UL>
+
+<P>
+<A NAME="IDX149"></A>
+<A NAME="IDX150"></A>
+In fact, every address <CODE>ppcas</CODE> ever uses is expressed as
+
+<PRE>
+(<VAR>section</VAR>) + (<VAR>offset into section</VAR>)
+</PRE>
+
+<P>
+Further, most expressions <CODE>ppcas</CODE> computes have this section-relative
+nature.
+
+</P>
+<P>
+In this manual we use the notation {<VAR>secname</VAR> <VAR>N</VAR>} to mean "offset
+<VAR>N</VAR> into section <VAR>secname</VAR>."
+
+</P>
+<P>
+Apart from text, data and bss sections you need to know about the
+<STRONG>absolute</STRONG> section.  When <CODE>link3do</CODE> mixes partial programs,
+addresses in the absolute section remain unchanged.  For example, address
+<CODE>{absolute 0}</CODE> is "relocated" to run-time address 0 by
+<CODE>link3do</CODE>.  Although the linker never arranges two partial programs'
+data sections with overlapping addresses after linking, <EM>by definition</EM>
+their absolute sections must overlap.  Address <CODE>{absolute 239}</CODE> in one
+part of a program is always the same address when the program is running as
+address <CODE>{absolute 239}</CODE> in any other part of the program.
+
+</P>
+<P>
+The idea of sections is extended to the <STRONG>undefined</STRONG> section.  Any
+address whose section is unknown at assembly time is by definition
+rendered {undefined <VAR>U</VAR>}---where <VAR>U</VAR> is filled in later.
+Since numbers are always defined, the only way to generate an undefined
+address is to mention an undefined symbol.  A reference to a named
+common block would be such a symbol: its value is unknown at assembly
+time so it has section <EM>undefined</EM>.
+
+</P>
+<P>
+By analogy the word <EM>section</EM> is used to describe groups of sections in
+the linked program.  <CODE>link3do</CODE> puts all partial programs' text
+sections in contiguous addresses in the linked program.  It is
+customary to refer to the <EM>text section</EM> of a program, meaning all
+the addresses of all partial programs' text sections.  Likewise for
+data and bss sections.
+
+</P>
+<P>
+Some sections are manipulated by <CODE>link3do</CODE>; others are invented for
+use of <CODE>ppcas</CODE> and have no meaning except during assembly.
+
+</P>
+
+
+<H2><A NAME="SEC38" HREF="as_toc.html#SEC38">link3do Sections</A></H2>
+<P>
+<CODE>link3do</CODE> deals with just four kinds of sections, summarized below.
+
+</P>
+<DL COMPACT>
+
+These sections hold your program.  <CODE>ppcas</CODE> and <CODE>link3do</CODE> treat them as
+separate but equal sections.  Anything you can say of one section is
+true another.
+
+<DT><STRONG>bss section</STRONG>
+<DD>
+<A NAME="IDX151"></A>
+ 
+This section contains zeroed bytes when your program begins running.  It
+is used to hold unitialized variables or common storage.  The length of
+each partial program's bss section is important, but because it starts
+out containing zeroed bytes there is no need to store explicit zero
+bytes in the object file.  The bss section was invented to eliminate
+those explicit zeros from object files.
+
+<A NAME="IDX152"></A>
+<DT><STRONG>absolute section</STRONG>
+<DD>
+Address 0 of this section is always "relocated" to runtime address 0.
+This is useful if you want to refer to an address that <CODE>link3do</CODE> must
+not change when relocating.  In this sense we speak of absolute
+addresses being "unrelocatable": they do not change during relocation.
+
+<A NAME="IDX153"></A>
+<DT><STRONG>undefined section</STRONG>
+<DD>
+This "section" is a catch-all for address references to objects not in
+the preceding sections.
+</DL>
+
+<P>
+<A NAME="IDX154"></A>
+An idealized example of three relocatable sections follows.
+Memory addresses are on the horizontal axis.
+
+</P>
+
+
+
+<H2><A NAME="SEC39" HREF="as_toc.html#SEC39">ppcas Internal Sections</A></H2>
+
+<P>
+<A NAME="IDX155"></A>
+<A NAME="IDX156"></A>
+These sections are meant only for the internal use of <CODE>ppcas</CODE>.  They
+have no meaning at run-time.  You do not really need to know about these
+sections for most purposes; but they can be mentioned in <CODE>ppcas</CODE>
+warning messages, so it might be helpful to have an idea of their
+meanings to <CODE>ppcas</CODE>.  These sections are used to permit the
+value of every expression in your assembly language program to be a
+section-relative address.
+
+</P>
+<DL COMPACT>
+
+<DT><B>ASSEMBLER-INTERNAL-LOGIC-ERROR!</B>
+<DD>
+<A NAME="IDX157"></A>
+ 
+An internal assembler logic error has been found.  This means there is a
+bug in the assembler.
+
+<A NAME="IDX158"></A>
+<DT><B>expr section</B>
+<DD>
+The assembler stores complex expression internally as combinations of
+symbols.  When it needs to represent an expression as a symbol, it puts
+it in the expr section.
+</DL>
+
+
+
+<H2><A NAME="SEC40" HREF="as_toc.html#SEC40">Sub-Sections</A></H2>
+
+<P>
+<A NAME="IDX159"></A>
+<A NAME="IDX160"></A>
+fall into two sections: text and data.
+You may have separate groups of
+data in named sections
+that you want to end up near to each other in the object file, even though they
+are not contiguous in the assembler source.  <CODE>ppcas</CODE> allows you to
+use <STRONG>subsections</STRONG> for this purpose.  Within each section, there can be
+numbered subsections with values from 0 to 8192.  Objects assembled into the
+same subsection go into the object file together with other objects in the same
+subsection.  For example, a compiler might want to store constants in the text
+section, but might not want to have them interspersed with the program being
+assembled.  In this case, the compiler could issue a <SAMP>`.text 0'</SAMP> before each
+section of code being output, and a <SAMP>`.text 1'</SAMP> before each group of
+constants being output.
+
+</P>
+<P>
+Subsections are optional.  If you do not use subsections, everything
+goes in subsection number zero.
+
+</P>
+
+<P>
+Subsections appear in your object file in numeric order, lowest numbered
+to highest.  (All this to be compatible with other people's assemblers.)
+The object file contains no representation of subsections; <CODE>link3do</CODE> and
+other programs that manipulate object files see no trace of them.
+They just see all your text subsections as a text section, and all your
+data subsections as a data section.
+
+</P>
+<P>
+To specify which subsection you want subsequent statements assembled
+into, use a numeric argument to specify it, in a <SAMP>`.text
+<VAR>expression</VAR>'</SAMP> or a <SAMP>`.data <VAR>expression</VAR>'</SAMP> statement.
+You
+can also use an extra subsection
+argument with arbitrary named sections: <SAMP>`.section <VAR>name</VAR>,
+<VAR>expression</VAR>'</SAMP>.
+<VAR>Expression</VAR> should be an absolute expression.
+(See section <A HREF="as.html#SEC53">Expressions</A>.)  If you just say <SAMP>`.text'</SAMP> then <SAMP>`.text 0'</SAMP>
+is assumed.  Likewise <SAMP>`.data'</SAMP> means <SAMP>`.data 0'</SAMP>.  Assembly
+begins in <CODE>text 0</CODE>.  For instance:
+
+<PRE>
+.text 0     # The default subsection is text 0 anyway.
+.ascii "This lives in the first text subsection. *"
+.text 1
+.ascii "But this lives in the second text subsection."
+.data 0
+.ascii "This lives in the data section,"
+.ascii "in the first data subsection."
+.text 0
+.ascii "This lives in the first text section,"
+.ascii "immediately following the asterisk (*)."
+</PRE>
+
+<P>
+Each section has a <STRONG>location counter</STRONG> incremented by one for every byte
+assembled into that section.  Because subsections are merely a convenience
+restricted to <CODE>ppcas</CODE> there is no concept of a subsection location
+counter.  There is no way to directly manipulate a location counter--but the
+<CODE>.align</CODE> directive changes it, and any label definition captures its
+current value.  The location counter of the section where statements are being
+assembled is said to be the <STRONG>active</STRONG> location counter.
+
+</P>
+
+
+<H2><A NAME="SEC41" HREF="as_toc.html#SEC41">bss Section</A></H2>
+
+<P>
+<A NAME="IDX161"></A>
+<A NAME="IDX162"></A>
+The bss section is used for local common variable storage.
+You may allocate address space in the bss section, but you may
+not dictate data to load into it before your program executes.  When
+your program starts running, all the contents of the bss
+section are zeroed bytes.
+
+</P>
+<P>
+Addresses in the bss section are allocated with special directives; you
+may not assemble anything directly into the bss section.  Hence there
+are no bss subsections. See section <A HREF="as.html#SEC68"><CODE>.comm <VAR>symbol</CODE> , <VAR>length</VAR> </VAR></A>,
+see section <A HREF="as.html#SEC87"><CODE>.lcomm <VAR>symbol</CODE> , <VAR>length</VAR></VAR></A>.
+
+</P>
+
+
+<H1><A NAME="SEC42" HREF="as_toc.html#SEC42">Symbols</A></H1>
+
+<P>
+<A NAME="IDX163"></A>
+Symbols are a central concept: the programmer uses symbols to name
+things, the linker uses symbols to link, and the debugger uses symbols
+to debug.
+
+</P>
+
+<BLOCKQUOTE>
+<A NAME="IDX164"></A>
+<P>
+<EM>Warning:</EM> <CODE>ppcas</CODE> does not place symbols in the object file in
+the same order they were declared.  This may break some debuggers.
+</BLOCKQUOTE>
+
+
+
+<H2><A NAME="SEC43" HREF="as_toc.html#SEC43">Labels</A></H2>
+
+<P>
+<A NAME="IDX165"></A>
+A <STRONG>label</STRONG> is written as a symbol immediately followed by a colon
+<SAMP>`:'</SAMP>.  The symbol then represents the current value of the
+active location counter, and is, for example, a suitable instruction
+operand.  You are warned if you use the same symbol to represent two
+different locations: the first definition overrides any other
+definitions.
+
+</P>
+
+
+
+<H2><A NAME="SEC44" HREF="as_toc.html#SEC44">Giving Symbols Other Values</A></H2>
+
+<P>
+<A NAME="IDX166"></A>
+<A NAME="IDX167"></A>
+A symbol can be given an arbitrary value by writing a symbol, followed
+by an equals sign <SAMP>`='</SAMP>, followed by an expression
+(see section <A HREF="as.html#SEC53">Expressions</A>).  This is equivalent to using the <CODE>.set</CODE>
+directive.  See section <A HREF="as.html#SEC102"><CODE>.set <VAR>symbol</CODE>, <VAR>expression</VAR></VAR></A>.
+
+</P>
+
+
+<H2><A NAME="SEC45" HREF="as_toc.html#SEC45">Symbol Names</A></H2>
+
+<P>
+<A NAME="IDX168"></A>
+<A NAME="IDX169"></A>
+
+</P>
+
+<P>
+Case of letters is significant: <CODE>foo</CODE> is a different symbol name
+than <CODE>Foo</CODE>.
+
+</P>
+<P>
+Each symbol has exactly one name.  Each name in an assembly language program
+refers to exactly one symbol.  You may use that symbol name any number of times
+in a program.
+
+</P>
+
+<H3>Local Symbol Names</H3>
+
+<P>
+<A NAME="IDX170"></A>
+<A NAME="IDX171"></A>
+<A NAME="IDX172"></A>
+<A NAME="IDX173"></A>
+Local symbols help compilers and programmers use names temporarily.
+There are ten local symbol names, which are re-used throughout the
+program.  You may refer to them using the names <SAMP>`0'</SAMP> <SAMP>`1'</SAMP>
+... <SAMP>`9'</SAMP>.  To define a local symbol, write a label of the form
+<SAMP>`<B>N</B>:'</SAMP> (where <B>N</B> represents any digit).  To refer to the most
+recent previous definition of that symbol write <SAMP>`<B>N</B>b'</SAMP>, using the
+same digit as when you defined the label.  To refer to the next
+definition of a local label, write <SAMP>`<B>N</B>f'</SAMP>---where <B>N</B> gives you
+a choice of 10 forward references.  The <SAMP>`b'</SAMP> stands for
+"backwards" and the <SAMP>`f'</SAMP> stands for "forwards".
+
+</P>
+<P>
+Local symbols are not emitted by the current GNU C compiler.
+
+</P>
+<P>
+There is no restriction on how you can use these labels, but
+remember that at any point in the assembly you can refer to at most
+10 prior local labels and to at most 10 forward local labels.
+
+</P>
+<P>
+Local symbol names are only a notation device.  They are immediately
+transformed into more conventional symbol names before the assembler
+uses them.  The symbol names stored in the symbol table, appearing in
+error messages and optionally emitted to the object file have these
+parts:
+
+</P>
+<DL COMPACT>
+
+<DT><CODE>L</CODE>
+<DD>
+All local labels begin with <SAMP>`L'</SAMP>. Normally both <CODE>ppcas</CODE> and
+<CODE>link3do</CODE> forget symbols that start with <SAMP>`L'</SAMP>. These labels are
+used for symbols you are never intended to see.  If you use the
+<SAMP>`-L'</SAMP> option then <CODE>ppcas</CODE> retains these symbols in the
+object file. If you also instruct <CODE>link3do</CODE> to retain these symbols,
+you may use them in debugging.
+
+<DT><CODE><VAR>digit</VAR></CODE>
+<DD>
+If the label is written <SAMP>`0:'</SAMP> then the digit is <SAMP>`0'</SAMP>.
+If the label is written <SAMP>`1:'</SAMP> then the digit is <SAMP>`1'</SAMP>.
+And so on up through <SAMP>`9:'</SAMP>.
+
+<DT><CODE>^A</CODE>
+<DD>
+This unusual character is included so you do not accidentally invent
+a symbol of the same name.  The character has ASCII value
+<SAMP>`\001'</SAMP>.
+
+<DT><CODE><EM>ordinal number</EM></CODE>
+<DD>
+This is a serial number to keep the labels distinct.  The first
+<SAMP>`0:'</SAMP> gets the number <SAMP>`1'</SAMP>; The 15th <SAMP>`0:'</SAMP> gets the
+number <SAMP>`15'</SAMP>; <EM>etc.</EM>.  Likewise for the other labels <SAMP>`1:'</SAMP>
+through <SAMP>`9:'</SAMP>.
+</DL>
+
+<P>
+For instance, the first <CODE>1:</CODE> is named <CODE>L1^A1</CODE>, the 44th
+<CODE>3:</CODE> is named <CODE>L3^A44</CODE>.
+
+</P>
+
+
+<H2><A NAME="SEC46" HREF="as_toc.html#SEC46">The Special Dot Symbol</A></H2>
+
+<P>
+<A NAME="IDX174"></A>
+<A NAME="IDX175"></A>
+<A NAME="IDX176"></A>
+<A NAME="IDX177"></A>
+The special symbol <SAMP>`.'</SAMP> refers to the current address that
+<CODE>ppcas</CODE> is assembling into.  Thus, the expression <SAMP>`melvin:
+.long .'</SAMP> defines <CODE>melvin</CODE> to contain its own address.
+Assigning a value to <CODE>.</CODE> is treated the same as a <CODE>.org</CODE>
+directive.  Thus, the expression <SAMP>`.=.+4'</SAMP> is the same as saying
+<SAMP>`.space 4'</SAMP>.
+
+</P>
+
+
+<H2><A NAME="SEC47" HREF="as_toc.html#SEC47">Symbol Attributes</A></H2>
+
+<P>
+<A NAME="IDX178"></A>
+<A NAME="IDX179"></A>
+Every symbol has, as well as its name, the attributes "Value" and
+"Type".  Depending on output format, symbols can also have auxiliary
+attributes.
+
+</P>
+<P>
+If you use a symbol without defining it, <CODE>ppcas</CODE> assumes zero for
+all these attributes, and probably won't warn you.  This makes the
+symbol an externally defined symbol, which is generally what you
+would want.
+
+</P>
+
+
+
+<H3><A NAME="SEC48" HREF="as_toc.html#SEC48">Value</A></H3>
+
+<P>
+<A NAME="IDX180"></A>
+<A NAME="IDX181"></A>
+The value of a symbol is (usually) 32 bits.  For a symbol which labels a
+location in the text, data, bss or absolute sections the value is the
+number of addresses from the start of that section to the label.
+Naturally for text, data and bss sections the value of a symbol changes
+as <CODE>link3do</CODE> changes section base addresses during linking.  Absolute
+symbols' values do not change during linking: that is why they are
+called absolute.
+
+</P>
+<P>
+The value of an undefined symbol is treated in a special way.  If it is
+0 then the symbol is not defined in this assembler source file, and
+<CODE>link3do</CODE> tries to determine its value from other files linked into the
+same program.  You make this kind of symbol simply by mentioning a symbol
+name without defining it.  A non-zero value represents a <CODE>.comm</CODE>
+common declaration.  The value is how much common storage to reserve, in
+bytes (addresses).  The symbol refers to the first address of the
+allocated storage.
+
+</P>
+
+
+<H3><A NAME="SEC49" HREF="as_toc.html#SEC49">Type</A></H3>
+
+<P>
+<A NAME="IDX182"></A>
+<A NAME="IDX183"></A>
+The type attribute of a symbol contains relocation (section)
+information, any flag settings indicating that a symbol is external, and
+(optionally), other information for linkers and debuggers.  The exact
+format depends on the object-code output format in use.
+
+</P>
+
+
+<H3><A NAME="SEC50" HREF="as_toc.html#SEC50">Symbol Attributes: <CODE>a.out</CODE></A></H3>
+
+<P>
+<A NAME="IDX184"></A>
+<A NAME="IDX185"></A>
+
+</P>
+
+
+
+<H4><A NAME="SEC51" HREF="as_toc.html#SEC51">Descriptor</A></H4>
+
+<P>
+<A NAME="IDX186"></A>
+This is an arbitrary 16-bit value.  You may establish a symbol's
+descriptor value by using a <CODE>.desc</CODE> statement
+(@xref{Desc,,<CODE>.desc</CODE>}).  A descriptor value means nothing to
+<CODE>ppcas</CODE>.
+
+</P>
+
+
+<H4><A NAME="SEC52" HREF="as_toc.html#SEC52">Other</A></H4>
+
+<P>
+<A NAME="IDX187"></A>
+This is an arbitrary 8-bit value.  It means nothing to <CODE>ppcas</CODE>.
+
+</P>
+
+
+
+<H1><A NAME="SEC53" HREF="as_toc.html#SEC53">Expressions</A></H1>
+
+<P>
+<A NAME="IDX188"></A>
+<A NAME="IDX189"></A>
+<A NAME="IDX190"></A>
+An <STRONG>expression</STRONG> specifies an address or numeric value.
+Whitespace may precede and/or follow an expression.
+
+</P>
+<P>
+The result of an expression must be an absolute number, or else an offset into
+a particular section.  If an expression is not absolute, and there is not
+enough information when <CODE>ppcas</CODE> sees the expression to know its
+section, a second pass over the source program might be necessary to interpret
+the expression--but the second pass is currently not implemented.
+<CODE>ppcas</CODE> aborts with an error message in this situation.
+
+</P>
+
+
+
+<H2><A NAME="SEC54" HREF="as_toc.html#SEC54">Empty Expressions</A></H2>
+
+<P>
+<A NAME="IDX191"></A>
+<A NAME="IDX192"></A>
+An empty expression has no value: it is just whitespace or null.
+Wherever an absolute expression is required, you may omit the
+expression, and <CODE>ppcas</CODE> assumes a value of (absolute) 0.  This
+is compatible with other assemblers.
+
+</P>
+
+
+<H2><A NAME="SEC55" HREF="as_toc.html#SEC55">Integer Expressions</A></H2>
+
+<P>
+<A NAME="IDX193"></A>
+<A NAME="IDX194"></A>
+An <STRONG>integer expression</STRONG> is one or more <EM>arguments</EM> delimited
+by <EM>operators</EM>.
+
+</P>
+
+
+
+<H3><A NAME="SEC56" HREF="as_toc.html#SEC56">Arguments</A></H3>
+
+<P>
+<A NAME="IDX195"></A>
+<A NAME="IDX196"></A>
+<A NAME="IDX197"></A>
+<A NAME="IDX198"></A>
+<STRONG>Arguments</STRONG> are symbols, numbers or subexpressions.  In other
+contexts arguments are sometimes called "arithmetic operands".  In
+this manual, to avoid confusing them with the "instruction operands" of
+the machine language, we use the term "argument" to refer to parts of
+expressions only, reserving the word "operand" to refer only to machine
+instruction operands.
+
+</P>
+<P>
+Symbols are evaluated to yield {<VAR>section</VAR> <VAR>NNN</VAR>} where
+<VAR>section</VAR> is one of text, data, bss, absolute,
+or undefined.  <VAR>NNN</VAR> is a signed, 2's complement 32 bit
+integer.
+
+</P>
+<P>
+Numbers are usually integers.
+
+</P>
+<P>
+A number can be a flonum or bignum.  In this case, you are warned
+that only the low order 32 bits are used, and <CODE>ppcas</CODE> pretends
+these 32 bits are an integer.  You may write integer-manipulating
+instructions that act on exotic constants, compatible with other
+assemblers.
+
+</P>
+<P>
+<A NAME="IDX199"></A>
+Subexpressions are a left parenthesis <SAMP>`('</SAMP> followed by an integer
+expression, followed by a right parenthesis <SAMP>`)'</SAMP>; or a prefix
+operator followed by an argument.
+
+</P>
+
+
+<H3><A NAME="SEC57" HREF="as_toc.html#SEC57">Operators</A></H3>
+
+<P>
+<A NAME="IDX200"></A>
+<A NAME="IDX201"></A>
+<A NAME="IDX202"></A>
+<STRONG>Operators</STRONG> are arithmetic functions, like <CODE>+</CODE> or <CODE>%</CODE>.  Prefix
+operators are followed by an argument.  Infix operators appear
+between their arguments.  Operators may be preceded and/or followed by
+whitespace.
+
+</P>
+
+
+<H3><A NAME="SEC58" HREF="as_toc.html#SEC58">Prefix Operator</A></H3>
+
+<P>
+<A NAME="IDX203"></A>
+<CODE>ppcas</CODE> has the following <STRONG>prefix operators</STRONG>.  They each take
+one argument, which must be absolute.
+
+</P>
+
+<DL COMPACT>
+
+<DT><CODE>-</CODE>
+<DD>
+<STRONG>Negation</STRONG>.  Two's complement negation.
+<DT><CODE>~</CODE>
+<DD>
+<STRONG>Complementation</STRONG>.  Bitwise not.
+</DL>
+
+
+
+<H3><A NAME="SEC59" HREF="as_toc.html#SEC59">Infix Operators</A></H3>
+
+<P>
+<A NAME="IDX204"></A>
+<A NAME="IDX205"></A>
+<STRONG>Infix operators</STRONG> take two arguments, one on either side.  Operators
+have precedence, but operations with equal precedence are performed left
+to right.  Apart from <CODE>+</CODE> or <CODE>-</CODE>, both arguments must be
+absolute, and the result is absolute.
+
+</P>
+
+<OL>
+
+<LI>
+
+<A NAME="IDX206"></A>
+ <A NAME="IDX207"></A>
+ 
+Highest Precedence
+
+<DL COMPACT>
+
+<DT><CODE>*</CODE>
+<DD>
+<STRONG>Multiplication</STRONG>.
+
+<DT><CODE>/</CODE>
+<DD>
+<STRONG>Division</STRONG>.  Truncation is the same as the C operator <SAMP>`/'</SAMP>
+
+<DT><CODE>%</CODE>
+<DD>
+<STRONG>Remainder</STRONG>.
+
+<DT><CODE>&#60;</CODE>
+<DD>
+<DT><CODE>&#60;&#60;</CODE>
+<DD>
+<STRONG>Shift Left</STRONG>.  Same as the C operator <SAMP>`&#60;&#60;'</SAMP>.
+
+<DT><CODE>&#62;</CODE>
+<DD>
+<DT><CODE>&#62;&#62;</CODE>
+<DD>
+<STRONG>Shift Right</STRONG>.  Same as the C operator <SAMP>`&#62;&#62;'</SAMP>.
+</DL>
+
+<LI>
+
+Intermediate precedence
+
+<DL COMPACT>
+
+<DT><CODE>|</CODE>
+<DD>
+<STRONG>Bitwise Inclusive Or</STRONG>.
+
+<DT><CODE>&#38;</CODE>
+<DD>
+<STRONG>Bitwise And</STRONG>.
+
+<DT><CODE>^</CODE>
+<DD>
+<STRONG>Bitwise Exclusive Or</STRONG>.
+
+<DT><CODE>!</CODE>
+<DD>
+<STRONG>Bitwise Or Not</STRONG>.
+</DL>
+
+<LI>
+
+Lowest Precedence
+
+<DL COMPACT>
+
+<DT><CODE>+</CODE>
+<DD>
+<A NAME="IDX208"></A>
+ <A NAME="IDX209"></A>
+ <A NAME="IDX210"></A>
+ 
+<STRONG>Addition</STRONG>.  If either argument is absolute, the result has the section of
+the other argument.  You may not add together arguments from different
+sections.
+
+<A NAME="IDX211"></A>
+<A NAME="IDX212"></A>
+<A NAME="IDX213"></A>
+<DT><CODE>-</CODE>
+<DD>
+<STRONG>Subtraction</STRONG>.  If the right argument is absolute, the
+result has the section of the left argument.
+If both arguments are in the same section, the result is absolute.
+You may not subtract arguments from different sections.
+</DL>
+</OL>
+
+<P>
+In short, it's only meaningful to add or subtract the <EM>offsets</EM> in an
+address; you can only have a defined section in one of the two arguments.
+
+</P>
+
+
+<H1><A NAME="SEC60" HREF="as_toc.html#SEC60">Assembler Directives</A></H1>
+
+<P>
+<A NAME="IDX214"></A>
+<A NAME="IDX215"></A>
+<A NAME="IDX216"></A>
+All assembler directives have names that begin with a period (<SAMP>`.'</SAMP>).
+The rest of the name is letters, usually in lower case.
+
+</P>
+<P>
+This chapter discusses directives that are available regardless of the
+target machine configuration for the GNU assembler.
+
+</P>
+
+
+
+<H2><A NAME="SEC61" HREF="as_toc.html#SEC61"><CODE>.abort</CODE></A></H2>
+
+<P>
+<A NAME="IDX217"></A>
+<A NAME="IDX218"></A>
+This directive stops the assembly immediately.  It is for
+compatibility with other assemblers.  The original idea was that the
+assembly language source would be piped into the assembler.  If the sender
+of the source quit, it could use this directive tells <CODE>ppcas</CODE> to
+quit also.  One day <CODE>.abort</CODE> will not be supported.
+
+</P>
+
+
+
+<H2><A NAME="SEC62" HREF="as_toc.html#SEC62"><CODE>.align <VAR>abs-expr</VAR> , <VAR>abs-expr</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX219"></A>
+<A NAME="IDX220"></A>
+Pad the location counter (in the current subsection) to a particular
+storage boundary.  The first expression (which must be absolute) is the
+alignment required, as described below.
+The second expression (also absolute) gives the value to be stored in
+the padding bytes.  It (and the comma) may be omitted.  If it is
+omitted, the padding bytes are zero.
+
+</P>
+<P>
+The way the required alignment is specified varies from system to system.
+For the a29k, hppa, m86k, m88k, w65, sparc, and Hitachi SH, and i386 using ELF
+format,
+the first expression is the
+alignment request in bytes.  For example <SAMP>`.align 8'</SAMP> advances
+the location counter until it is a multiple of 8.  If the location counter
+is already a multiple of 8, no change is needed.
+
+</P>
+<P>
+For other systems, including the i386 using a.out format, it is the
+number of low-order zero bits the location counter must have after
+advancement.  For example <SAMP>`.align 3'</SAMP> advances the location
+counter until it a multiple of 8.  If the location counter is already a
+multiple of 8, no change is needed.
+
+</P>
+<P>
+This inconsistency is due to the different behaviors of the various
+native assemblers for these systems which GAS must emulate.
+GAS also provides <CODE>.balign</CODE> and <CODE>.p2align</CODE> directives,
+described later, which have a consistent behavior across all
+architectures (but are specific to GAS).
+
+</P>
+
+
+<H2><A NAME="SEC63" HREF="as_toc.html#SEC63"><CODE>.app-file <VAR>string</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX221"></A>
+<A NAME="IDX222"></A>
+<A NAME="IDX223"></A>
+<CODE>.app-file</CODE>
+(which may also be spelled <SAMP>`.file'</SAMP>)
+tells <CODE>ppcas</CODE> that we are about to start a new
+logical file.  <VAR>string</VAR> is the new file name.  In general, the
+filename is recognized whether or not it is surrounded by quotes <SAMP>`"'</SAMP>;
+but if you wish to specify an empty file name is permitted,
+you must give the quotes--<CODE>""</CODE>.  This statement may go away in
+future: it is only recognized to be compatible with old <CODE>ppcas</CODE>
+programs.
+</P>
+
+
+<H2><A NAME="SEC64" HREF="as_toc.html#SEC64"><CODE>.ascii "<VAR>string</VAR>"</CODE>...</A></H2>
+
+<P>
+<A NAME="IDX224"></A>
+<A NAME="IDX225"></A>
+<CODE>.ascii</CODE> expects zero or more string literals (see section <A HREF="as.html#SEC30">Strings</A>)
+separated by commas.  It assembles each string (with no automatic
+trailing zero byte) into consecutive addresses.
+
+</P>
+
+
+<H2><A NAME="SEC65" HREF="as_toc.html#SEC65"><CODE>.asciz "<VAR>string</VAR>"</CODE>...</A></H2>
+
+<P>
+<A NAME="IDX226"></A>
+<A NAME="IDX227"></A>
+<A NAME="IDX228"></A>
+<CODE>.asciz</CODE> is just like <CODE>.ascii</CODE>, but each string is followed by
+a zero byte.  The "z" in <SAMP>`.asciz'</SAMP> stands for "zero".
+
+</P>
+
+
+<H2><A NAME="SEC66" HREF="as_toc.html#SEC66"><CODE>.balign <VAR>abs-expr</VAR> , <VAR>abs-expr</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX229"></A>
+<A NAME="IDX230"></A>
+Pad the location counter (in the current subsection) to a particular
+storage boundary.  The first expression (which must be absolute) is the
+alignment request in bytes.  For example <SAMP>`.balign 8'</SAMP> advances
+the location counter until it is a multiple of 8.  If the location counter
+is already a multiple of 8, no change is needed.
+
+</P>
+<P>
+The second expression (also absolute) gives the value to be stored in
+the padding bytes.  It (and the comma) may be omitted.  If it is
+omitted, the padding bytes are zero.
+
+</P>
+
+
+<H2><A NAME="SEC67" HREF="as_toc.html#SEC67"><CODE>.byte <VAR>expressions</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX231"></A>
+<A NAME="IDX232"></A>
+<CODE>.byte</CODE> expects zero or more expressions, separated by commas.
+Each expression is assembled into the next byte.
+
+</P>
+
+
+<H2><A NAME="SEC68" HREF="as_toc.html#SEC68"><CODE>.comm <VAR>symbol</VAR> , <VAR>length</VAR> </CODE></A></H2>
+
+<P>
+<A NAME="IDX233"></A>
+<A NAME="IDX234"></A>
+<CODE>.comm</CODE> declares a named common area in the bss section.  Normally
+<CODE>link3do</CODE> reserves memory addresses for it during linking, so no partial
+program defines the location of the symbol.  Use <CODE>.comm</CODE> to tell
+<CODE>link3do</CODE> that it must be at least <VAR>length</VAR> bytes long.  <CODE>link3do</CODE>
+allocates space for each <CODE>.comm</CODE> symbol that is at least as
+long as the longest <CODE>.comm</CODE> request in any of the partial programs
+linked.  <VAR>length</VAR> is an absolute expression.
+
+</P>
+
+
+
+<H2><A NAME="SEC69" HREF="as_toc.html#SEC69"><CODE>.data <VAR>subsection</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX235"></A>
+<CODE>.data</CODE> tells <CODE>ppcas</CODE> to assemble the following statements onto the
+end of the data subsection numbered <VAR>subsection</VAR> (which is an
+absolute expression).  If <VAR>subsection</VAR> is omitted, it defaults
+to zero.
+
+</P>
+
+
+
+<H2><A NAME="SEC70" HREF="as_toc.html#SEC70"><CODE>.double <VAR>flonums</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX236"></A>
+<A NAME="IDX237"></A>
+<CODE>.double</CODE> expects zero or more flonums, separated by commas.  It
+assembles floating point numbers.
+On the Power PC family <SAMP>`.double'</SAMP> emits 64-bit floating-point numbers
+in IEEE format.
+
+</P>
+
+
+<H2><A NAME="SEC71" HREF="as_toc.html#SEC71"><CODE>.eject</CODE></A></H2>
+
+<P>
+<A NAME="IDX238"></A>
+<A NAME="IDX239"></A>
+<A NAME="IDX240"></A>
+<A NAME="IDX241"></A>
+Force a page break at this point, when generating assembly listings.
+
+</P>
+
+
+<H2><A NAME="SEC72" HREF="as_toc.html#SEC72"><CODE>.else</CODE></A></H2>
+
+<P>
+<A NAME="IDX242"></A>
+<CODE>.else</CODE> is part of the <CODE>ppcas</CODE> support for conditional
+assembly; see section <A HREF="as.html#SEC82"><CODE>.if <VAR>absolute expression</CODE></VAR></A>.  It marks the beginning of a section
+of code to be assembled if the condition for the preceding <CODE>.if</CODE>
+was false.
+
+</P>
+
+
+
+<H2><A NAME="SEC73" HREF="as_toc.html#SEC73"><CODE>.endif</CODE></A></H2>
+
+<P>
+<A NAME="IDX243"></A>
+<CODE>.endif</CODE> is part of the <CODE>ppcas</CODE> support for conditional assembly;
+it marks the end of a block of code that is only assembled
+conditionally.  See section <A HREF="as.html#SEC82"><CODE>.if <VAR>absolute expression</CODE></VAR></A>.
+
+</P>
+
+
+<H2><A NAME="SEC74" HREF="as_toc.html#SEC74"><CODE>.equ <VAR>symbol</VAR>, <VAR>expression</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX244"></A>
+<A NAME="IDX245"></A>
+<A NAME="IDX246"></A>
+This directive sets the value of <VAR>symbol</VAR> to <VAR>expression</VAR>.
+It is synonymous with <SAMP>`.set'</SAMP>; see section <A HREF="as.html#SEC102"><CODE>.set <VAR>symbol</CODE>, <VAR>expression</VAR></VAR></A>.
+
+</P>
+
+
+
+<H2><A NAME="SEC75" HREF="as_toc.html#SEC75"><CODE>.extern</CODE></A></H2>
+
+<P>
+<A NAME="IDX247"></A>
+<CODE>.extern</CODE> is accepted in the source program--for compatibility
+with other assemblers--but it is ignored.  <CODE>ppcas</CODE> treats
+all undefined symbols as external.
+
+</P>
+
+
+<H2><A NAME="SEC76" HREF="as_toc.html#SEC76"><CODE>.file <VAR>string</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX248"></A>
+<A NAME="IDX249"></A>
+<A NAME="IDX250"></A>
+<CODE>.file</CODE> (which may also be spelled <SAMP>`.app-file'</SAMP>) tells
+<CODE>ppcas</CODE> that we are about to start a new logical file.
+<VAR>string</VAR> is the new file name.  In general, the filename is
+recognized whether or not it is surrounded by quotes <SAMP>`"'</SAMP>; but if
+you wish to specify an empty file name, you must give the
+quotes--<CODE>""</CODE>.  This statement may go away in future: it is only
+recognized to be compatible with old <CODE>ppcas</CODE> programs.
+
+</P>
+
+
+<H2><A NAME="SEC77" HREF="as_toc.html#SEC77"><CODE>.fill <VAR>repeat</VAR> , <VAR>size</VAR> , <VAR>value</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX251"></A>
+<A NAME="IDX252"></A>
+<A NAME="IDX253"></A>
+<VAR>result</VAR>, <VAR>size</VAR> and <VAR>value</VAR> are absolute expressions.
+This emits <VAR>repeat</VAR> copies of <VAR>size</VAR> bytes.  <VAR>Repeat</VAR>
+may be zero or more.  <VAR>Size</VAR> may be zero or more, but if it is
+more than 8, then it is deemed to have the value 8, compatible with
+other people's assemblers.  The contents of each <VAR>repeat</VAR> bytes
+is taken from an 8-byte number.  The highest order 4 bytes are
+zero.  The lowest order 4 bytes are <VAR>value</VAR> rendered in the
+byte-order of an integer on the computer <CODE>ppcas</CODE> is assembling for.
+Each <VAR>size</VAR> bytes in a repetition is taken from the lowest order
+<VAR>size</VAR> bytes of this number.  Again, this bizarre behavior is
+compatible with other people's assemblers.
+
+</P>
+<P>
+<VAR>size</VAR> and <VAR>value</VAR> are optional.
+If the second comma and <VAR>value</VAR> are absent, <VAR>value</VAR> is
+assumed zero.  If the first comma and following tokens are absent,
+<VAR>size</VAR> is assumed to be 1.
+
+</P>
+
+
+<H2><A NAME="SEC78" HREF="as_toc.html#SEC78"><CODE>.float <VAR>flonums</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX254"></A>
+<A NAME="IDX255"></A>
+This directive assembles zero or more flonums, separated by commas.  It
+has the same effect as <CODE>.single</CODE>.
+On the Power PC family, <CODE>.float</CODE> emits 32-bit floating point numbers
+in IEEE format.
+
+</P>
+
+
+<H2><A NAME="SEC79" HREF="as_toc.html#SEC79"><CODE>.global <VAR>symbol</VAR></CODE>, <CODE>.globl <VAR>symbol</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX256"></A>
+<A NAME="IDX257"></A>
+<CODE>.global</CODE> makes the symbol visible to <CODE>link3do</CODE>.  If you define
+<VAR>symbol</VAR> in your partial program, its value is made available to
+other partial programs that are linked with it.  Otherwise,
+<VAR>symbol</VAR> takes its attributes from a symbol of the same name
+from another file linked into the same program.
+
+</P>
+<P>
+Both spellings (<SAMP>`.globl'</SAMP> and <SAMP>`.global'</SAMP>) are accepted, for
+compatibility with other assemblers.
+
+</P>
+
+
+
+<H2><A NAME="SEC80" HREF="as_toc.html#SEC80"><CODE>.hword <VAR>expressions</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX258"></A>
+<A NAME="IDX259"></A>
+<A NAME="IDX260"></A>
+<A NAME="IDX261"></A>
+This expects zero or more <VAR>expressions</VAR>, and emits
+a 16 bit number for each.
+
+</P>
+<P>
+This directive is a synonym for <SAMP>`.short'</SAMP>.
+
+</P>
+
+
+<H2><A NAME="SEC81" HREF="as_toc.html#SEC81"><CODE>.ident</CODE></A></H2>
+
+<P>
+<A NAME="IDX262"></A>
+This directive is used by some assemblers to place tags in object files.
+<CODE>ppcas</CODE> simply accepts the directive for source-file
+compatibility with such assemblers, but does not actually emit anything
+for it.
+
+</P>
+
+
+<H2><A NAME="SEC82" HREF="as_toc.html#SEC82"><CODE>.if <VAR>absolute expression</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX263"></A>
+<A NAME="IDX264"></A>
+<CODE>.if</CODE> marks the beginning of a section of code which is only
+considered part of the source program being assembled if the argument
+(which must be an <VAR>absolute expression</VAR>) is non-zero.  The end of
+the conditional section of code must be marked by <CODE>.endif</CODE>
+(see section <A HREF="as.html#SEC73"><CODE>.endif</CODE></A>); optionally, you may include code for the
+alternative condition, flagged by <CODE>.else</CODE> (see section <A HREF="as.html#SEC72"><CODE>.else</CODE></A>.
+
+</P>
+<P>
+The following variants of <CODE>.if</CODE> are also supported:
+<DL COMPACT>
+
+<DT><CODE>.ifdef <VAR>symbol</VAR></CODE>
+<DD>
+<A NAME="IDX265"></A>
+ 
+Assembles the following section of code if the specified <VAR>symbol</VAR>
+has been defined.
+
+<A NAME="IDX266"></A>
+<A NAME="IDX267"></A>
+<DT><CODE>.ifndef <VAR>symbol</VAR></CODE>
+<DD>
+<DT><CODE>ifnotdef <VAR>symbol</VAR></CODE>
+<DD>
+Assembles the following section of code if the specified <VAR>symbol</VAR>
+has not been defined.  Both spelling variants are equivalent.
+
+</DL>
+
+
+
+<H2><A NAME="SEC83" HREF="as_toc.html#SEC83"><CODE>.include "<VAR>file</VAR>"</CODE></A></H2>
+
+<P>
+<A NAME="IDX268"></A>
+<A NAME="IDX269"></A>
+<A NAME="IDX270"></A>
+This directive provides a way to include supporting files at specified
+points in your source program.  The code from <VAR>file</VAR> is assembled as
+if it followed the point of the <CODE>.include</CODE>; when the end of the
+included file is reached, assembly of the original file continues.  You
+can control the search paths used with the <SAMP>`-I'</SAMP> command-line option
+(see section <A HREF="as.html#SEC9">Command-Line Options</A>).  Quotation marks are required
+around <VAR>file</VAR>.
+
+</P>
+
+
+<H2><A NAME="SEC84" HREF="as_toc.html#SEC84"><CODE>.int <VAR>expressions</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX271"></A>
+<A NAME="IDX272"></A>
+Expect zero or more <VAR>expressions</VAR>, of any section, separated by commas.
+For each expression, emit a number that, at run time, is the value of that
+expression.  The byte order and bit size of the number depends on what kind
+of target the assembly is for.
+
+</P>
+
+
+
+<H2><A NAME="SEC85" HREF="as_toc.html#SEC85"><CODE>.irp <VAR>symbol</VAR>,<VAR>values</VAR></CODE>...</A></H2>
+
+<P>
+<A NAME="IDX273"></A>
+Evaluate a sequence of statements assigning different values to <VAR>symbol</VAR>.
+The sequence of statements starts at the <CODE>.irp</CODE> directive, and is
+terminated by an <CODE>.endr</CODE> directive.  For each <VAR>value</VAR>, <VAR>symbol</VAR> is
+set to <VAR>value</VAR>, and the sequence of statements is assembled.  If no
+<VAR>value</VAR> is listed, the sequence of statements is assembled once, with
+<VAR>symbol</VAR> set to the null string.  To refer to <VAR>symbol</VAR> within the
+sequence of statements, use <VAR>\symbol</VAR>.
+
+</P>
+<P>
+For example, assembling
+
+</P>
+
+<PRE>
+        .irp    param,1,2,3
+        move    d\param,sp@-
+        .endr
+</PRE>
+
+<P>
+is equivalent to assembling
+
+</P>
+
+<PRE>
+        move    d1,sp@-
+        move    d2,sp@-
+        move    d3,sp@-
+</PRE>
+
+
+
+<H2><A NAME="SEC86" HREF="as_toc.html#SEC86"><CODE>.irpc <VAR>symbol</VAR>,<VAR>values</VAR></CODE>...</A></H2>
+
+<P>
+<A NAME="IDX274"></A>
+Evaluate a sequence of statements assigning different values to <VAR>symbol</VAR>.
+The sequence of statements starts at the <CODE>.irpc</CODE> directive, and is
+terminated by an <CODE>.endr</CODE> directive.  For each character in <VAR>value</VAR>,
+<VAR>symbol</VAR> is set to the character, and the sequence of statements is
+assembled.  If no <VAR>value</VAR> is listed, the sequence of statements is
+assembled once, with <VAR>symbol</VAR> set to the null string.  To refer to
+<VAR>symbol</VAR> within the sequence of statements, use <VAR>\symbol</VAR>.
+
+</P>
+<P>
+For example, assembling
+
+</P>
+
+<PRE>
+        .irpc    param,123
+        move    d\param,sp@-
+        .endr
+</PRE>
+
+<P>
+is equivalent to assembling
+
+</P>
+
+<PRE>
+        move    d1,sp@-
+        move    d2,sp@-
+        move    d3,sp@-
+</PRE>
+
+
+
+<H2><A NAME="SEC87" HREF="as_toc.html#SEC87"><CODE>.lcomm <VAR>symbol</VAR> , <VAR>length</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX275"></A>
+<A NAME="IDX276"></A>
+<A NAME="IDX277"></A>
+Reserve <VAR>length</VAR> (an absolute expression) bytes for a local common
+denoted by <VAR>symbol</VAR>.  The section and value of <VAR>symbol</VAR> are
+those of the new local common.  The addresses are allocated in the bss
+section, so that at run-time the bytes start off zeroed.  <VAR>Symbol</VAR>
+is not declared global (see section <A HREF="as.html#SEC79"><CODE>.global <VAR>symbol</CODE></VAR>, <CODE>.globl <VAR>symbol</CODE></VAR></A>), so is normally
+not visible to <CODE>link3do</CODE>.
+
+</P>
+
+
+
+<H2><A NAME="SEC88" HREF="as_toc.html#SEC88"><CODE>.lflags</CODE></A></H2>
+
+<P>
+<A NAME="IDX278"></A>
+<CODE>ppcas</CODE> accepts this directive, for compatibility with other
+assemblers, but ignores it.
+
+</P>
+
+
+<H2><A NAME="SEC89" HREF="as_toc.html#SEC89"><CODE>.line <VAR>line-number</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX279"></A>
+<A NAME="IDX280"></A>
+
+</P>
+<P>
+Even though this is a directive associated with the <CODE>a.out</CODE> or
+<CODE>b.out</CODE> object-code formats, <CODE>ppcas</CODE> still recognizes it
+when producing COFF output, and treats <SAMP>`.line'</SAMP> as though it
+were the COFF <SAMP>`.ln'</SAMP> <EM>if</EM> it is found outside a
+<CODE>.def</CODE>/<CODE>.endef</CODE> pair.
+
+</P>
+<P>
+Inside a <CODE>.def</CODE>, <SAMP>`.line'</SAMP> is, instead, one of the directives
+used by compilers to generate auxiliary symbol information for
+debugging.
+
+</P>
+
+
+<H2><A NAME="SEC90" HREF="as_toc.html#SEC90"><CODE>.ln <VAR>line-number</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX281"></A>
+<SAMP>`.ln'</SAMP> is a synonym for <SAMP>`.line'</SAMP>.
+
+</P>
+
+
+<H2><A NAME="SEC91" HREF="as_toc.html#SEC91"><CODE>.list</CODE></A></H2>
+
+<P>
+<A NAME="IDX282"></A>
+<A NAME="IDX283"></A>
+Control (in conjunction with the <CODE>.nolist</CODE> directive) whether or
+not assembly listings are generated.  These two directives maintain an
+internal counter (which is zero initially).   <CODE>.list</CODE> increments the
+counter, and <CODE>.nolist</CODE> decrements it.  Assembly listings are
+generated whenever the counter is greater than zero.
+
+</P>
+<P>
+By default, listings are disabled.  When you enable them (with the
+<SAMP>`-a'</SAMP> command line option; see section <A HREF="as.html#SEC9">Command-Line Options</A>),
+the initial value of the listing counter is one.
+
+</P>
+
+
+<H2><A NAME="SEC92" HREF="as_toc.html#SEC92"><CODE>.long <VAR>expressions</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX284"></A>
+<CODE>.long</CODE> is the same as <SAMP>`.int'</SAMP>, see section <A HREF="as.html#SEC84"><CODE>.int <VAR>expressions</CODE></VAR></A>.
+
+</P>
+
+
+
+<H2><A NAME="SEC93" HREF="as_toc.html#SEC93"><CODE>.macro</CODE></A></H2>
+
+<P>
+<A NAME="IDX285"></A>
+The commands <CODE>.macro</CODE> and <CODE>.endm</CODE> allow you to define macros that
+generate assembly output.  For example, this definition specifies a macro
+<CODE>sum</CODE> that puts a sequence of numbers into memory:
+
+</P>
+
+<PRE>
+        .macro  sum from=0, to=5
+        .long   \from
+        .if     \to-\from
+        sum     "(\from+1)",\to
+        .endif
+        .endm
+</PRE>
+
+<P>
+With that definition, <SAMP>`SUM 0,5'</SAMP> is equivalent to this assembly input:
+
+</P>
+
+<PRE>
+        .long   0
+        .long   1
+        .long   2
+        .long   3
+        .long   4
+        .long   5
+</PRE>
+
+<DL COMPACT>
+
+<DT><CODE>.macro <VAR>macname</VAR></CODE>
+<DD>
+<A NAME="IDX286"></A>
+<DT><CODE>.macro <VAR>macname</VAR> <VAR>macargs</VAR> ...</CODE>
+<DD>
+<A NAME="IDX287"></A>
+<A NAME="IDX288"></A>
+Begin the definition of a macro called <VAR>macname</VAR>.  If your macro
+definition requires arguments, specify their names after the macro name,
+separated by commas or spaces.  You can supply a default value for any
+macro argument by following the name with <SAMP>`=<VAR>deflt</VAR>'</SAMP>.  For
+example, these are all valid <CODE>.macro</CODE> statements:
+
+<DL COMPACT>
+
+<DT><CODE>.macro comm</CODE>
+<DD>
+Begin the definition of a macro called <CODE>comm</CODE>, which takes no
+arguments.
+
+<DT><CODE>.macro plus1 p, p1</CODE>
+<DD>
+<DT><CODE>.macro plus1 p p1</CODE>
+<DD>
+Either statement begins the definition of a macro called <CODE>plus1</CODE>,
+which takes two arguments; within the macro definition, write
+<SAMP>`\p'</SAMP> or <SAMP>`\p1'</SAMP> to evaluate the arguments.
+
+<DT><CODE>.macro reserve_str p1=0 p2</CODE>
+<DD>
+Begin the definition of a macro called <CODE>reserve_str</CODE>, with two
+arguments.  The first argument has a default value, but not the second.
+After the definition is complete, you can call the macro either as
+<SAMP>`reserve_str <VAR>a</VAR>,<VAR>b</VAR>'</SAMP> (with <SAMP>`\p1'</SAMP> evaluating to
+<VAR>a</VAR> and <SAMP>`\p2'</SAMP> evaluating to <VAR>b</VAR>), or as <SAMP>`reserve_str
+,<VAR>b</VAR>'</SAMP> (with <SAMP>`\p1'</SAMP> evaluating as the default, in this case
+<SAMP>`0'</SAMP>, and <SAMP>`\p2'</SAMP> evaluating to <VAR>b</VAR>).
+</DL>
+
+When you call a macro, you can specify the argument values either by
+position, or by keyword.  For example, <SAMP>`sum 9,17'</SAMP> is equivalent to
+<SAMP>`sum to=17, from=9'</SAMP>.
+
+<DT><CODE>.endm</CODE>
+<DD>
+<A NAME="IDX289"></A>
+<A NAME="IDX290"></A>
+Mark the end of a macro definition.
+
+<DT><CODE>.exitm</CODE>
+<DD>
+<A NAME="IDX291"></A>
+<A NAME="IDX292"></A>
+Exit early from the current macro definition.
+
+<A NAME="IDX293"></A>
+<A NAME="IDX294"></A>
+<DT><CODE>\@</CODE>
+<DD>
+<A NAME="IDX295"></A>
+<CODE>ppcas</CODE> maintains a counter of how many macros it has
+executed in this pseudo-variable; you can copy that number to your
+output with <SAMP>`\@'</SAMP>, but <EM>only within a macro definition</EM>.
+
+</DL>
+
+
+
+<H2><A NAME="SEC94" HREF="as_toc.html#SEC94"><CODE>.nolist</CODE></A></H2>
+
+<P>
+<A NAME="IDX296"></A>
+<A NAME="IDX297"></A>
+Control (in conjunction with the <CODE>.list</CODE> directive) whether or
+not assembly listings are generated.  These two directives maintain an
+internal counter (which is zero initially).   <CODE>.list</CODE> increments the
+counter, and <CODE>.nolist</CODE> decrements it.  Assembly listings are
+generated whenever the counter is greater than zero.
+
+</P>
+
+
+<H2><A NAME="SEC95" HREF="as_toc.html#SEC95"><CODE>.octa <VAR>bignums</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX298"></A>
+<A NAME="IDX299"></A>
+<A NAME="IDX300"></A>
+This directive expects zero or more bignums, separated by commas.  For each
+bignum, it emits a 16-byte integer.
+
+</P>
+<P>
+The term "octa" comes from contexts in which a "word" is two bytes;
+hence <EM>octa</EM>-word for 16 bytes.
+
+</P>
+
+
+<H2><A NAME="SEC96" HREF="as_toc.html#SEC96"><CODE>.org <VAR>new-lc</VAR> , <VAR>fill</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX301"></A>
+<A NAME="IDX302"></A>
+<A NAME="IDX303"></A>
+<A NAME="IDX304"></A>
+Advance the location counter of the current section to
+<VAR>new-lc</VAR>.  <VAR>new-lc</VAR> is either an absolute expression or an
+expression with the same section as the current subsection.  That is,
+you can't use <CODE>.org</CODE> to cross sections: if <VAR>new-lc</VAR> has the
+wrong section, the <CODE>.org</CODE> directive is ignored.  To be compatible
+with former assemblers, if the section of <VAR>new-lc</VAR> is absolute,
+<CODE>ppcas</CODE> issues a warning, then pretends the section of <VAR>new-lc</VAR>
+is the same as the current subsection.
+
+</P>
+<P>
+<CODE>.org</CODE> may only increase the location counter, or leave it
+unchanged; you cannot use <CODE>.org</CODE> to move the location counter
+backwards.
+
+</P>
+<P>
+Because <CODE>ppcas</CODE> tries to assemble programs in one pass, <VAR>new-lc</VAR>
+may not be undefined.  If you really detest this restriction we eagerly await
+a chance to share your improved assembler.
+
+</P>
+<P>
+Beware that the origin is relative to the start of the section, not
+to the start of the subsection.  This is compatible with other
+people's assemblers.
+
+</P>
+<P>
+When the location counter (of the current subsection) is advanced, the
+intervening bytes are filled with <VAR>fill</VAR> which should be an
+absolute expression.  If the comma and <VAR>fill</VAR> are omitted,
+<VAR>fill</VAR> defaults to zero.
+
+</P>
+
+
+<H2><A NAME="SEC97" HREF="as_toc.html#SEC97"><CODE>.p2align <VAR>abs-expr</VAR> , <VAR>abs-expr</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX305"></A>
+<A NAME="IDX306"></A>
+Pad the location counter (in the current subsection) to a particular
+storage boundary.  The first expression (which must be absolute) is the
+number of low-order zero bits the location counter must have after
+advancement.  For example <SAMP>`.p2align 3'</SAMP> advances the location
+counter until it a multiple of 8.  If the location counter is already a
+multiple of 8, no change is needed.
+
+</P>
+<P>
+The second expression (also absolute) gives the value to be stored in
+the padding bytes.  It (and the comma) may be omitted.  If it is
+omitted, the padding bytes are zero.
+
+</P>
+
+
+<H2><A NAME="SEC98" HREF="as_toc.html#SEC98"><CODE>.psize <VAR>lines</VAR> , <VAR>columns</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX307"></A>
+<A NAME="IDX308"></A>
+<A NAME="IDX309"></A>
+Use this directive to declare the number of lines--and, optionally, the
+number of columns--to use for each page, when generating listings.
+
+</P>
+<P>
+If you do not use <CODE>.psize</CODE>, listings use a default line-count
+of 60.  You may omit the comma and <VAR>columns</VAR> specification; the
+default width is 200 columns.
+
+</P>
+<P>
+<CODE>ppcas</CODE> generates formfeeds whenever the specified number of
+lines is exceeded (or whenever you explicitly request one, using
+<CODE>.eject</CODE>).
+
+</P>
+<P>
+If you specify <VAR>lines</VAR> as <CODE>0</CODE>, no formfeeds are generated save
+those explicitly specified with <CODE>.eject</CODE>.
+
+</P>
+
+
+<H2><A NAME="SEC99" HREF="as_toc.html#SEC99"><CODE>.quad <VAR>bignums</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX310"></A>
+<CODE>.quad</CODE> expects zero or more bignums, separated by commas.  For
+each bignum, it emits
+an 8-byte integer.  If the bignum won't fit in 8 bytes, it prints a
+warning message; and just takes the lowest order 8 bytes of the bignum.
+<A NAME="IDX311"></A>
+<A NAME="IDX312"></A>
+
+</P>
+<P>
+The term "quad" comes from contexts in which a "word" is two bytes;
+hence <EM>quad</EM>-word for 8 bytes.
+
+</P>
+
+
+<H2><A NAME="SEC100" HREF="as_toc.html#SEC100"><CODE>.rept <VAR>count</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX313"></A>
+Repeat the sequence of lines between the <CODE>.rept</CODE> directive and the next
+<CODE>.endr</CODE> directive <VAR>count</VAR> times.
+
+</P>
+<P>
+For example, assembling
+
+</P>
+
+<PRE>
+        .rept   3
+        .long   0
+        .endr
+</PRE>
+
+<P>
+is equivalent to assembling
+
+</P>
+
+<PRE>
+        .long   0
+        .long   0
+        .long   0
+</PRE>
+
+
+
+<H2><A NAME="SEC101" HREF="as_toc.html#SEC101"><CODE>.sbttl "<VAR>subheading</VAR>"</CODE></A></H2>
+
+<P>
+<A NAME="IDX314"></A>
+<A NAME="IDX315"></A>
+<A NAME="IDX316"></A>
+Use <VAR>subheading</VAR> as the title (third line, immediately after the
+title line) when generating assembly listings.
+
+</P>
+<P>
+This directive affects subsequent pages, as well as the current page if
+it appears within ten lines of the top of a page.
+
+</P>
+
+
+
+<H2><A NAME="SEC102" HREF="as_toc.html#SEC102"><CODE>.set <VAR>symbol</VAR>, <VAR>expression</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX317"></A>
+<A NAME="IDX318"></A>
+Set the value of <VAR>symbol</VAR> to <VAR>expression</VAR>.  This
+changes <VAR>symbol</VAR>'s value and type to conform to
+<VAR>expression</VAR>.  If <VAR>symbol</VAR> was flagged as external, it remains
+flagged. (See section <A HREF="as.html#SEC47">Symbol Attributes</A>.)
+
+</P>
+<P>
+You may <CODE>.set</CODE> a symbol many times in the same assembly.
+
+</P>
+<P>
+If you <CODE>.set</CODE> a global symbol, the value stored in the object
+file is the last value stored into it.
+
+</P>
+
+
+
+<H2><A NAME="SEC103" HREF="as_toc.html#SEC103"><CODE>.short <VAR>expressions</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX319"></A>
+This expects zero or more <VAR>expressions</VAR>, and emits
+a 16 bit number for each.
+
+</P>
+
+
+<H2><A NAME="SEC104" HREF="as_toc.html#SEC104"><CODE>.single <VAR>flonums</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX320"></A>
+<A NAME="IDX321"></A>
+This directive assembles zero or more flonums, separated by commas.  It
+has the same effect as <CODE>.float</CODE>.
+On the Power PC family, <CODE>.single</CODE> emits 32-bit floating point
+numbers in IEEE format.
+
+</P>
+
+
+
+<H2><A NAME="SEC105" HREF="as_toc.html#SEC105"><CODE>.space <VAR>size</VAR> , <VAR>fill</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX322"></A>
+<A NAME="IDX323"></A>
+This directive emits <VAR>size</VAR> bytes, each of value <VAR>fill</VAR>.  Both
+<VAR>size</VAR> and <VAR>fill</VAR> are absolute expressions.  If the comma
+and <VAR>fill</VAR> are omitted, <VAR>fill</VAR> is assumed to be zero.
+
+</P>
+
+
+
+<H2><A NAME="SEC106" HREF="as_toc.html#SEC106"><CODE>.stabd, .stabn, .stabs</CODE></A></H2>
+
+<P>
+<A NAME="IDX324"></A>
+<A NAME="IDX325"></A>
+There are three directives that begin <SAMP>`.stab'</SAMP>.
+All emit symbols (see section <A HREF="as.html#SEC42">Symbols</A>), for use by symbolic debuggers.
+The symbols are not entered in the <CODE>ppcas</CODE> hash table: they
+cannot be referenced elsewhere in the source file.
+Up to five fields are required:
+
+</P>
+<DL COMPACT>
+
+<DT><VAR>string</VAR>
+<DD>
+This is the symbol's name.  It may contain any character except
+<SAMP>`\000'</SAMP>, so is more general than ordinary symbol names.  Some
+debuggers used to code arbitrarily complex structures into symbol names
+using this field.
+
+<DT><VAR>type</VAR>
+<DD>
+An absolute expression.  The symbol's type is set to the low 8 bits of
+this expression.  Any bit pattern is permitted, but <CODE>link3do</CODE>
+and debuggers choke on silly bit patterns.
+
+<DT><VAR>other</VAR>
+<DD>
+An absolute expression.  The symbol's "other" attribute is set to the
+low 8 bits of this expression.
+
+<DT><VAR>desc</VAR>
+<DD>
+An absolute expression.  The symbol's descriptor is set to the low 16
+bits of this expression.
+
+<DT><VAR>value</VAR>
+<DD>
+An absolute expression which becomes the symbol's value.
+</DL>
+
+<P>
+If a warning is detected while reading a <CODE>.stabd</CODE>, <CODE>.stabn</CODE>,
+or <CODE>.stabs</CODE> statement, the symbol has probably already been created;
+you get a half-formed symbol in your object file.  This is
+compatible with earlier assemblers!
+
+</P>
+<DL COMPACT>
+
+<DT><CODE>.stabd <VAR>type</VAR> , <VAR>other</VAR> , <VAR>desc</VAR></CODE>
+<DD>
+<A NAME="IDX326"></A>
+ 
+
+The "name" of the symbol generated is not even an empty string.
+It is a null pointer, for compatibility.  Older assemblers used a
+null pointer so they didn't waste space in object files with empty
+strings.
+
+The symbol's value is set to the location counter,
+relocatably.  When your program is linked, the value of this symbol
+is the address of the location counter when the <CODE>.stabd</CODE> was
+assembled.
+
+<A NAME="IDX327"></A>
+<DT><CODE>.stabn <VAR>type</VAR> , <VAR>other</VAR> , <VAR>desc</VAR> , <VAR>value</VAR></CODE>
+<DD>
+The name of the symbol is set to the empty string <CODE>""</CODE>.
+
+<A NAME="IDX328"></A>
+<DT><CODE>.stabs <VAR>string</VAR> ,  <VAR>type</VAR> , <VAR>other</VAR> , <VAR>desc</VAR> , <VAR>value</VAR></CODE>
+<DD>
+All five fields are specified.
+</DL>
+
+
+
+<H2><A NAME="SEC107" HREF="as_toc.html#SEC107"><CODE>.string</CODE> "<VAR>str</VAR>"</A></H2>
+
+<P>
+<A NAME="IDX329"></A>
+<A NAME="IDX330"></A>
+
+</P>
+<P>
+Copy the characters in <VAR>str</VAR> to the object file.  You may specify more than
+one string to copy, separated by commas.  Unless otherwise specified for a
+particular machine, the assembler marks the end of each string with a 0 byte.
+You can use any of the escape sequences described in section <A HREF="as.html#SEC30">Strings</A>.
+
+</P>
+
+
+
+<H2><A NAME="SEC108" HREF="as_toc.html#SEC108"><CODE>.text <VAR>subsection</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX331"></A>
+Tells <CODE>ppcas</CODE> to assemble the following statements onto the end of
+the text subsection numbered <VAR>subsection</VAR>, which is an absolute
+expression.  If <VAR>subsection</VAR> is omitted, subsection number zero
+is used.
+
+</P>
+
+
+<H2><A NAME="SEC109" HREF="as_toc.html#SEC109"><CODE>.title "<VAR>heading</VAR>"</CODE></A></H2>
+
+<P>
+<A NAME="IDX332"></A>
+<A NAME="IDX333"></A>
+Use <VAR>heading</VAR> as the title (second line, immediately after the
+source file name and pagenumber) when generating assembly listings.
+
+</P>
+<P>
+This directive affects subsequent pages, as well as the current page if
+it appears within ten lines of the top of a page.
+
+</P>
+
+
+
+<H2><A NAME="SEC110" HREF="as_toc.html#SEC110"><CODE>.word <VAR>expressions</VAR></CODE></A></H2>
+
+<P>
+<A NAME="IDX334"></A>
+This directive expects zero or more <VAR>expressions</VAR>, of any section,
+separated by commas.
+For each expression, <CODE>ppcas</CODE> emits a 32-bit number.
+
+</P>
+<P>
+In order to assemble compiler output into something that works,
+<CODE>ppcas</CODE> occasionlly does strange things to <SAMP>`.word'</SAMP> directives.
+Directives of the form <SAMP>`.word sym1-sym2'</SAMP> are often emitted by
+compilers as part of jump tables.  Therefore, when <CODE>ppcas</CODE> assembles a
+directive of the form <SAMP>`.word sym1-sym2'</SAMP>, and the difference between
+<CODE>sym1</CODE> and <CODE>sym2</CODE> does not fit in 16 bits, <CODE>ppcas</CODE>
+creates a <STRONG>secondary jump table</STRONG>, immediately before the next label.
+This secondary jump table is preceded by a short-jump to the
+first byte after the secondary table.  This short-jump prevents the flow
+of control from accidentally falling into the new table.  Inside the
+table is a long-jump to <CODE>sym2</CODE>.  The original <SAMP>`.word'</SAMP>
+contains <CODE>sym1</CODE> minus the address of the long-jump to
+<CODE>sym2</CODE>.
+
+</P>
+<P>
+If there were several occurrences of <SAMP>`.word sym1-sym2'</SAMP> before the
+secondary jump table, all of them are adjusted.  If there was a
+<SAMP>`.word sym3-sym4'</SAMP>, that also did not fit in sixteen bits, a
+long-jump to <CODE>sym4</CODE> is included in the secondary jump table,
+and the <CODE>.word</CODE> directives are adjusted to contain <CODE>sym3</CODE>
+minus the address of the long-jump to <CODE>sym4</CODE>; and so on, for as many
+entries in the original jump table as necessary.
+
+</P>
+
+
+
+<H2><A NAME="SEC111" HREF="as_toc.html#SEC111">Deprecated Directives</A></H2>
+
+<P>
+<A NAME="IDX335"></A>
+<A NAME="IDX336"></A>
+One day these directives won't work.
+They are included for compatibility with older assemblers.
+<DL COMPACT>
+
+<DT><TT>.abort</TT>
+<DD>
+<DT><TT>.app-file</TT>
+<DD>
+<DT><TT>.line</TT>
+<DD>
+</DL>
+
+</UL>
+
+@lowersections
+
+
+
+<H1><A NAME="SEC112" HREF="as_toc.html#SEC112">PowerPC Dependent Features</A></H1>
+
+<P>
+<A NAME="IDX337"></A>
+
+</P>
+
+
+<H2><A NAME="SEC113" HREF="as_toc.html#SEC113">PPC Options</A></H2>
+
+<P>
+<A NAME="IDX338"></A>
+<A NAME="IDX339"></A>
+The PowerPC version of the GNU assembler, <CODE>ppcas</CODE>, has a few machine
+dependent options.
+
+</P>
+<P>
+<A NAME="IDX340"></A>
+<A NAME="IDX341"></A>
+<A NAME="IDX342"></A>
+<CODE>ppcas</CODE> can assemble code for several different members of the
+PowerPCfamily.  The default depends upon how <CODE>ppcas</CODE>
+was configured when it was built; normally, the default is to assemble
+code for the PPC 602 microprocessor.  The following options may be used to
+change the default.  These options control which instructions and
+addressing modes are permitted.  The members of the PowerPC family are
+very similar.  For detailed information about the differences, see the
+Motorola and IBM manuals.
+
+</P>
+<DL COMPACT>
+
+<DT><SAMP>`-mppc'</SAMP>
+<DD>
+<DT><SAMP>`-mppc32'</SAMP>
+<DD>
+<DT><SAMP>`-m403'</SAMP>
+<DD>
+<DT><SAMP>`-m603'</SAMP>
+<DD>
+<DT><SAMP>`-m604'</SAMP>
+<DD>
+Assemble for the PowerPC 603/604.  These 32-bit PowerPC chips are virtually the 
+same from the point of view of the assembler.
+
+<DT><SAMP>`-m602'</SAMP>
+<DD>
+Just like -mppc except replaces some double-precision floating point 
+instructions with their single-precision equivalents.  This is a kludge to
+correct bad compiler output so it will probably go away in the future.This is 
+the current default.
+
+<DT><SAMP>`-m601'</SAMP>
+<DD>
+Assemble for the PowerPC 601.
+
+<DT><SAMP>`-mppc64'</SAMP>
+<DD>
+<DT><SAMP>`-m620'</SAMP>
+<DD>
+Assemble for the 64-bit PowerPC 620.
+
+<DT><SAMP>`-V'</SAMP>
+<DD>
+Print the assembler's version number.
+
+
+
+<H2><A NAME="SEC114" HREF="as_toc.html#SEC114">Syntax</A></H2>
+
+<P>
+<A NAME="IDX343"></A>
+<A NAME="IDX344"></A>
+
+</P>
+<P>
+This version of <CODE>ppcas</CODE> uses instructions names and
+syntax compatible with most PowerPC manuals.  The basic syntax is also
+compatible with the Diab assembler, allowing it to assemble the output of the
+Diab compiler.  Note that the syntax for macros and <SAMP>`.equ'</SAMP> are two 
+notable incompatibilities.
+
+</P>
+<P>
+<A NAME="IDX345"></A>
+<A NAME="IDX346"></A>
+The following register names are understood:
+
+</P>
+<DL COMPACT>
+
+<DT><STRONG>General Purpose Registers</STRONG>
+<DD>
+<SAMP>`r0'</SAMP> through <SAMP>`r31'</SAMP> or
+<SAMP>`R0'</SAMP> through <SAMP>`R31'</SAMP>
+
+<DT><STRONG>Floating Point Registers</STRONG>
+<DD>
+<SAMP>`f0'</SAMP> through <SAMP>`f31'</SAMP> or
+<SAMP>`F0'</SAMP> through <SAMP>`F31'</SAMP>
+
+<DT><STRONG>Condition Register Fields</STRONG>
+<DD>
+<SAMP>`cr0'</SAMP> through <SAMP>`cr7'</SAMP> or
+<SAMP>`CR0'</SAMP> through <SAMP>`CR7'</SAMP>
+</DL>
+
+
+
+<H2><A NAME="SEC115" HREF="as_toc.html#SEC115">Local Labels</A></H2>
+
+<P>
+<A NAME="IDX347"></A>
+<A NAME="IDX348"></A>
+
+</P>
+<P>
+Local labels in the PowerPC assembler begin with <SAMP>`.L'</SAMP>.
+No symbolic information will be generated for local labels.
+
+</P>
+
+
+<H3><A NAME="SEC116" HREF="as_toc.html#SEC116">Special Characters</A></H3>
+
+<P>
+<A NAME="IDX349"></A>
+<A NAME="IDX350"></A>
+<A NAME="IDX351"></A>
+<A NAME="IDX352"></A>
+The line-comment character is <SAMP>`#'</SAMP>.  
+
+</P>
+
+
+
+<H1><A NAME="SEC117" HREF="as_toc.html#SEC117">Acknowledgements</A></H1>
+
+<P>
+If you have contributed to the GNU assembler and your name isn't listed here,
+it is not meant as a slight.  We just don't know about it.  Send mail to the
+maintainer, and we'll correct the situation.  Currently 
+the maintainer is Ken Raeburn (email address <CODE>raeburn@cygnus.com</CODE>).
+
+</P>
+<P>
+Dean Elsner wrote the original GNU assembler for the VAX.<A NAME="FOOT1" HREF="as_foot.html#FOOT1">(1)</A>
+
+</P>
+<P>
+Jay Fenlason maintained GAS for a while, adding support for GDB-specific debug
+information and the 68k series machines, most of the preprocessing pass, and
+extensive changes in <TT>`messages.c'</TT>, <TT>`input-file.c'</TT>, <TT>`write.c'</TT>.
+
+</P>
+<P>
+K. Richard Pixley maintained GAS for a while, adding various enhancements and
+many bug fixes, including merging support for several processors, breaking GAS
+up to handle multiple object file format back ends (including heavy rewrite,
+testing, an integration of the coff and b.out back ends), adding configuration
+including heavy testing and verification of cross assemblers and file splits
+and renaming, converted GAS to strictly ANSI C including full prototypes, added
+support for m680[34]0 and cpu32, did considerable work on i960 including a COFF
+port (including considerable amounts of reverse engineering), a SPARC opcode
+file rewrite, DECstation, rs6000, and hp300hpux host ports, updated "know"
+assertions and made them work, much other reorganization, cleanup, and lint.
+
+</P>
+<P>
+Ken Raeburn wrote the high-level BFD interface code to replace most of the code
+in format-specific I/O modules.
+
+</P>
+<P>
+The original VMS support was contributed by David L. Kashtan.  Eric Youngdale
+has done much work with it since.
+
+</P>
+<P>
+The Intel 80386 machine description was written by Eliot Dresselhaus.
+
+</P>
+<P>
+Minh Tran-Le at IntelliCorp contributed some AIX 386 support.
+
+</P>
+<P>
+The Motorola 88k machine description was contributed by Devon Bowen of Buffalo
+University and Torbjorn Granlund of the Swedish Institute of Computer Science.
+
+</P>
+<P>
+Keith Knowles at the Open Software Foundation wrote the original MIPS back end
+(<TT>`tc-mips.c'</TT>, <TT>`tc-mips.h'</TT>), and contributed Rose format support
+(which hasn't been merged in yet).  Ralph Campbell worked with the MIPS code to
+support a.out format.
+
+</P>
+<P>
+Support for the Zilog Z8k and Hitachi H8/300 and H8/500 processors (tc-z8k,
+tc-h8300, tc-h8500), and IEEE 695 object file format (obj-ieee), was written by
+Steve Chamberlain of Cygnus Support.  Steve also modified the COFF back end to
+use BFD for some low-level operations, for use with the H8/300 and AMD 29k
+targets.
+
+</P>
+<P>
+John Gilmore built the AMD 29000 support, added <CODE>.include</CODE> support, and
+simplified the configuration of which versions accept which directives.  He
+updated the 68k machine description so that Motorola's opcodes always produced
+fixed-size instructions (e.g. <CODE>jsr</CODE>), while synthetic instructions
+remained shrinkable (<CODE>jbsr</CODE>).  John fixed many bugs, including true tested
+cross-compilation support, and one bug in relaxation that took a week and
+required the proverbial one-bit fix.
+
+</P>
+<P>
+Ian Lance Taylor of Cygnus Support merged the Motorola and MIT syntax for the
+68k, completed support for some COFF targets (68k, i386 SVR3, and SCO Unix),
+added support for MIPS ECOFF and ELF targets, and made a few other minor
+patches.
+
+</P>
+<P>
+Steve Chamberlain made <CODE>ppcas</CODE> able to generate listings.
+
+</P>
+<P>
+Hewlett-Packard contributed support for the HP9000/300.
+
+</P>
+<P>
+Jeff Law wrote GAS and BFD support for the native HPPA object format (SOM)
+along with a fairly extensive HPPA testsuite (for both SOM and ELF object
+formats).  This work was supported by both the Center for Software Science at
+the University of Utah and Cygnus Support.
+
+</P>
+<P>
+Support for ELF format files has been worked on by Mark Eichin of Cygnus
+Support (original, incomplete implementation for SPARC), Pete Hoogenboom and
+Jeff Law at the University of Utah (HPPA mainly), Michael Meissner of the Open
+Software Foundation (i386 mainly), and Ken Raeburn of Cygnus Support (sparc,
+and some initial 64-bit support).
+
+</P>
+<P>
+Several engineers at Cygnus Support have also provided many small bug fixes and
+configuration enhancements.
+
+</P>
+<P>
+Many others have contributed large or small bugfixes and enhancements.  If
+you have contributed significant work and are not mentioned on this list, and
+want to be, let us know.  Some of the history has been lost; we are not
+intentionally leaving anyone out.
+
+</P>
+
+
+<H1><A NAME="SEC118" HREF="as_toc.html#SEC118">Index</A></H1>
+
+<P>
+<H2>#</H2>
+<DIR>
+<LI><A HREF="as.html#IDX83">#</A>
+<LI><A HREF="as.html#IDX79">#APP</A>
+<LI><A HREF="as.html#IDX78">#NO_APP</A>
+</DIR>
+<H2>-</H2>
+<DIR>
+<LI><A HREF="as.html#IDX10">--</A>
+<LI><A HREF="as.html#IDX57">--statistics</A>
+<LI><A HREF="as.html#IDX30">-a</A>
+<LI><A HREF="as.html#IDX31">-ad</A>
+<LI><A HREF="as.html#IDX32">-ah</A>
+<LI><A HREF="as.html#IDX33">-al</A>
+<LI><A HREF="as.html#IDX34">-an</A>
+<LI><A HREF="as.html#IDX35">-as</A>
+<LI><A HREF="as.html#IDX38">-D</A>
+<LI><A HREF="as.html#IDX39">-f</A>
+<LI><A HREF="as.html#IDX42">-I <VAR>path</VAR></A>
+<LI><A HREF="as.html#IDX46">-K</A>
+<LI><A HREF="as.html#IDX47">-L</A>
+<LI><A HREF="as.html#IDX340"><SAMP>`-mppc'</SAMP> and related options</A>
+<LI><A HREF="as.html#IDX49">-o</A>
+<LI><A HREF="as.html#IDX52">-R</A>
+<LI><A HREF="as.html#IDX61">-v</A>
+<LI><A HREF="as.html#IDX62">-version</A>
+<LI><A HREF="as.html#IDX65">-W</A>
+</DIR>
+<H2>.</H2>
+<DIR>
+<LI><A HREF="as.html#IDX175"><CODE>.</CODE> (symbol)</A>
+<LI><A HREF="as.html#IDX20">.o</A>
+</DIR>
+<H2>:</H2>
+<DIR>
+<LI><A HREF="as.html#IDX98"><CODE>:</CODE> (label)</A>
+</DIR>
+<H2>\</H2>
+<DIR>
+<LI><A HREF="as.html#IDX121"><CODE>\"</CODE> (doublequote character)</A>
+<LI><A HREF="as.html#IDX119"><CODE>\\</CODE> (<SAMP>`\'</SAMP> character)</A>
+<LI><A HREF="as.html#IDX107"><CODE>\b</CODE> (backspace character)</A>
+<LI><A HREF="as.html#IDX117"><CODE>\<VAR>ddd</VAR></CODE> (octal character code)</A>
+<LI><A HREF="as.html#IDX109"><CODE>\f</CODE> (formfeed character)</A>
+<LI><A HREF="as.html#IDX111"><CODE>\n</CODE> (newline character)</A>
+<LI><A HREF="as.html#IDX113"><CODE>\r</CODE> (carriage return character)</A>
+<LI><A HREF="as.html#IDX115"><CODE>\t</CODE> (tab)</A>
+</DIR>
+<H2>a</H2>
+<DIR>
+<LI><A HREF="as.html#IDX19">a.out</A>
+<LI><A HREF="as.html#IDX184"><CODE>a.out</CODE> symbol attributes</A>
+<LI><A HREF="as.html#IDX217"><CODE>abort</CODE> directive</A>
+<LI><A HREF="as.html#IDX152">absolute section</A>
+<LI><A HREF="as.html#IDX208">addition, permitted arguments</A>
+<LI><A HREF="as.html#IDX189">addresses</A>
+<LI><A HREF="as.html#IDX149">addresses, format of</A>
+<LI><A HREF="as.html#IDX303">advancing location counter</A>
+<LI><A HREF="as.html#IDX220"><CODE>align</CODE> directive</A>
+<LI><A HREF="as.html#IDX223"><CODE>app-file</CODE> directive</A>
+<LI><A HREF="as.html#IDX341">architecture options, PowerPC</A>
+<LI><A HREF="as.html#IDX210">arguments for addition</A>
+<LI><A HREF="as.html#IDX213">arguments for subtraction</A>
+<LI><A HREF="as.html#IDX196">arguments in expressions</A>
+<LI><A HREF="as.html#IDX201">arithmetic functions</A>
+<LI><A HREF="as.html#IDX198">arithmetic operands</A>
+<LI><A HREF="as.html#IDX224"><CODE>ascii</CODE> directive</A>
+<LI><A HREF="as.html#IDX226"><CODE>asciz</CODE> directive</A>
+<LI><A HREF="as.html#IDX157">assembler internal logic error</A>
+<LI><A HREF="as.html#IDX147">assembler, and linker</A>
+<LI><A HREF="as.html#IDX37">assembly listings, enabling</A>
+<LI><A HREF="as.html#IDX245">assigning values to symbols</A>
+<LI><A HREF="as.html#IDX179">attributes, symbol</A>
+</DIR>
+<H2>b</H2>
+<DIR>
+<LI><A HREF="as.html#IDX120">backslash (<CODE>\\</CODE>)</A>
+<LI><A HREF="as.html#IDX108">backspace (<CODE>\b</CODE>)</A>
+<LI><A HREF="as.html#IDX230"><CODE>balign</CODE> directive</A>
+<LI><A HREF="as.html#IDX138">bignums</A>
+<LI><A HREF="as.html#IDX130">binary integers</A>
+<LI><A HREF="as.html#IDX161">bss section</A>
+<LI><A HREF="as.html#IDX231"><CODE>byte</CODE> directive</A>
+</DIR>
+<H2>c</H2>
+<DIR>
+<LI><A HREF="as.html#IDX114">carriage return (<CODE>\r</CODE>)</A>
+<LI><A HREF="as.html#IDX101">character constants</A>
+<LI><A HREF="as.html#IDX106">character escape codes</A>
+<LI><A HREF="as.html#IDX124">character, single</A>
+<LI><A HREF="as.html#IDX86">characters used in symbols</A>
+<LI><A HREF="as.html#IDX233"><CODE>comm</CODE> directive</A>
+<LI><A HREF="as.html#IDX8">command line conventions</A>
+<LI><A HREF="as.html#IDX81">comments</A>
+<LI><A HREF="as.html#IDX352">comments, PowerPC</A>
+<LI><A HREF="as.html#IDX74">comments, removed by preprocessor</A>
+<LI><A HREF="as.html#IDX162">common variable storage</A>
+<LI><A HREF="as.html#IDX263">conditional assembly</A>
+<LI><A HREF="as.html#IDX125">constant, single character</A>
+<LI><A HREF="as.html#IDX100">constants</A>
+<LI><A HREF="as.html#IDX139">constants, bignum</A>
+<LI><A HREF="as.html#IDX102">constants, character</A>
+<LI><A HREF="as.html#IDX75">constants, converted by preprocessor</A>
+<LI><A HREF="as.html#IDX142">constants, floating point</A>
+<LI><A HREF="as.html#IDX129">constants, integer</A>
+<LI><A HREF="as.html#IDX126">constants, number</A>
+<LI><A HREF="as.html#IDX104">constants, string</A>
+<LI><A HREF="as.html#IDX93">continuing statements</A>
+<LI><A HREF="as.html#IDX176">current address</A>
+<LI><A HREF="as.html#IDX304">current address, advancing</A>
+</DIR>
+<H2>d</H2>
+<DIR>
+<LI><A HREF="as.html#IDX53">data and text sections, joining</A>
+<LI><A HREF="as.html#IDX235"><CODE>data</CODE> directive</A>
+<LI><A HREF="as.html#IDX164">debuggers, and symbol order</A>
+<LI><A HREF="as.html#IDX134">decimal integers</A>
+<LI><A HREF="as.html#IDX335">deprecated directives</A>
+<LI><A HREF="as.html#IDX186">descriptor, of <CODE>a.out</CODE> symbol</A>
+<LI><A HREF="as.html#IDX97">directives and instructions</A>
+<LI><A HREF="as.html#IDX214">directives, machine independent</A>
+<LI><A HREF="as.html#IDX174">dot (symbol)</A>
+<LI><A HREF="as.html#IDX236"><CODE>double</CODE> directive</A>
+<LI><A HREF="as.html#IDX122">doublequote (<CODE>\"</CODE>)</A>
+</DIR>
+<H2>e</H2>
+<DIR>
+<LI><A HREF="as.html#IDX311">eight-byte integer</A>
+<LI><A HREF="as.html#IDX238"><CODE>eject</CODE> directive</A>
+<LI><A HREF="as.html#IDX242"><CODE>else</CODE> directive</A>
+<LI><A HREF="as.html#IDX191">empty expressions</A>
+<LI><A HREF="as.html#IDX243"><CODE>endif</CODE> directive</A>
+<LI><A HREF="as.html#IDX290"><CODE>endm</CODE> directive</A>
+<LI><A HREF="as.html#IDX92">EOF, newline must precede</A>
+<LI><A HREF="as.html#IDX244"><CODE>equ</CODE> directive</A>
+<LI><A HREF="as.html#IDX23">error messsages</A>
+<LI><A HREF="as.html#IDX69">errors, continuing after</A>
+<LI><A HREF="as.html#IDX105">escape codes, character</A>
+<LI><A HREF="as.html#IDX292"><CODE>exitm</CODE> directive</A>
+<LI><A HREF="as.html#IDX158">expr (internal section)</A>
+<LI><A HREF="as.html#IDX195">expression arguments</A>
+<LI><A HREF="as.html#IDX188">expressions</A>
+<LI><A HREF="as.html#IDX192">expressions, empty</A>
+<LI><A HREF="as.html#IDX194">expressions, integer</A>
+<LI><A HREF="as.html#IDX247"><CODE>extern</CODE> directive</A>
+</DIR>
+<H2>f</H2>
+<DIR>
+<LI><A HREF="as.html#IDX41">faster processing (<CODE>-f</CODE>)</A>
+<LI><A HREF="as.html#IDX248"><CODE>file</CODE> directive</A>
+<LI><A HREF="as.html#IDX250">file name, logical</A>
+<LI><A HREF="as.html#IDX270">files, including</A>
+<LI><A HREF="as.html#IDX14">files, input</A>
+<LI><A HREF="as.html#IDX251"><CODE>fill</CODE> directive</A>
+<LI><A HREF="as.html#IDX323">filling memory</A>
+<LI><A HREF="as.html#IDX255"><CODE>float</CODE> directive</A>
+<LI><A HREF="as.html#IDX141">floating point numbers</A>
+<LI><A HREF="as.html#IDX237">floating point numbers (double)</A>
+<LI><A HREF="as.html#IDX321">floating point numbers (single)</A>
+<LI><A HREF="as.html#IDX140">flonums</A>
+<LI><A HREF="as.html#IDX28">format of error messages</A>
+<LI><A HREF="as.html#IDX26">format of warning messages</A>
+<LI><A HREF="as.html#IDX110">formfeed (<CODE>\f</CODE>)</A>
+<LI><A HREF="as.html#IDX202">functions, in expressions</A>
+</DIR>
+<H2>g</H2>
+<DIR>
+<LI><A HREF="as.html#IDX256"><CODE>global</CODE> directive</A>
+<LI><A HREF="as.html#IDX160">grouping data</A>
+</DIR>
+<H2>h</H2>
+<DIR>
+<LI><A HREF="as.html#IDX136">hexadecimal integers</A>
+<LI><A HREF="as.html#IDX258"><CODE>hword</CODE> directive</A>
+</DIR>
+<H2>i</H2>
+<DIR>
+<LI><A HREF="as.html#IDX262"><CODE>ident</CODE> directive</A>
+<LI><A HREF="as.html#IDX264"><CODE>if</CODE> directive</A>
+<LI><A HREF="as.html#IDX265"><CODE>ifdef</CODE> directive</A>
+<LI><A HREF="as.html#IDX266"><CODE>ifndef</CODE> directive</A>
+<LI><A HREF="as.html#IDX267"><CODE>ifnotdef</CODE> directive</A>
+<LI><A HREF="as.html#IDX268"><CODE>include</CODE> directive</A>
+<LI><A HREF="as.html#IDX45"><CODE>include</CODE> directive search path</A>
+<LI><A HREF="as.html#IDX204">infix operators</A>
+<LI><A HREF="as.html#IDX12">input</A>
+<LI><A HREF="as.html#IDX15">input file linenumbers</A>
+<LI><A HREF="as.html#IDX96">instructions and directives</A>
+<LI><A HREF="as.html#IDX271"><CODE>int</CODE> directive</A>
+<LI><A HREF="as.html#IDX193">integer expressions</A>
+<LI><A HREF="as.html#IDX299">integer, 16-byte</A>
+<LI><A HREF="as.html#IDX312">integer, 8-byte</A>
+<LI><A HREF="as.html#IDX128">integers</A>
+<LI><A HREF="as.html#IDX259">integers, 16-bit</A>
+<LI><A HREF="as.html#IDX272">integers, 32-bit</A>
+<LI><A HREF="as.html#IDX131">integers, binary</A>
+<LI><A HREF="as.html#IDX135">integers, decimal</A>
+<LI><A HREF="as.html#IDX137">integers, hexadecimal</A>
+<LI><A HREF="as.html#IDX133">integers, octal</A>
+<LI><A HREF="as.html#IDX232">integers, one byte</A>
+<LI><A HREF="as.html#IDX155">internal <CODE>ppcas</CODE> sections</A>
+<LI><A HREF="as.html#IDX1">invocation summary</A>
+<LI><A HREF="as.html#IDX273"><CODE>irp</CODE> directive</A>
+<LI><A HREF="as.html#IDX274"><CODE>irpc</CODE> directive</A>
+</DIR>
+<H2>j</H2>
+<DIR>
+<LI><A HREF="as.html#IDX55">joining text and data sections</A>
+</DIR>
+<H2>l</H2>
+<DIR>
+<LI><A HREF="as.html#IDX99">label (<CODE>:</CODE>)</A>
+<LI><A HREF="as.html#IDX165">labels</A>
+<LI><A HREF="as.html#IDX275"><CODE>lcomm</CODE> directive</A>
+<LI><A HREF="as.html#IDX22">ld</A>
+<LI><A HREF="as.html#IDX87">length of symbols</A>
+<LI><A HREF="as.html#IDX278"><CODE>lflags</CODE> directive (ignored)</A>
+<LI><A HREF="as.html#IDX82">line comment character</A>
+<LI><A HREF="as.html#IDX351">line comment character, PowerPC</A>
+<LI><A HREF="as.html#IDX279"><CODE>line</CODE> directive</A>
+<LI><A HREF="as.html#IDX16">line numbers, in input files</A>
+<LI><A HREF="as.html#IDX27">line numbers, in warnings/errors</A>
+<LI><A HREF="as.html#IDX89">line separator character</A>
+<LI><A HREF="as.html#IDX84">lines starting with <CODE>#</CODE></A>
+<LI><A HREF="as.html#IDX21">linker</A>
+<LI><A HREF="as.html#IDX146">linker, and assembler</A>
+<LI><A HREF="as.html#IDX282"><CODE>list</CODE> directive</A>
+<LI><A HREF="as.html#IDX297">listing control, turning off</A>
+<LI><A HREF="as.html#IDX283">listing control, turning on</A>
+<LI><A HREF="as.html#IDX241">listing control: new page</A>
+<LI><A HREF="as.html#IDX308">listing control: paper size</A>
+<LI><A HREF="as.html#IDX316">listing control: subtitle</A>
+<LI><A HREF="as.html#IDX333">listing control: title line</A>
+<LI><A HREF="as.html#IDX36">listings, enabling</A>
+<LI><A HREF="as.html#IDX281"><CODE>ln</CODE> directive</A>
+<LI><A HREF="as.html#IDX276">local common symbols</A>
+<LI><A HREF="as.html#IDX347">local labels, PowerPC</A>
+<LI><A HREF="as.html#IDX48">local labels, retaining in output</A>
+<LI><A HREF="as.html#IDX170">local symbol names</A>
+<LI><A HREF="as.html#IDX177">location counter</A>
+<LI><A HREF="as.html#IDX302">location counter, advancing</A>
+<LI><A HREF="as.html#IDX249">logical file name</A>
+<LI><A HREF="as.html#IDX280">logical line number</A>
+<LI><A HREF="as.html#IDX85">logical line numbers</A>
+<LI><A HREF="as.html#IDX284"><CODE>long</CODE> directive</A>
+</DIR>
+<H2>m</H2>
+<DIR>
+<LI><A HREF="as.html#IDX216">machine independent directives</A>
+<LI><A HREF="as.html#IDX5">machine instructions (not covered)</A>
+<LI><A HREF="as.html#IDX70">machine-independent syntax</A>
+<LI><A HREF="as.html#IDX288"><CODE>macro</CODE> directive</A>
+<LI><A HREF="as.html#IDX285">macros</A>
+<LI><A HREF="as.html#IDX294">macros, count executed</A>
+<LI><A HREF="as.html#IDX4">manual, structure and purpose</A>
+<LI><A HREF="as.html#IDX56">merging text and data sections</A>
+<LI><A HREF="as.html#IDX25">messages from <CODE>ppcas</CODE></A>
+<LI><A HREF="as.html#IDX212">minus, permitted arguments</A>
+<LI><A HREF="as.html#IDX94">multi-line statements</A>
+</DIR>
+<H2>n</H2>
+<DIR>
+<LI><A HREF="as.html#IDX169">names, symbol</A>
+<LI><A HREF="as.html#IDX50">naming object file</A>
+<LI><A HREF="as.html#IDX239">new page, in listings</A>
+<LI><A HREF="as.html#IDX112">newline (<CODE>\n</CODE>)</A>
+<LI><A HREF="as.html#IDX91">newline, required at file end</A>
+<LI><A HREF="as.html#IDX296"><CODE>nolist</CODE> directive</A>
+<LI><A HREF="as.html#IDX228">null-terminated strings</A>
+<LI><A HREF="as.html#IDX127">number constants</A>
+<LI><A HREF="as.html#IDX293">number of macros executed</A>
+<LI><A HREF="as.html#IDX159">numbered subsections</A>
+<LI><A HREF="as.html#IDX260">numbers, 16-bit</A>
+<LI><A HREF="as.html#IDX190">numeric values</A>
+</DIR>
+<H2>o</H2>
+<DIR>
+<LI><A HREF="as.html#IDX17">object file</A>
+<LI><A HREF="as.html#IDX7">object file format</A>
+<LI><A HREF="as.html#IDX51">object file name</A>
+<LI><A HREF="as.html#IDX68">object file, after errors</A>
+<LI><A HREF="as.html#IDX336">obsolescent directives</A>
+<LI><A HREF="as.html#IDX298"><CODE>octa</CODE> directive</A>
+<LI><A HREF="as.html#IDX118">octal character code (<CODE>\<VAR>ddd</VAR></CODE>)</A>
+<LI><A HREF="as.html#IDX132">octal integers</A>
+<LI><A HREF="as.html#IDX197">operands in expressions</A>
+<LI><A HREF="as.html#IDX206">operator precedence</A>
+<LI><A HREF="as.html#IDX200">operators, in expressions</A>
+<LI><A HREF="as.html#IDX205">operators, permitted arguments</A>
+<LI><A HREF="as.html#IDX2">option summary</A>
+<LI><A HREF="as.html#IDX29">options, all versions of <CODE>ppcas</CODE></A>
+<LI><A HREF="as.html#IDX11">options, command line</A>
+<LI><A HREF="as.html#IDX338">options, PPC</A>
+<LI><A HREF="as.html#IDX301"><CODE>org</CODE> directive</A>
+<LI><A HREF="as.html#IDX187">other attribute, of <CODE>a.out</CODE> symbol</A>
+<LI><A HREF="as.html#IDX18">output file</A>
+</DIR>
+<H2>p</H2>
+<DIR>
+<LI><A HREF="as.html#IDX306"><CODE>p2align</CODE> directive</A>
+<LI><A HREF="as.html#IDX219">padding the location counter</A>
+<LI><A HREF="as.html#IDX305">padding the location counter given a power of two</A>
+<LI><A HREF="as.html#IDX229">padding the location counter given number of bytes</A>
+<LI><A HREF="as.html#IDX240">page, in listings</A>
+<LI><A HREF="as.html#IDX309">paper size, for listings</A>
+<LI><A HREF="as.html#IDX43">paths for <CODE>.include</CODE></A>
+<LI><A HREF="as.html#IDX253">patterns, writing in memory</A>
+<LI><A HREF="as.html#IDX209">plus, permitted arguments</A>
+<LI><A HREF="as.html#IDX342">PowerPC architecture options</A>
+<LI><A HREF="as.html#IDX350">PowerPC line comment character</A>
+<LI><A HREF="as.html#IDX348">PowerPC local labels</A>
+<LI><A HREF="as.html#IDX345">PowerPC register names</A>
+<LI><A HREF="as.html#IDX343">PowerPC syntax</A>
+<LI><A HREF="as.html#IDX339">PPC options</A>
+<LI><A HREF="as.html#IDX337">PPC support</A>
+<LI><A HREF="as.html#IDX63"><CODE>ppcas</CODE> version</A>
+<LI><A HREF="as.html#IDX207">precedence of operators</A>
+<LI><A HREF="as.html#IDX143">precision, floating point</A>
+<LI><A HREF="as.html#IDX203">prefix operators</A>
+<LI><A HREF="as.html#IDX72">preprocessing</A>
+<LI><A HREF="as.html#IDX77">preprocessing, turning on and off</A>
+<LI><A HREF="as.html#IDX215">pseudo-ops, machine independent</A>
+<LI><A HREF="as.html#IDX307"><CODE>psize</CODE> directive</A>
+<LI><A HREF="as.html#IDX6">purpose of GNU <CODE>ppcas</CODE></A>
+</DIR>
+<H2>q</H2>
+<DIR>
+<LI><A HREF="as.html#IDX310"><CODE>quad</CODE> directive</A>
+</DIR>
+<H2>r</H2>
+<DIR>
+<LI><A HREF="as.html#IDX346">register names, PowerPC</A>
+<LI><A HREF="as.html#IDX145">relocation</A>
+<LI><A HREF="as.html#IDX154">relocation example</A>
+<LI><A HREF="as.html#IDX313"><CODE>rept</CODE> directive</A>
+</DIR>
+<H2>s</H2>
+<DIR>
+<LI><A HREF="as.html#IDX314"><CODE>sbttl</CODE> directive</A>
+<LI><A HREF="as.html#IDX44">search path for <CODE>.include</CODE></A>
+<LI><A HREF="as.html#IDX150">section-relative addressing</A>
+<LI><A HREF="as.html#IDX144">sections</A>
+<LI><A HREF="as.html#IDX156">sections in messages, internal</A>
+<LI><A HREF="as.html#IDX317"><CODE>set</CODE> directive</A>
+<LI><A HREF="as.html#IDX319"><CODE>short</CODE> directive</A>
+<LI><A HREF="as.html#IDX123">single character constant</A>
+<LI><A HREF="as.html#IDX320"><CODE>single</CODE> directive</A>
+<LI><A HREF="as.html#IDX261">sixteen bit integers</A>
+<LI><A HREF="as.html#IDX300">sixteen byte integer</A>
+<LI><A HREF="as.html#IDX13">source program</A>
+<LI><A HREF="as.html#IDX322"><CODE>space</CODE> directive</A>
+<LI><A HREF="as.html#IDX60">space used, maximum for assembly</A>
+<LI><A HREF="as.html#IDX349">special characters, PowerPC</A>
+<LI><A HREF="as.html#IDX326"><CODE>stabd</CODE> directive</A>
+<LI><A HREF="as.html#IDX327"><CODE>stabn</CODE> directive</A>
+<LI><A HREF="as.html#IDX328"><CODE>stabs</CODE> directive</A>
+<LI><A HREF="as.html#IDX325"><CODE>stab<VAR>x</VAR></CODE> directives</A>
+<LI><A HREF="as.html#IDX9">standard input, as input file</A>
+<LI><A HREF="as.html#IDX148">standard <CODE>ppcas</CODE> sections</A>
+<LI><A HREF="as.html#IDX95">statement on multiple lines</A>
+<LI><A HREF="as.html#IDX90">statement separator character</A>
+<LI><A HREF="as.html#IDX88">statements, structure of</A>
+<LI><A HREF="as.html#IDX58">statistics, about assembly</A>
+<LI><A HREF="as.html#IDX218">stopping the assembly</A>
+<LI><A HREF="as.html#IDX103">string constants</A>
+<LI><A HREF="as.html#IDX330"><CODE>string</CODE> directive</A>
+<LI><A HREF="as.html#IDX225">string literals</A>
+<LI><A HREF="as.html#IDX329">string, copying to object file</A>
+<LI><A HREF="as.html#IDX199">subexpressions</A>
+<LI><A HREF="as.html#IDX315">subtitles for listings</A>
+<LI><A HREF="as.html#IDX211">subtraction, permitted arguments</A>
+<LI><A HREF="as.html#IDX3">summary of options</A>
+<LI><A HREF="as.html#IDX269">supporting files, including</A>
+<LI><A HREF="as.html#IDX66">suppressing warnings</A>
+<LI><A HREF="as.html#IDX178">symbol attributes</A>
+<LI><A HREF="as.html#IDX185">symbol attributes, <CODE>a.out</CODE></A>
+<LI><A HREF="as.html#IDX168">symbol names</A>
+<LI><A HREF="as.html#IDX171">symbol names, local</A>
+<LI><A HREF="as.html#IDX173">symbol names, temporary</A>
+<LI><A HREF="as.html#IDX183">symbol type</A>
+<LI><A HREF="as.html#IDX181">symbol value</A>
+<LI><A HREF="as.html#IDX318">symbol value, setting</A>
+<LI><A HREF="as.html#IDX167">symbol values, assigning</A>
+<LI><A HREF="as.html#IDX234">symbol, common</A>
+<LI><A HREF="as.html#IDX257">symbol, making visible to linker</A>
+<LI><A HREF="as.html#IDX324">symbolic debuggers, information for</A>
+<LI><A HREF="as.html#IDX163">symbols</A>
+<LI><A HREF="as.html#IDX246">symbols, assigning values to</A>
+<LI><A HREF="as.html#IDX277">symbols, local common</A>
+<LI><A HREF="as.html#IDX71">syntax, machine-independent</A>
+<LI><A HREF="as.html#IDX344">syntax, PowerPC</A>
+</DIR>
+<H2>t</H2>
+<DIR>
+<LI><A HREF="as.html#IDX116">tab (<CODE>\t</CODE>)</A>
+<LI><A HREF="as.html#IDX172">temporary symbol names</A>
+<LI><A HREF="as.html#IDX54">text and data sections, joining</A>
+<LI><A HREF="as.html#IDX331"><CODE>text</CODE> directive</A>
+<LI><A HREF="as.html#IDX59">time, total for assembly</A>
+<LI><A HREF="as.html#IDX332"><CODE>title</CODE> directive</A>
+<LI><A HREF="as.html#IDX40">trusted compiler</A>
+<LI><A HREF="as.html#IDX76">turning preprocessing on and off</A>
+<LI><A HREF="as.html#IDX182">type of a symbol</A>
+</DIR>
+<H2>u</H2>
+<DIR>
+<LI><A HREF="as.html#IDX153">undefined section</A>
+</DIR>
+<H2>v</H2>
+<DIR>
+<LI><A HREF="as.html#IDX180">value of a symbol</A>
+<LI><A HREF="as.html#IDX64">version of <CODE>ppcas</CODE></A>
+</DIR>
+<H2>w</H2>
+<DIR>
+<LI><A HREF="as.html#IDX24">warning messages</A>
+<LI><A HREF="as.html#IDX67">warnings, suppressing</A>
+<LI><A HREF="as.html#IDX80">whitespace</A>
+<LI><A HREF="as.html#IDX73">whitespace, removed by preprocessor</A>
+<LI><A HREF="as.html#IDX334"><CODE>word</CODE> directive</A>
+<LI><A HREF="as.html#IDX252">writing patterns in memory</A>
+</DIR>
+<H2>z</H2>
+<DIR>
+<LI><A HREF="as.html#IDX227">zero-terminated strings</A>
+</DIR>
+
+</P>
+</BODY>
+</HTML>

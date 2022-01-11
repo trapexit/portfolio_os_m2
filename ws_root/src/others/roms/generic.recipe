@@ -1,0 +1,467 @@
+// @(#) generic.recipe 96/12/03 1.19
+//
+// Recipe to produce a bootable image.
+// This file should not be used directly, but should be included
+// in an image recipe file, such as cdrom.recipe.
+
+PARSEOFF
+#include "../../includes/kernel/types.h"
+#include "../../includes/file/discdata.h"
+#include "../../includes/dipir/rom.h"
+#include "generic.defines"
+PARSEON
+
+// ***********************************************************************
+// Get all the files ready...
+// ***********************************************************************
+
+// Build the "takeme" tree.
+COMMAND { rm -rf TAKEME }
+CMDWARGS { BUILDTREE BLUEPRINT }
+
+#ifdef BOOTABLE
+// Concatenate the primitive components into OSCODE.
+COMMAND { MAKEBOOT -a7 KERNEL -a7 OPERATOR -a7 FILESYSTEM -a7 KERNEL_INIT -a7 OPERATOR_INIT -a7 FILESYSTEM_INIT > OSCODE }
+#endif /* BOOTABLE */
+
+// Sign some files.
+#ifdef APPBANNER
+COMMAND { chmod +w APPBANNER; RSASIGN APPBANNER }
+#endif
+#ifdef DEVICON
+COMMAND { chmod +w DEVICON; RSASIGN DEVICON }
+#endif
+#ifdef DDDFILE
+COMMAND { chmod +w DDDFILE; RSASIGN DDDFILE }
+#endif
+#ifdef BOOTABLE
+COMMAND { chmod +w MISCCODE; RSASIGN MISCCODE }
+COMMAND { chmod +w OSCODE; RSASIGN OSCODE }
+#endif /* BOOTABLE */
+
+// Make placeholder signature files.
+COMMAND { dd if=/dev/zero of=DUMMYSIG64 bs=64 count=1 }
+COMMAND { dd if=/dev/zero of=DUMMYSIG128 bs=128 count=1 }
+#ifdef ENCODER_OFFSET
+COMMAND { dd if=/dev/zero of=ENCODER_IMAGE bs=2048 count=12 }
+#endif
+
+// ***********************************************************************
+// Build RomTag table
+// ***********************************************************************
+
+INITBUF
+VARIABLE VOL_START ADDRESS	// Save address for later
+ADDRESS { ADDRESS + SIZEOF_LABEL }
+ALIGN BLOCK_SIZE
+VARIABLE RTT_START ADDRESS	// Save address for later
+
+// Device-dipir
+BYTE	RSANODE
+BYTE	RSA_M2_DEVDIPIR
+BYTE	22	// FIXME: READFILE DEVDIPIR {KOFFVER} {KOFFVER + 1}
+BYTE	0	// FIXME: READFILE DEVDIPIR {KOFFREV} {KOFFREV + 1}
+WORD	0x00000000
+VARIABLE DEVDIPIR_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	{ DEVDIPIR + 128 }	// Length of component + signature
+WORD	DEVDIPIR_COMPONENT_ID	// ComponentID
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+VARIABLE SIZEOF_ROMTAG { ADDRESS - RTT_START }
+
+#ifdef DDDFILE
+// Dipir Device Driver
+BYTE	RSANODE
+BYTE	RSA_M2_DRIVER
+BYTE	22	// FIXME: READFILE DDDFILE {KOFFVER} {KOFFVER + 1}
+BYTE	0	// FIXME: READFILE DDDFILE {KOFFREV} {KOFFREV + 1}
+WORD	0x00000000
+VARIABLE DDDFILE_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	DDDFILE			// Length of component + signature
+WORD	DDDFILE_COMPONENT_ID	// ComponentID
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+#endif /* DDDFILE */
+
+
+#ifdef APPBANNER
+// App Banner
+BYTE	RSANODE
+BYTE	RSA_M2_APPBANNER
+BYTE	0
+BYTE	0
+WORD	0x00000000
+VARIABLE APPBANNER_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	APPBANNER		// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+#endif /* APPBANNER */
+
+#ifdef DEVICON
+// App Banner
+BYTE	RSANODE
+BYTE	RSA_M2_ICON
+BYTE	0
+BYTE	0
+WORD	0x00000000
+VARIABLE DEVICON_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	DEVICON			// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+#endif /* DEVICON */
+
+#ifdef BOOTABLE
+
+// Misc code
+BYTE	RSANODE
+BYTE	RSA_M2_MISCCODE
+BYTE	0
+BYTE	0
+WORD	0x00000000
+VARIABLE MISCCODE_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	MISCCODE		// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+// OS file
+BYTE	RSANODE
+BYTE	RSA_M2_OS
+BYTE	22	// FIXME: READFILE KERNEL {KOFFVER} {KOFFVER + 1}
+BYTE	0	// FIXME: READFILE KERNEL {KOFFREV} {KOFFREV + 1}
+WORD	0x00000000
+VARIABLE OSCODE_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	OSCODE			// Length of component
+WORD	0x00000000
+WORD	{ OSFLAGS }		// OSFlags
+WORD	{ OSRESERVEDMEM }	// OSReservedMem
+WORD	0x00000000
+
+#endif /* BOOTABLE */
+
+#ifdef DEVICEPERMS
+
+BYTE	RSANODE
+BYTE	RSA_DEV_PERMS
+BYTE	0
+BYTE	0
+WORD	0x00000000
+WORD	0x00000000	
+WORD	0x00000000
+WORD	DEVICEPERMS
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+#endif /* DEVICEPERMS */
+
+#ifdef OPERA
+
+// Device-dipir for Opera
+BYTE	RSANODE
+BYTE	RSA_NEWKNEWNEWGNUBOOT
+READFILE DEVDIPIR_OPERA {AIFVER} {AIFVER + 1}
+READFILE DEVDIPIR_OPERA {AIFREV} {AIFREV + 1}
+WORD	0x00000000
+VARIABLE DEVDIPIR_OPERA_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	DEVDIPIR_OPERA		// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+// Misc code for Opera
+BYTE	RSANODE
+BYTE	RSA_MISCCODE
+BYTE	0
+BYTE	0
+WORD	0x00000000
+VARIABLE MISCCODE_OPERA_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	MISCCODE_OPERA		// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+// Banner for Opera
+BYTE	RSANODE
+BYTE	RSA_APPBANNER
+BYTE	0
+BYTE	0
+WORD	0x00000000
+VARIABLE APPBANNER_OPERA_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	APPBANNER_OPERA		// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+// OS file for Opera
+BYTE	RSANODE
+BYTE	RSA_OS
+READFILE KERNEL_OPERA {AIFVER} {AIFVER + 1}
+READFILE KERNEL_OPERA {AIFREV} {AIFREV + 1}
+WORD	0x00000000
+VARIABLE OSCODE_OPERA_Off ADDRESS
+WORD	0x00000000		// Place holder for offset to be filled in later
+WORD	OSCODE_OPERA		// Length of component
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+
+#endif /* OPERA */
+
+VARIABLE RTT_END ADDRESS
+VARIABLE NumRomTags { ( RTT_END - RTT_START ) / SIZEOF_ROMTAG }
+
+#ifdef OPERA
+// RomTag table terminator (only needed by Opera)
+BYTE	0
+BYTE	0
+BYTE	0
+BYTE	0
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+WORD	0x00000000
+#endif /* OPERA */
+
+// ***********************************************************************
+// Reserve space for signatures at end of RomTag table.
+// Real signatures will be filled in later.
+// ***********************************************************************
+
+#ifdef OPERA
+VARIABLE OPERA_SIG ADDRESS
+READFILE DUMMYSIG64  // Space for Opera signature
+#endif /* OPERA */
+VARIABLE M2_SIG ADDRESS
+READFILE DUMMYSIG128 // Space for M2 signature
+
+VARIABLE RTT_PEND ADDRESS
+
+// ***********************************************************************
+// Figure out where we will place the actual files in the volume.
+// ***********************************************************************
+
+#ifdef RTT2_OFFSET
+// Leave space for 2nd copy of RomTag table.
+ADDRESS { ( RTT2_OFFSET ) + ( 5 * BLOCK_SIZE ) }
+#endif
+
+#define	POKE_OFFSET(sym) \
+	POKEWORD sym { ( ADDRESS - RTT_START ) / BLOCK_SIZE }
+
+// Device dipir 
+ALIGN BLOCK_SIZE
+POKE_OFFSET(DEVDIPIR_Off)
+VARIABLE DEVDIPIR_RomOff ADDRESS
+VARIABLE DEVDIPIR_START ADDRESS
+ADDRESS { ADDRESS + DEVDIPIR }
+VARIABLE DEVDIPIR_END { ADDRESS }
+ADDRESS { ADDRESS + 128 }
+
+#ifdef DDDFILE
+// Dipir Device Driver
+ALIGN BLOCK_SIZE
+POKE_OFFSET(DDDFILE_Off)
+VARIABLE DDDFILE_RomOff ADDRESS
+ADDRESS { ADDRESS + DDDFILE }
+#endif
+
+// App banner 
+#ifdef APPBANNER
+ALIGN BLOCK_SIZE
+POKE_OFFSET(APPBANNER_Off)
+VARIABLE APPBANNER_RomOff ADDRESS
+ADDRESS { ADDRESS + APPBANNER }
+#endif /* APPBANNER */
+
+// Icon
+#ifdef DEVICON
+ALIGN BLOCK_SIZE
+POKE_OFFSET(DEVICON_Off)
+VARIABLE DEVICON_RomOff ADDRESS
+ADDRESS { ADDRESS + DEVICON }
+#endif /* DEVICON */
+
+// Misc code
+#ifdef BOOTABLE
+ALIGN BLOCK_SIZE
+POKE_OFFSET(MISCCODE_Off)
+VARIABLE MISCCODE_RomOff ADDRESS
+ADDRESS { ADDRESS + MISCCODE }
+
+// OS file
+ALIGN BLOCK_SIZE
+POKE_OFFSET(OSCODE_Off)
+VARIABLE OSCODE_RomOff ADDRESS
+ADDRESS { ADDRESS + OSCODE }
+COMMAND { echo misccode [MISCCODE_RomOff], oscode [OSCODE_RomOff] }
+#endif /* BOOTABLE */
+
+#ifdef OPERA
+
+// Device dipir for Opera
+ALIGN BLOCK_SIZE
+VARIABLE OPERA_START ADDRESS
+POKE_OFFSET(DEVDIPIR_OPERA_Off)
+VARIABLE DEVDIPIR_OPERA_RomOff ADDRESS
+VARIABLE DEVDIPIR_OPERA_START ADDRESS
+ADDRESS { ADDRESS + DEVDIPIR_OPERA }
+VARIABLE DEVDIPIR_OPERA_END ADDRESS
+
+// Misc code for Opera
+ALIGN BLOCK_SIZE
+POKE_OFFSET(MISCCODE_OPERA_Off)
+VARIABLE MISCCODE_OPERA_RomOff ADDRESS
+ADDRESS { ADDRESS + MISCCODE_OPERA }
+
+// App banner for Opera
+ALIGN BLOCK_SIZE
+POKE_OFFSET(APPBANNER_OPERA_Off)
+VARIABLE APPBANNER_OPERA_RomOff ADDRESS
+ADDRESS { ADDRESS + APPBANNER_OPERA }
+
+// OS file for Opera
+ALIGN BLOCK_SIZE
+POKE_OFFSET(OSCODE_OPERA_Off)
+VARIABLE OSCODE_OPERA_RomOff ADDRESS
+ADDRESS { ADDRESS + OSCODE_OPERA }
+
+#endif /* OPERA */
+
+// Output the RomTag table
+OUTPUT RTT_IMAGE RTT_START RTT_PEND
+
+// ***********************************************************************
+// Construct the placement files.
+// ***********************************************************************
+
+#define	CALC_PLACE(sym) \
+	STRING	CALC { ( ( sym ) - VOL_START ) / BLOCK_SIZE }
+
+// RomTag table
+INITBUF
+CALC_PLACE(RTT_START)
+#ifdef RTT2_OFFSET
+BYTE 0x20 // Space
+CALC_PLACE(RTT2_OFFSET)
+#endif
+OUTPUT RTT_PLACE
+
+// Encoder file
+#ifdef ENCODER_OFFSET
+INITBUF
+CALC_PLACE(ENCODER_OFFSET)
+OUTPUT ENCODER_PLACE
+#endif
+
+// Device dipir 
+INITBUF
+CALC_PLACE(DEVDIPIR_RomOff)
+OUTPUT DEVDIPIR_PLACE
+
+#ifdef DDDFILE
+INITBUF
+CALC_PLACE(DDDFILE_RomOff)
+OUTPUT DDDFILE_PLACE
+#endif /* DDDFILE */
+
+// App banner 
+#ifdef APPBANNER
+INITBUF
+CALC_PLACE(APPBANNER_RomOff)
+OUTPUT APPBANNER_PLACE
+#endif /* APPBANNER */
+
+// Icon
+#ifdef DEVICON
+INITBUF
+CALC_PLACE(DEVICON_RomOff)
+OUTPUT DEVICON_PLACE
+#endif /* DEVICON */
+
+// Misc code
+#ifdef BOOTABLE
+INITBUF
+CALC_PLACE(MISCCODE_RomOff)
+OUTPUT MISCCODE_PLACE
+
+// OS file
+INITBUF
+CALC_PLACE(OSCODE_RomOff)
+OUTPUT OSCODE_PLACE
+#endif /* BOOTABLE */
+
+#ifdef OPERA
+
+// Device dipir for Opera
+INITBUF
+CALC_PLACE(DEVDIPIR_OPERA_RomOff)
+OUTPUT DEVDIPIR_OPERA_PLACE
+
+// Misc code for Opera
+INITBUF
+CALC_PLACE(MISCCODE_OPERA_RomOff)
+OUTPUT MISCCODE_OPERA_PLACE
+
+// App banner for Opera
+INITBUF
+CALC_PLACE(APPBANNER_OPERA_RomOff)
+OUTPUT APPBANNER_OPERA_PLACE
+
+// OS file for Opera
+INITBUF
+CALC_PLACE(OSCODE_OPERA_RomOff)
+OUTPUT OSCODE_OPERA_PLACE
+
+#endif /* OPERA */
+
+// ***********************************************************************
+// Do the filesystem layout.
+// ***********************************************************************
+
+#ifdef OPERA
+#define	VOLFLAGS	VF_M2 + VF_BLESSED
+#else
+#define	VOLFLAGS	VF_M2 + VF_BLESSED + VF_M2ONLY
+#endif
+
+COMMAND { FSBUILD TAKEME -t FSTYPE -b BLOCK_SIZE -d DIR_BLOCK_SIZE -s VOLSIZE -r [NumRomTags] -f [VOLFLAGS] -l LAYOUT_TOOLS -o OUTPUT_IMAGE -v VOLUME_NAME -L LAYOUT_LOG }
+
+// ***********************************************************************
+// Add signatures.
+// ***********************************************************************
+
+#ifdef OPERA
+// Put Opera signature after RomTag table.
+COMMAND { RSASIGN -kopera -s0 -e SIZEOF_OPERA_LABEL -s [RTT_START] -e [RTT_END + SIZEOF_ROMTAG] -s [DEVDIPIR_OPERA_START] -e [DEVDIPIR_OPERA_END] -p OUTPUT_IMAGE | OVERWRITE -s [OPERA_SIG] OUTPUT_IMAGE }
+#endif /* OPERA */
+
+// Put M2 signature after RomTag table.
+COMMAND { RSASIGN -s0 -e SIZEOF_LABEL -s [RTT_START] -e [RTT_END] -p OUTPUT_IMAGE | OVERWRITE -s [M2_SIG] OUTPUT_IMAGE }
+
+// Put signature on the M2 dipir
+COMMAND { RSASIGN -s0 -e SIZEOF_LABEL -s [RTT_START] -e [RTT_END] -s [DEVDIPIR_START] -e [DEVDIPIR_END] -p OUTPUT_IMAGE | OVERWRITE -s [DEVDIPIR_END] OUTPUT_IMAGE }

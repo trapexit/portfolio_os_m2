@@ -1,0 +1,111 @@
+\ @(#) sub_decode_adp4.ins 96/08/01 1.12
+\ $Id: decodeadpcm.ins.j,v 1.6 1995/01/20 21:27:52 peabody Exp $
+\ ADPCM NIbble decoder based on 4:1 Intel/DVI format
+\
+\ Phil Burk
+\ Copyright 3DO 1993
+\ All Rights Reserved
+\ Proprietary and Confidential
+
+\\\	Decompress a 4-bit Intel/DVI format sample.
+\\\ Included by sampler_adpcm_*.ins
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument is the adaptive delta pulse code modulation library
+\\\	    routine. It is used internally when it is called by other adpcm routines to
+\\\	    implement the decompression of 4-bit samples. Load this instrument using
+\\\	    LoadInstrument() before loading other ADPCM instruments.
+\\\
+\\\	    Sound samples are compressed from 16-bit samples to 4-bit samples using the
+\\\	    SoundHack program. These 4-bit samples are in the standard Intel/DVI
+\\\	    format. This library routine decompresses the 4-bit samples so that they
+\\\	    can be played by other ADPCM instruments.
+\\\
+
+include? DFID_SUB_DECODE_ADP4 function_ids.j
+include? ADPCM_REG_StepSize sub_decode_adp4.j
+
+anew task-sub_decode_adp4.ins.j
+
+create StepSizeInitData here
+    7  , 8 ,   9 ,  10 ,  11 ,  12 ,  13 ,  14 ,  16 ,   17 ,  19 ,
+   21 ,  23 ,  25 ,  28 ,  31 ,  34 ,  37 ,  41 ,  45 ,   50 ,  55 ,
+   60 ,  66 ,  73 ,  80 ,  88 ,  97 , 107 , 118 , 130 ,  143 , 157 ,
+  173 , 190 , 209 , 230 , 253 , 279 , 307 , 337 , 371 ,  408 , 449 ,
+  494 , 544 , 598 , 658 , 724 , 796 , 876 , 963 , 1060 , 1166 , 1282 ,
+ 1411 , 1552 , 1707 , 1878 , 2066 , 2272 , 2499 , 2749 , 3024 ,  3327 , 3660 ,
+ 4026 , 4428 , 4871 , 5358 , 5894 , 6484 , 7132 ,  7845 , 8630 ,  9493 , 10442 ,
+11487 , 12635 , 13899 , 15289 , 16818 , 18500 , 20350 , 22385 , 24623 , 27086 , 29794 ,
+32767 ,
+here swap - cell / constant StepSizeInitDataMany
+
+create IndexDeltaInitData here
+    -1 , -1 , -1 , -1 , 2 , 4 , 6 , 8 ,
+here swap - cell / constant IndexDeltaInitDataMany
+
+dspp-echo off
+
+_BULLDOG
+dspp{
+ins{
+
+DHDR_F_PRIVILEGED DHDR_F_SHARED or dspp-header-flags !
+DFID_SUB_DECODE_ADP4 dspp-function-id !
+$" sub_decode_adp4.dsp" ins-name !
+
+\ ADPCM decoding variables
+_IMPORT ALLOC.VARIABLE   gScratch1  \ table address
+_IMPORT ALLOC.VARIABLE   gScratch2  \ encoded sample, data in high nibble
+
+StepSizeInitDataMany   ALLOC.VARIABLE.ARRAY  StepSizes
+IndexDeltaInitDataMany ALLOC.VARIABLE.ARRAY  IndexDeltas
+
+StepSizes DINI_AT_ALLOC StepSizeInitData StepSizeInitDataMany INIT.RESOURCE.ARRAY StepSizesInit
+IndexDeltas DINI_AT_ALLOC IndexDeltaInitData IndexDeltaInitDataMany INIT.RESOURCE.ARRAY IndexDeltaInit
+
+$ 7FFF StepSizeInitDataMany -  DRSC_AT_ALLOC ALLOC.VARIABLE.DEFAULT StepTableClipper
+
+: MACRO.CALC.DELTA
+\ delta = (EncodedSample + 1/2) * StepSize/4
+	gScratch2 _A _= ACCUME #$ 7000 _AND
+\ calculate index into IndexDeltas table, shift right by 12 by *8
+	gScratch1 _A _= ACCUME $ 0008 _#  IndexDeltas _# _*+  \ index into IndexDeltas
+	gScratch2 _A #$ 0800 _OR   \ for the +1/2
+	ADPCM_REG_StepSize _reg  ACCUME   1 _<<' _*
+;
+
+\ RBASE set by caller
+
+_EXPORT _LABEL: sub_decode_adp4
+
+	ACCUME #$ F000 _AND
+\ apply sign bit, encoded sample is not two's complement
+	_BPL: @DontNegate
+	MACRO.CALC.DELTA
+\ SUBTRACT delta from previous sample
+	ADPCM_REG_NewVal _%reg ACCUME _CLIP _-
+	_JUMP: FinishDelta
+
+_LABEL:  @DontNegate
+	MACRO.CALC.DELTA
+\ ADD delta to previous sample
+	ADPCM_REG_NewVal _%reg ACCUME _CLIP _+
+_LABEL: FinishDelta
+
+\ clip between 0 and StepSizeInitDataMany
+	ADPCM_REG_StepIndex _reg gScratch1 _[A] _CLIP _+
+	ACCUME $ 8000 _# _CLIP  _+ \ clip against zero
+	ACCUME $ 8000 _# _-    \ get back to original
+	ACCUME StepTableClipper _A _CLIP _+   \ clip to StepSizeInitDataMany
+	ADPCM_REG_StepIndex _reg _= ACCUME StepTableClipper _A _-   \ get back to original
+
+\ We now have a StepIndex that is within the legal range.
+	gScratch1 _A _= StepSizes _# ACCUME _+
+	_NOP  \ 1 NOP required for pipeline
+	ADPCM_REG_StepSize _reg gScratch1 _[A] _MOVE
+	_RTS
+
+	_ENDEXT
+}ins
+}dspp

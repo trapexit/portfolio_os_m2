@@ -1,0 +1,75 @@
+# @(#) extrasrc 96/09/12 1.14
+
+# This deals with importing source files from other modules. You set the
+# EXTRA_SRC variable to contain the complete path leading up to the
+# extra source files that are needed. These files will be compiled as if
+# they were local to the current directory.
+
+# dummy target to permit order-independent inclusion of this rule with other rules
+default:
+
+# {
+ifneq (0, ${words ${EXTRA_SRC}})
+
+# A macro used below before removing our links to make sure that they really are links.
+# !!! Nick T. reports that this doesn't work on IRIX. I don't know why, so it's
+#     disabled for IRIX. -peabody 07 Jul 1995
+ifneq (${HOSTOS}, IRIX)
+checklinks = \
+	oops=0				; \
+	for f in ${notdir ${EXTRA_SRC}}	; \
+	do if [ -f $$f -a ! -h $$f ]	; \
+	   then echo "${RELATIVE_PATH}$$f is a file. Expected a symbolic link because $$f appears in EXTRA_SRC." ; \
+		oops=1			; \
+	   fi				; \
+	done				; \
+	[ $$oops -eq 0 ]
+else
+checklinks =		${TRUE}
+endif
+
+# Use relative soft links whereever possible to avoid absolute
+# path names with non-portable file system names
+# @@@ this isn't as optimal as it could be, it winds up doing ../ all the way up to ROOT
+#     when in most cases it doesn't need to. It would be better to figure out the longest
+#     prefix that is common to each member of EXTRA_SRC and ABSPATH and do ../ to back
+#     up the remaining non-common part.
+empty:=
+space:=${empty} ${empty}
+ifneq (,${filter ${ROOT}%,${ABSPATH}})
+  ifneq (${RELATIVE_PATH},)
+    # Transform RELATIVE_PATH into a series of ../ from build directory back up to ROOT.
+    # (has trailing slash)
+    RELATIVE_ROOT = ${subst ${space},/,${patsubst %,..,${subst /,${space},${RELATIVE_PATH}}}}/
+  endif
+  # Make relatively named set of EXTRA_SRC files. Absolutely named ones go thru unchanged.
+  RELATIVE_EXTRA_SRC = ${EXTRA_SRC:${ROOT}/%=${RELATIVE_ROOT}%}
+else
+  # if ABSPATH is not under ROOT, just use absolute names to get to everything
+  RELATIVE_EXTRA_SRC = ${EXTRA_SRC}
+endif
+
+# This rule is activated once for each of the targets in EXTRA_SRC if it doesn't
+# already exist. $@ contains the name of the target that invokes the rule.
+# If file being linked doesn't exist, print an error message instead of making a link.
+${notdir ${EXTRA_SRC}}:
+	@f=${filter %/$@,${RELATIVE_EXTRA_SRC}}		; \
+	 if [ ! -f $$f ]				; \
+	   then echo "EXTRA_SRC file $$f not found."	; \
+		${FALSE}				; \
+	   fi
+	${SLN} ${filter %/$@,${RELATIVE_EXTRA_SRC}} $@
+
+depends.here: ${notdir ${EXTRA_SRC}}
+
+all.here: all.extrasrc ${notdir ${EXTRA_SRC}}
+all.extrasrc:
+	@${checklinks}
+
+clean: clean.extrasrc
+clean.extrasrc:
+	@${checklinks}
+	${RM} ${notdir ${EXTRA_SRC}}
+
+endif
+# } ifneq (0, ${words ${EXTRA_SRC}})

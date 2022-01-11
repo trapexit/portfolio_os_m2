@@ -1,0 +1,116 @@
+\ @(#) submixer4x2.ins 95/11/16 1.7
+\ $Id: submixer4x2.ins,v 1.7 1995/01/20 20:20:23 peabody Exp $
+\ 4x2 subMixer
+\
+\ Copyright 1993 3DO
+
+\\\	NOAUTODOC -private -class DSP -name submixer4x2.dsp
+\\\	OBSOLETE - Four-channel stereo submixer.
+\\\
+\\\	  Function
+\\\
+\\\	    This is a four-channel stereo mixer. The total gain on a side should not
+\\\	    exceed $7FFF. The output is available directly and can be used as an
+\\\	    input to other instruments. This could be used to mix signals before
+\\\	    being passed to an effects processor.
+\\\
+\\\	  Knobs
+\\\
+\\\	    LeftGain0 - 0  ->  $7FFF
+\\\
+\\\	    LeftGain1 - 0  ->  $7FFF
+\\\
+\\\	    LeftGain2 - 0  ->  $7FFF
+\\\
+\\\	    LeftGain3 - 0  ->  $7FFF
+\\\
+\\\	    RightGain0 - 0  ->  $7FFF
+\\\
+\\\	    RightGain1 - 0  ->  $7FFF
+\\\
+\\\	    RightGain2 - 0  ->  $7FFF
+\\\
+\\\	    RightGain3 - 0  ->  $7FFF
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input0
+\\\
+\\\	    Input1
+\\\
+\\\	    Input2
+\\\
+\\\	    Input3
+\\\
+\\\	  Outputs
+\\\
+\\\	    Left Output
+\\\
+\\\	    Right Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks = 32
+\\\
+\\\	    N memory = 32 words
+\\\
+
+decimal
+include? DFID_SUBMIXER4X2 function_ids.j
+
+anew task-submixer4x2.f
+
+_RED
+dspp{
+ins{
+
+DFID_SUBMIXER4X2 dspp-function-id !
+$" submixer4x2.dsp" ins-name !
+
+
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain0
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain1
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain2
+0 $ 7FFF $ 0 ALLOC.KNOB RightGain3
+
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain0
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain1
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain2
+0 $ 7FFF $ 0 ALLOC.KNOB LeftGain3
+
+ALLOC.IMEM Input0
+ALLOC.IMEM Input1
+ALLOC.IMEM Input2
+ALLOC.IMEM Input3
+
+ALLOC.OUTPUT LeftOutput
+ALLOC.OUTPUT RightOutput
+32 ALLOC.TICKS
+
+\ left side
+	LeftGain0 _A  Input0 _A  _*
+	LeftGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	LeftGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	LeftGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	_NOP
+	LeftOutput _A _=A
+
+\ right side
+	RightGain0 _A  Input0 _A  _*
+	RightGain1 _A  Input1 _A  ACCUME _CLIP _*+
+	RightGain2 _A  Input2 _A  ACCUME _CLIP _*+
+	RightGain3 _A  Input3 _A  ACCUME _CLIP _*+
+	_NOP
+	RightOutput _A _=A
+
+}ins
+}dspp
+

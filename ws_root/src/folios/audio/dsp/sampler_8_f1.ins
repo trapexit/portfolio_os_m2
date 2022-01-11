@@ -1,0 +1,73 @@
+\ @(#) sampler_8_f1.ins 96/03/11 1.10
+\ sampler_8_f1 - Instrument Template for Sample Player without rate conversion
+\
+\ Author: Phil Burk
+\ Copyright 1993 3DO
+\ All Rights Reserved
+\
+
+\\\	AUTODOC -class DSP -group Sampled_Sound -name sampler_8_f1.dsp
+\\\	Fixed-rate mono 8-bit sample player.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument plays a monophonic 8-bit sample at the instrument's
+\\\	    execution rate (e.g., 44100 samples/sec).
+\\\
+\\\	  Knobs
+\\\
+\\\	    Amplitude - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        0.0 to 1.0. Defaults to 1.0.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 6
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 2 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V27
+\\\
+\\\	  Caveats
+\\\
+\\\	    8-bit audio sounds inherently BAD because there is very little information
+\\\	    in each sample. Use one of the compressed data formats such as SQS2 for mono
+\\\	    samples, or CBD2 for stereo samples, for better quality. The only reason to
+\\\	    use 8-bit audio is if you don't have the 16-bit original recording.
+\\\
+\\\	  See Also
+\\\
+\\\	    sampler_8_f2.dsp(@), sampler_sqs2_f1.dsp(@)
+
+include? DFID_SAMPLER_8_F1 function_ids.j
+
+anew task-sampler_8_f1.ins
+
+
+_BULLDOG
+dspp{
+ins{
+DFID_SAMPLER_8_F1 dspp-function-id !
+$" sampler_8_f1.dsp" ins-name !
+dspp-echo off
+
+DRSC_INFIFO_SUBTYPE_8BIT ALLOC.INFIFO.SUBTYPE  InFIFO
+
+\ Yes, use 16 bit player cuz the DMA does the decompression to 16 bits!
+	include sampler_16_f1.j
+
+}ins
+}dspp

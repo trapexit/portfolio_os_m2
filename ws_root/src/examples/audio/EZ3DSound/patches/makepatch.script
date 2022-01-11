@@ -1,0 +1,6 @@
+# @(#) makepatch.script 96/09/06 1.3
+#
+# Script to make patches for EZ3DSound example.
+
+makepatch bee.mp            bee.patch            -check #
+makepatch reverb.mp         reverb.patch         -check #

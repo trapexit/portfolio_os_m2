@@ -1,0 +1,90 @@
+\ @(#) filter_1o1z.ins 96/03/11 1.12
+\ First Order, One Zero filter
+
+\\\	AUTODOC -class DSP -group Effects -name filter_1o1z.dsp
+\\\	First Order, One Zero filter.
+\\\
+\\\	  Description
+\\\
+\\\	    First Order, One Zero filter using the following formula:
+\\\
+\\\	        y(n) = A0*x(n) + A1*x(n-1)
+\\\
+\\\	    where y(n) is Output, x(n) is Input and x(n-1) is Input at the prior sample
+\\\	    tick.
+\\\
+\\\	    Setting A1 positive gives a low-pass response; setting A1 negative gives a
+\\\	    high-pass response. The bandwidth of this filter is fairly high, so it often
+\\\	    serves a building block by being cascaded with other filters.
+\\\
+\\\	    If A0 and A1 are both 0.5, then this filter is a simple averaging lowpass
+\\\	    filter, with a zero at SR/2 = 22050 Hz.
+\\\
+\\\	    If A0 is 0.5 and A1 is -0.5, then this filter is a high pass filter, with a
+\\\	    zero at 0.0 Hz.
+\\\
+\\\	    A thorough description of the digital filter theory needed to fully describe
+\\\	    this filter is beyond the scope of this document.
+\\\
+\\\	    Calculating coefficients is non-intuitive; the interested user is referred
+\\\	    to one of the standard texts on filter theory (e.g., Moore, "Elements of
+\\\	    Computer Music", section 2.4).
+\\\
+\\\	  Knobs
+\\\
+\\\	    A0, A1 - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Filter coefficients, -1.0 to 1.0, default = 0.5.
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input
+\\\	        Signal to process.
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Filtered signal.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 11
+\\\
+\\\	    Code: 11 words
+\\\
+\\\	    Data: 4 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V29
+\\\
+\\\	  See Also
+\\\
+\\\	    svfilter.dsp(@)
+
+\ Phil Burk, Robert Marsanyi
+\ Copyright 1996 3DO
+include? DFID_FILTER_1O1Z function_ids.j
+
+anew task-filter_1o1z.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_FILTER_1o1z dspp-function-id !
+$" filter_1o1z.dsp" ins-name !
+
+\ ************************************************************************************
+ALLOC.INPUT  Input
+ALLOC.OUTPUT Output
+ALLOC.OUTPUT Delayed
+$ 3FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 A0
+$ 3FFF KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 A1
+
+11 ALLOC.TICKS
+	Input   _A   A0 _A  _*
+	Output _A _= Delayed _A   A1 _A  ACCUME _CLIP _*+
+	Delayed _A   Input _A  _MOVE
+
+}ins
+}dspp

@@ -1,0 +1,14 @@
+// @(#) tstation.blueprint 96/08/23 1.1
+//
+// Blueprint file for tstation image.
+
+#include	"generic.defines"
+
+TAKEME {
+	System.m2 {
+		Boot {
+			dipir.tstation -> DIPIRDIR/dipir.tstation
+			tstation.icon  STUFF/tstation.icon
+		}
+	}
+}

@@ -1,0 +1,122 @@
+\ @(#) varmono16.ins 95/11/16 1.8
+\ $Id: varmono16.ins,v 1.6 1995/01/20 20:20:23 peabody Exp $
+\ Oscillator with fixed point frequency control
+\ Phil Burk
+\ Copyright 1992 NTG
+\
+\ 930910 PLB _BCC: @Interpolate instead
+
+\\\	NOAUTODOC -private -class DSP -name varmono16.dsp
+\\\	OBSOLETE - Rate-variable sample player.
+\\\
+\\\	  Function
+\\\
+\\\	    This instrument is a rate-variable 16-bit mono sample player. This
+\\\	    instrument is identical to sampler.dsp, except that you should use
+\\\	    varmono16.dsp if you are short on ticks.
+\\\
+\\\	    This instrument is limited to a pitch one octave above base pitch, if
+\\\	    recorded at 44.1 kHz. If it is recorded at 22 kHz, the pitch can go two
+\\\	    octaves up. A rate of 0x8000 corresponds to one data sample per DAC
+\\\	    sample frame. 0xFFFF is the highest possible rate.
+\\\
+\\\	  Knobs
+\\\
+\\\	    Frequency  -  units are fixed point phase increment. $8000 equals the
+\\\	    normal sample rate, with 1 sample per frame. Thus, you can go from zero
+\\\	    to one octave above the original.
+\\\
+\\\	    Amplitude - 0  =>  $7FFF
+\\\
+\\\	  Inputs
+\\\
+\\\	    None
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\
+\\\	  Input FIFOs
+\\\
+\\\	    InFIFO
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    None
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks = 25
+\\\
+\\\	    N memory = 26 words
+\\\
+
+include? DFID_VARMONO16 function_ids.j
+anew task-varmono16.ins
+
+_RED
+dspp{
+ins{
+
+
+DFID_VARMONO16 dspp-function-id !
+$" varmono16.dsp" ins-name !
+
+ALLOC.OUTPUT Output
+ALLOC.INFIFO  InFIFO
+ALLOC.IMEM    Phase
+ALLOC.IMEM    OldVal
+ALLOC.IMEM    NewVal
+$ 8000 KNOB_TYPE_SAMPLE_RATE ALLOC.KNOB.M2 Frequency
+$ 7FFF KNOB_TYPE_RAW_UNSIGNED ALLOC.KNOB.M2 Amplitude
+25 ALLOC.TICKS
+
+
+\ Output  DINI_AT_START    0  INIT.RESOURCE  Output_NAME
+\ NewVal  DINI_AT_START    0  INIT.RESOURCE  NewVal_NAME
+\ Phase  DINI_AT_START    0  INIT.RESOURCE  Phase_NAME
+\ OldVal  DINI_AT_START    0  INIT.RESOURCE  OldVal_NAME
+
+\ ************************************************************************************
+\ This version uses fixed point frequency that is shifted right by 1
+\ allowing a range of 0->1.999.
+\ R5 contains the fractional phase as a 15 bit value so it is already
+\ in the form needed for interpolation and can be used directly.
+\ It clumps the FIFO accesses to avoid DMA collisions.
+\
+\ Phase goes from 0->$7FFF
+\ If it goes minus, normalize the phase to 0=>$7FFF, take a sample.
+\ If it goes minus twice, take two samples.
+\ If it stays positive, just interpolate.
+
+\ Calculate phase increment
+	Phase _%A Frequency _A _+
+\ Determine whether to get 0,1,or 2 samples
+	_BMI:	@Once
+	_BCC:	@Interpolate   \ 930910
+\	_BCS:	@Twice
+\	_Jump:	@Interpolate
+
+_LABEL: @Twice
+\ Get two samples
+	OldVal _A InFIFO _A	_MOVE 	\ OldVal<-FIFO
+	_JUMP: @GetNewVal
+
+_LABEL: @Once
+\ Get one sample
+	Phase _%A #$ 8000	_-		\ wrap back to positive phase
+	OldVal _A NewVal _A	_MOVE		\ OldVal<-newval
+
+_LABEL: @GetNewVal
+	NewVal _A InFIFO _A _MOVE		\ NewVal<-FIFO
+
+_LABEL: @Interpolate
+\ Phase is still in accumulator!!!
+\ Can we use a trick for OldVal since it appears twice?????
+	ACCUME OldVal _A OldVal _A _*-		\ old*(frac-1)	= old*frac-old
+	NewVal _A Phase _A ACCUME _*-		\ interpolate new value
+    Output _A _= ACCUME Amplitude _A _*  \ scale output
+
+	_ENDEXT
+}ins
+}dspp

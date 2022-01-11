@@ -1,0 +1,62 @@
+\ @(#) pf_todo.txt 95/11/15 1.3
+File: pf_todo.txt
+
+To Do --------------------------------------------------------
+
+O- resolve problems with EOL in WORD
+O- fix tester.fth failures
+
+O- integrate SAVE-FORTH, SDAD, and CLONE
+O- simplify dictionary management so that globals are tracked better
+O- move globals into task data structure
+
+O- add better command line support, -d -e"commands" -i -b
+O- document non-standard words, output as EPS
+O- add dictionary room to MAP command
+
+O- research ROM requirements
+
+O- clean up C call mechanism
+O- integrate CATCH with ABORT and INTERPRET
+O- go through ANSI and add what's missing
+O- support word sets
+O- support ANSI error codes
+O- research byte size tokens
+
+Maybe Do ---------
+O- defer interpret
+
+Done -------------
+X- add list and description of files to README
+X- get floats to work with :STRUCT and FLPT
+X- add PD disclaimers to Forth code
+X- make script to build release package for UNIX/Mac
+X- clean up source files
+X- bump version number
+X- add PD disclaimers to 'C' code
+X- conditionally compile modes: full_build, compiler, turnkey
+X- save as turnkey or dev mode
+X- eliminate reliance on printf() for embedded systems
+X- funnel ALL I/O through pf_io.c
+X- add LoadDictionary
+X- add SAVEFORTH
+X- Add numeric entry
+X-   call deferred word from Interpret
+X- Create Does
+X- Branch, 0branch
+X- add decimal numeric output
+X- add "OK"
+X- FIX EMIT !!!!! defer problem?!
+X-   try to load dspp_asm.fth
+X- dictionary traversal, nfa->ffa
+X- fix BYE
+X- add CATCH and THROW
+X- REFILL
+X- SOURCE-ID
+X- EVALUATE
+X- push and pop source-id
+X- make .S deferred, redefine using current base
+X- revise trace to use level, stack trace
+X- allow minnamesize and mincodesize on save
+X- handle decimal point for double precision words.
+

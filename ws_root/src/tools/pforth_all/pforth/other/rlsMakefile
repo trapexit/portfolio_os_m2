@@ -1,0 +1,64 @@
+# @(#) rlsMakefile 96/05/28 1.4
+# makefile for pForth
+# Portable Forth written in 'C'
+# Phil Burk
+
+.SUFFIXES: .c .o
+
+# Options include: PF_SUPPORT_FP PF_NO_MALLOC PF_NO_INIT PF_DEBUG PF_HOST_MACINTOSH
+# See README file for more info.
+
+SOURCEDIR = csrc
+OBJECTDIR = objects
+CCOPTS = -DPF_SUPPORT_FP
+COMPILER = gcc
+
+#######################################
+PFINCLUDES = \
+    ${SOURCEDIR}/pf_cglue.h \
+    ${SOURCEDIR}/pfcompil.h \
+    ${SOURCEDIR}/pf_core.h \
+    ${SOURCEDIR}/pfcompfp.h \
+    ${SOURCEDIR}/pfinnrfp.h \
+    ${SOURCEDIR}/pf_all.h \
+    ${SOURCEDIR}/pf_guts.h \
+    ${SOURCEDIR}/pf_io.h \
+    ${SOURCEDIR}/pf_mem.h \
+    ${SOURCEDIR}/pf_save.h \
+    ${SOURCEDIR}/pf_text.h \
+    ${SOURCEDIR}/pf_tools.h \
+    ${SOURCEDIR}/pf_words.h \
+    ${SOURCEDIR}/pforth.h
+
+PFOBJS = \
+    ${SOURCEDIR}/pf_cglue.o \
+    ${SOURCEDIR}/pfcustom.o \
+    ${SOURCEDIR}/pfcompil.o \
+    ${SOURCEDIR}/pf_core.o \
+    ${SOURCEDIR}/pf_host.o \
+    ${SOURCEDIR}/pf_inner.o \
+    ${SOURCEDIR}/pf_io.o \
+    ${SOURCEDIR}/pf_main.o \
+    ${SOURCEDIR}/pf_mem.o \
+    ${SOURCEDIR}/pf_save.o \
+    ${SOURCEDIR}/pf_text.o \
+    ${SOURCEDIR}/pf_tools.o \
+    ${SOURCEDIR}/pf_words.o
+
+COMPILE = $(COMPILER) $(CCOPTS) $(CDEFS)
+
+.c.o:  $(PFINCLUDES)
+	$(COMPILE) -O -o $*.o -c $*.c
+
+all: pforth pforth.dic
+
+# build pforth by compiling 'C' source
+pforth: $(PFINCLUDES) $(PFOBJS)
+	$(COMPILER) $(PFOBJS) -lm -o pforth
+
+# build basic dictionary by running newly pforth and including system.fth
+pforth.dic: pforth
+	pforth -i system.fth
+
+clean:
+	rm -f $(SOURCEDIR)/*.o pforth *.dic core

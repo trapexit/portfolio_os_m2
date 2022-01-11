@@ -1,0 +1,73 @@
+\ @(#) compare_phase.ins.disabled 96/05/28 1.2
+
+\\\	AUTODOC -disabled -class DSP -group Arithmetic -name compare_phase.dsp
+\\\	Phase comparator for building Phase Locked Loops
+\\\
+\\\	  Description
+\\\
+\\\	    Wideband phase comparator.
+\\\
+\\\	  Knobs
+\\\
+\\\	    InputA, InputB - AUDIO_SIGNAL_TYPE_GENERIC_SIGNED
+\\\	        Signed input values. -1.0 to 1.0. Defaults to 0.0
+\\\
+\\\	  Outputs
+\\\
+\\\	    Output
+\\\	        Signed, -1.0 to 1.0
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: ??? FIXME
+\\\
+\\\	    Code: 6 words
+\\\
+\\\	    Data: 3 words
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  See Also
+\\\
+\\\	    FIXME
+
+include? DFID_ADD function_ids.j
+
+anew task-add.ins
+
+_BULLDOG
+dspp{
+ins{
+
+DFID_ADD dspp-function-id ! \ FIXME
+$" add.dsp" ins-name !
+
+$   0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputA
+$   0 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 InputB
+$  10 KNOB_TYPE_RAW_SIGNED ALLOC.KNOB.M2 Sensitivity
+0 DRSC_AT_START  ALLOC.VARIABLE.DEFAULT  PreviousA
+0 DRSC_AT_START  ALLOC.VARIABLE.DEFAULT  PreviousB
+\ 0 means waiting for A, 1 means waiting for B
+0 DRSC_AT_START  ALLOC.OUTPUT.DEFAULT Output
+20 ALLOC.TICKS
+
+	PreviousA _A  InputA _A  _XOR
+	ACCUME $ 8000 _# _AND            \ check sign bit
+	_BEQ: @CheckB                   \ are they different?
+\  A changed sign
+	Output _%A  Sensitivity _A _CLIP _+
+
+_LABEL: @CheckB
+	PreviousB _A  InputB _A  _XOR   \ are they different?
+	ACCUME $ 8000 _# _AND            \ check sign bit
+	_BEQ: @Done                   \ are they different?
+\  B  changed sign
+	Output _%A  Sensitivity _A _CLIP _-
+
+_LABEL: @Done
+	PreviousA _A  InputA _A _MOVE   \ delay
+	PreviousB _A  InputB _A _MOVE   \ delay
+}ins
+}dspp

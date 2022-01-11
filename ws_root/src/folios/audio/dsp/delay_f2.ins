@@ -1,0 +1,68 @@
+\ @(#) delay_f2.ins 96/06/27 1.16
+\ $Id: delaystereo.ins,v 1.2 1995/01/20 20:20:23 peabody Exp $
+\ DelayStereo - output stereo samples to a delay line.
+\
+\ Copyright 1992 3DO
+\ Phil Burk
+\
+
+\\\	AUTODOC -class DSP -group Effects -name delay_f2.dsp
+\\\	Sends stereo input to a delay line.
+\\\
+\\\	  Description
+\\\
+\\\	    This instrument writes input to an output FIFO. It is used as a building
+\\\	    block for reverberation and echo effects when used in conjunction with a
+\\\	    sample player (e.g. sampler_16_f2.dsp(@)). It can only write to special
+\\\	    Sample(@)s created using CreateDelayLine().
+\\\
+\\\	  Inputs
+\\\
+\\\	    Input - 2 parts
+\\\	        Stereo signal to delay.
+\\\
+\\\	  Output FIFOs
+\\\
+\\\	    OutFIFO
+\\\	        Writes stereo, 16-bit sample data to delay line Sample(@) attached to
+\\\	        this port.
+\\\
+\\\	  Resources
+\\\
+\\\	    Ticks: 13
+\\\
+\\\	    Code: 10 words
+\\\
+\\\	    FIFOs: 1
+\\\
+\\\	  Implementation
+\\\
+\\\	    V24
+\\\
+\\\	  See Also
+\\\
+\\\	    delay_f1.dsp(@), sampler_16_f2.dsp(@), CreateDelayLine()
+
+include? DFID_DELAY_F2 function_ids.j
+
+anew task-delay_f2.ins
+
+_BULLDOG
+dspp{
+ins{
+DFID_DELAY_F2 dspp-function-id !
+$" delay_f2.dsp" ins-name !
+
+ALLOC.OUTFIFO  OutFIFO
+2 ALLOC.INPUT.ARRAY     Input
+13 ALLOC.TICKS
+
+\ We must check fifo status so we don't put out half a pair and lose
+\ left/right registration.  Use 6 to make sure there is room for 2 more.
+	OutFIFO FIFOSTATUS+ _A #$ 0006 _-	\ check FIFO status
+	_BGT: FIFOFULL
+	OutFIFO _A   Input 0 PART+ _A  _MOVE
+	OutFIFO _A   Input 1 PART+ _A  _MOVE
+_LABEL: FIFOFULL
+}ins
+}dspp

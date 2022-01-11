@@ -1,0 +1,6 @@
+# @(#) Makefile 95/10/11 1.26
+# Audio Shell Programs
+
+include ${CODEMGR_WS}/ws_root/variables/generic
+include ${CODEMGR_WS}/ws_root/rules/subtree
+include ${CODEMGR_WS}/ws_root/rules/generic

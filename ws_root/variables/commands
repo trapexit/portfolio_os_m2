@@ -1,0 +1,135 @@
+# @(#) commands 96/12/09 1.60
+# Variables describing build commands
+
+# {{{ HOSTOS independent command locations
+
+# We define all the commands here to ensure the same executables are used by
+# everyone.
+MD =			/bin/mkdir -p
+RM =			/bin/rm -fr
+CP =			/bin/cp
+GNUCP =			/usr/software/bin/cp
+MV =			/bin/mv
+SLN =			/bin/ln -s
+HLN =			/bin/ln
+CHMOD =			/bin/chmod
+UNIFDEF =		/usr/ucb/unifdef
+TRUE =			/bin/true
+FALSE =			/bin/false
+SED =			/bin/sed
+SORT =			/bin/sort
+GREP =			/bin/grep
+DATE =			/bin/date
+CAT =			/bin/cat
+TR =			/bin/tr
+UNIQ =			/bin/uniq
+BASENAME =		/bin/basename
+EXPR =			/bin/expr
+
+# }}}
+# {{{ Commands built within the workspace
+
+ifeq (${wildcard ${SRC}/tools/filters}, ${SRC}/tools/filters)
+FIXCOPYR =		${HOSTOSBIN}/fix_copyright
+FIXINCLUDES =		${HOSTOSBIN}/fix_includes_${RELEASE_PLATFORM}
+FIXEOL =		${HOSTOSBIN}/fix_eol_${RELEASE_PLATFORM}
+else
+FIXCOPYR =		${REFERENCE_HOSTOSBIN}/fix_copyright
+FIXINCLUDES =		${REFERENCE_HOSTOSBIN}/fix_includes_${RELEASE_PLATFORM}
+FIXEOL =		${REFERENCE_HOSTOSBIN}/fix_eol_${RELEASE_PLATFORM}
+endif
+
+ADX		:= ${firstword ${wildcard ${HOSTOSBIN}/adx} ${REFERENCE_HOSTOSBIN}/adx}
+R64ENC		:= ${firstword ${wildcard ${HOSTOSBIN}/r64enc} ${REFERENCE_HOSTOSBIN}/r64enc}
+R64DEC		:= ${firstword ${wildcard ${HOSTOSBIN}/r64dec} ${REFERENCE_HOSTOSBIN}/r64dec}
+RSASIGN		:= ${firstword ${wildcard ${HOSTOSBIN}/rsasign} ${REFERENCE_HOSTOSBIN}/rsasign}
+DDFC		:= ${firstword ${wildcard ${HOSTOSBIN}/ddfc} ${REFERENCE_HOSTOSBIN}/ddfc}
+
+BUILDTREE	:= ${firstword ${wildcard ${HOSTOSBIN}/buildtree} ${REFERENCE_HOSTOSBIN}/buildtree}
+COOK		:= ${firstword ${wildcard ${HOSTOSBIN}/cook} ${REFERENCE_HOSTOSBIN}/cook}
+FSBUILD		:= ${firstword ${wildcard ${HOSTOSBIN}/fsbuild} ${REFERENCE_HOSTOSBIN}/fsbuild}
+GETROMELFINFO	:= ${firstword ${wildcard ${HOSTOSBIN}/getromelfinfo} ${REFERENCE_HOSTOSBIN}/getromelfinfo}
+TREESIZE	:= ${firstword ${wildcard ${HOSTOSBIN}/treesize} ${REFERENCE_HOSTOSBIN}/treesize}
+
+# }}}
+# {{{ HOSTOS dependent command locations
+
+# {{{ defaults to prevent insane actions
+
+CXX =			false
+CC =			false
+AS =			false
+LD =			false
+AR =			false
+RANLIB =		false
+
+HOSTCC =		false
+HOSTAR =		false
+HOSTRANLIB =		false
+
+# }}}
+# {{{ SunOS locations
+
+ifeq (${HOSTOS}, SunOS)
+
+ifndef DIABLIB
+DIABLIB = /usr/software/diab/3.7a
+export DIABLIB
+endif
+
+CC =			${DIABLIB}/bin/dcc
+CXX =			${DIABLIB}/bin/dplus
+#PPCAS =		/usr/software/bin/ppcas
+PPCAS :=		${firstword ${wildcard ${HOSTOSBIN}/ppcas} ${REFERENCE_HOSTOSBIN}/ppcas}
+
+AS := ${firstword ${wildcard ${HOSTOSBIN}/jas} ${REFERENCE_HOSTOSBIN}/jas}
+
+LD = 			${firstword ${wildcard ${SRC}/tools/link/link3do} ${REFERENCE_BUILD}/ws_root/src/tools/link/link3do}
+AR =			${DIABLIB}/bin/dar
+RANLIB =		${TRUE}
+
+HOSTCC =		gcc
+HOSTRANLIB =		/bin/ranlib
+MAKEDEPEND = 		/usr/software/bin/makedepend
+HOSTAR =		/bin/ar
+
+endif
+
+# }}}
+# {{{ IRIX locations
+
+ifeq (${HOSTOS}, IRIX)
+
+CXX =			CC
+CC =			cc
+AS =			as
+LD =			ld
+AR =			/bin/ar
+RANLIB =		${TRUE}
+
+HOSTCC =		cc
+HOSTAR =		/bin/ar
+HOSTRANLIB =		${TRUE}
+MAKEDEPEND = 	/usr/bin/X11/makedepend
+
+endif
+
+# }}}
+# }}}
+# {{{ Aliases for more complex commands
+
+SANITIZE =		${UNIFDEF} -DEXTERNAL_RELEASE
+hardlinkme=		${RM} $@ && (${HLN} $< $@ || ${CP} $< $@)
+
+# }}}
+
+# {{{ Command define flags for use by ROM build tools
+
+COMMAND_DEFINES =				\
+	-DBUILDTREE=${BUILDTREE}		\
+	-DFSBUILD=${FSBUILD}			\
+	-DGETROMELFINFO=${GETROMELFINFO}	\
+	-DTREESIZE=${TREESIZE}
+
+# }}}
+

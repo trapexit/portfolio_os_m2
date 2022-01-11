@@ -1,0 +1,215 @@
+
+10/9/95
+LightWave Converters Version 1.0a3
+
+There are two programs for LightWave conversion: lwtosdf and lwstoanim.
+lwtosdf will convert a LightWave object file (.lwo) to an ASCII SDF file. 
+
+lwstoanim will take a LightWave scene file (.lws) and create an object 
+hierarchy and a set of Key Frame objects in the same format as those output by the
+3D Studio and Strata converters. 
+
+LWSTOSDF CONVERSION BEHAVIOR
+Models:
+Models will retain their file names so a file called ship.lwo will be referenced
+in the SDF file as model "ship.lwo".
+
+Textures:
+Texture names are converted to lowercase, path names stripped away and given a .utf
+extension.  The -case option will make lwtosdf preserve the case of the names, and 
+the -e option will make lwtosdf append the .utf extension rather than replace whatever
+extension the texture name might have.  At the end of the object processing, a list
+of textures and their new names is output in script form. This list can be output 
+to a file (using the -sa or the -sn options) to use as a batch processing script for 
+the model's textures.
+An M2 primitive (triangle, polygon, tri-mesh, etc) has at most one texture associated
+with it, so all texturing effects must be combined into a single UTF texture.  Color
+maps have precedence, so if a LightWave surface has one, it will be used as the M2 
+texture.  If no color map is present, the object's color will be used and a diffuse
+map can be used to modulate the surface color if one is present.  Transparency maps
+will be accounted for in the TexBlend settings of the SDF file, but it is up to the 
+user to merge (perhaps with a batch script) the transparency texture with any color
+or diffuse map to make a final UTF texture.
+Currently, environment and clip maps are not supported but may be in the future.
+Procedural textures, specular maps and bump maps can never be supported and should
+not be used in objects that are to be converted.
+
+Materials
+The surface material properties are translated as best as possible to an M2 
+counterpart. Diffuse, specular, gloss, emission, and color values are translated 
+verbatim while an ambient lighting value can be set through a command-line option
+(since LightWave objects have no ambient lighting values of their own). 
+
+Polygons:
+Convex polygons are turned into tri-fans.  Non-convex polygons are triangulated
+if they are not self-intersecting.  Self-intersecting polygons will be converted
+into a fan (and a warning will appear during conversion as well as a comment in the 
+ASCII SDF file) and almost certainly won't render correctly.  Therefore, it is best
+to break up all non-convex polygons in convex pieces before converting to SDF.
+A smooth-shaded surface is converted to a tri-mesh and will have interpolated
+normals.
+Flat-shaded surfaces are currently turned into a collection of triangles.  This
+will be fixed in a future update so that vertex sharing can occur.  The effect is that
+flat-shaded surfaces are slower in rendering than Gouraud-shaded surfaces.  For example,
+a cube that is Gouraud-shaded will be made up eight vertices while a flat-shaded cube
+will be turned into twenty-four vertices (to accommodate the three different normals at
+each corner of the cube).
+Detail polygons should not be used as they are not directly supported by M2 and
+will usually render incorrectly. During conversion, detail polygons are collected 
+into a separate surface that appears after the regular polygons of a given surface.
+
+LWSTOANIM CONVERSION BEHAVIOR
+ The top-level node of the scene will be named "<output_filename>_world" and can be 
+referenced with an SDF viewer (like newview) to see the scene as it would be set up at
+time 0.  To see the animation, the anim viewer must be used.  
+Model names will be converted to lower case and the model conversion script will 
+strip off any model name extension and add a .sdf extension for the converted name.
+The -case option will make lwstoanim preserve the case of the names, and the -e
+will make lwstoanim append the .sdf extension rather than replace whatever extension 
+the model name might have. 
+Currently only object motion is accurately translated from the scene files.  Lights
+and their motion may be translated with the use of the -l option, but the 
+target parameters as well as animated intensity, falloff, cone angle, etc. are not
+currently supported.  Fully animated light parameters, cameras, and object geometry 
+morphing may be added in a future update.
+
+
+11/21/95
+LightWave Converters Version 1.0a4
+
+Both lwtosdf and lwstoanim are now FAT binaries so PowerPC owners should see
+a remarkable improvement in the speed of model conversion.  In general, lwtosdf is 
+about six times faster on a PowerPC than the previous 68K-only version. lwtosdf has
+improved filtering of "bad" data.  The previous version could crash when it tried to
+triangulate certain types of degenerate polygons.  This version will filter these
+out and shouldn't crash.  As before, degenerate polygons cannot be triangulated by
+the converter and should be fixed in the modeler before conversion.  Also, the 
+previous version had a tendency to fragment memory on the Macs, so large models 
+could quickly exhaust MPW's memory.  This version fixes that and should be much more
+reasonable in it's memory usage.
+
+Known bugs
+The -ext option on the Mac versions of the converters will sometimes leave extra 
+characters at the end of the texture names.  The workaround is simply not to use the
+-ext option or to use the SGI version if you need your extensions preserved.  This bug
+will be fixed in the next release.
+
+12/15/95
+LightWave Converters Version 1.1d1
+The previous bug with using -ext option on the Mac has been fixed.
+A new option, -t, has been added to the converters.  Using the -t option will suppress
+the output of texture when the geometry is being written out to the ASCII SDF file.
+Error messages have been added to notify you when an error has occurred during the
+writing out of ASCII SDF files rather than just exiting without any message. 
+Path names are now stripped off the input files so that if for example path:test.lwo
+is given as an input file, material and textures will be test.lwo_materials rather than
+path:test.lwo_materials.  This was to avoid excessively long names when people would
+use an absolute path (often through an environment variable) for input file names.
+lwstoanim now will name the top level node "<output filename>_world" rather than just
+"world" so that multiple animations can be merged and compiled into a single file.
+Also the animation data structure name has been changed from "kfengines" to 
+"<output filenam>_kfengines" for the same reason.  Not that the 1.2 Release of the anim
+program will be required to play these animations as older version will only look for
+"kfengines".
+
+2/24/96
+LightWave Converters Version 1.1a1
+Previous versions of lwtosdf would sometimes not enable the emissive flag in
+the shadeenable variable even though the emission variable would be set properly. This
+has been fixed for this release.
+-m option has been added to write out separate material and TexBlends files.  The 
+output files will be <output filename>.mat and <output filename>.tex.  The output of 
+TexBlends to the <output filename>.tex will not happen if either the -ta or -tn option
+is used to output TexBlends to a specified file.
+The -tn option is now available in lwstoanim so that the model processing script output
+by lwstoanim will properly process the models using a single TexBlend file.  See the 
+"apebot" animation for an example of how to use this option.
+The -ext option has been renamed to -e to match the other 3D converters.
+The -light option has been renamed to -l to match the other 3D converters.
+lwtosdf now will properly calculate surface normals, properly obeying the maximum 
+smoothing angle in a surface.  This eliminates the problem with previous versions that
+let Framework calculate the normals and allow interpolation of all the normals in a 
+surface- even inverse normals.  Allowing lwtosdf to generate surface normals is almost
+always best, but if it is not desired, it can be turned off with the -norm option. It
+should be noted that the calculation of surface normals causes lwtosdf to take longer
+to process models than previous versions.  On slower 68K machines or when processing
+large models, this may be a significant time difference.
+
+3/12/96
+LightWave Converters Version 1.1a2
+A crashing bug that occurs in 1.1a1 when the -ta option is used with a script file 
+that doesn't exist.  This is fixed in version 1.1a2.
+This version is built with 3DO's MPW 2.0 environment (with SC and MrC).
+Copyright notices were updated to 1996.
+
+4/8/96
+LightWave Converters Version 1.1a2m1
+The previous release had a crashing bug on the Mac 68k version of lwtosdf when a 
+polygon needed to be triangulated.  This has been fixed for this release.
+
+5/14/96
+LightWave Converters Version 2.0d3
+Two new options, -mn and -ma, have been added.  These mirror the options -tn and -ta
+in that they allow the input and output of separate material arrays.  This is useful
+for sets of models which share a small set of materials between them.
+This is especially important for efficiency in a rendering engine like Mercury, in 
+which each new Material causes a sync and flush of the pipeline.  These options
+effectively collapse redundant MatArray entries the same way the -tn and -ta collapse 
+redundant TexArray entries.
+Previous versions of lwtosdf would put a dummy TexBlend (no texture) as the first entry
+of the TexArray.  This behavior is now turned off by default (but can be turned back
+on with the -dummy option).
+
+8/10/96
+LightWave Converters Version 3.0d2
+Previous versions of lwstoanim would not calculate the HPB transforms in the correct
+order. This has been fixed.
+Previous versions of lwtosdf would not texture flat-shaded surfaces, this has been fixed
+for this release.
+Because LightWave and the anim program use different methods for rotations, a new option, -hpb, 
+has been added to lwstoanim.  This option makes the converter change the order of the rotation 
+transforms.  The animation engine uses quaternions for rotations while LightWave uses straight 
+interpolation of Euler angles.  Sometimes LightWave will have "gimbal lock" which the quaternion 
+engine won't reproduce.  By changing the order of the transforms, it is usually possible to mimic
+the gimbal lock behavior.  The default value is 0 and the limit is 11.  The values are in order 
+of likelihood of working (i.e. 1 is the next likely value to work if the default fails).  Another
+caveat is that the anim program cannot reproduce rotations >= 360 degrees in a single key (because
+of the quaternion implementation).  This limitation will be addressed in a future release.
+ 
+9/27/96
+LightWave Converters Version 3.1
+*Support for environment mapping has been added to the lwtosdf converter.
+If a spherical environment map is selected in a LightWave Surface and no other texture maps are 
+applied to that surface (i.e. no color maps or diffuse maps), the converter will output an 
+appropiate TexArray entry and texgen for the surface.  
+The reflectivity (which must be a value, not a map) is used to determine the blend between the 
+primitive surface and reflection map.  The reflection will not look identical to LightWave because
+in LightWave the reflection color is added to the primitive color whereas on M2 it is blended with
+a LERP operation.
+The -envmult will change the blend operation from LERP to MULT to allow for different effects.  
+This option is best used when a brightly colored chrome is desired (bright red chrome) while the
+default LERP reflection is best for realistic partial reflections on things like glass or to 
+simulate Phong shading.  The -envmap option is available to turn off translation of environment 
+map attributes (for use with Framework or older versions of Mercury or just because).
+*Previous versions of lwtosdf would use the material color as the primitive color when a color 
+map was applied to a surface.  This was not a problem if the material color was set to white or a 
+diffuse map was used instead of a color map.  However, because the primitive color is multiplied 
+by the texture color on the M2, a non-white surface color had the effects of changing the color 
+values of the texture.
+For instance, if a picture frame had a surface color of brown and then a color map was applied to 
+frame (overriding the surface color in LightWave) the texture map would be multiplied by brown on 
+the M2.  If the texture map was itself brown, the effect wouldn't be too noticeable (although the 
+colors would get darker) but if there were other colors such as white or blue they too would be 
+multiplied by brown and would show up as either brown or black.
+The new version of lwtosdf correctly sets the primitive color to white whenever a color map is 
+applied to a surface.  The option -white allows the white intensity to be set for this white 
+material (although changing the diffuse and specular values within LightWave could be used to 
+achieve the same effect). 
+*lwtosdf is now faster at calculating the surface normals.
+
+12/1/96
+LightWave Converters Version 3.1b1
+*The previous version of lwtosdf could sometimes apply environment mapping to an untextured 
+surface if the model also contained environment mapping.  This has been fixed.
+
+

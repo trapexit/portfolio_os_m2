@@ -1,0 +1,40 @@
+;******************************************************************************
+;*
+;*  @(#) filtered_sample.mp 96/08/22 1.5
+;*  
+;*  Tutorial 14: Filtered, enveloped sample
+;*
+;******************************************************************************
+
+; Instruments
+Instrument Source sampler_16_v1.dsp
+Instrument EnvPlayer envelope.dsp
+Instrument Filter svfilter.dsp
+Output Output 1 Signed
+
+; Attachments
+Envelope Blat Signed 0.02 0.5 1.0 3.0 0.02 0.0  ; sharp attack, slow decay
+Sample Sample /remote/Samples/PitchedL/Cello/Cello.D4LM44k.aiff
+
+; Expose the FIFOs, etc, so we can attach things
+Expose InFIFO Source InFIFO
+Attach Sample InFIFO -FatLadySings
+Expose Env EnvPlayer Env
+Attach Blat Env
+
+; Connect up the audio
+Connect Source          Output          0       Filter  Input           0
+Connect Filter          Output          0       .       Output          0
+Connect EnvPlayer       Output          0       Filter  Frequency       0
+
+; Knobs
+Knob SampleRate 1 SampRate 44100
+Knob Amplitude  1 Signed   0.8
+Knob Resonance  1 Signed   0.2
+
+constant Source Amplitude   0  0.5  ; to prevent overdriving the filter
+
+; Connect up the control signals
+Connect .               SampleRate      0       Source  SampleRate      0
+Connect .               Amplitude       0       Filter  Amplitude       0
+Connect .               Resonance       0       Filter  Resonance       0

@@ -1,0 +1,170 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.39
+     from as.texinfo on 27 November 1995 -->
+
+<TITLE>Using ppcas - Table of Contents</TITLE>
+</HEAD>
+<BODY>
+<H1>Using ppcas</H1>
+<H2>The GNU Assembler</H2>
+<H2>for the Power PC family</H2>
+<H2>January 1994</H2>
+<ADDRESS>Dean Elsner, Jay Fenlason &#38; friends</ADDRESS>
+<P>
+<UL>
+<LI><A NAME="SEC1" HREF="as.html#SEC1">Overview</A>
+<UL>
+<LI><A NAME="SEC2" HREF="as.html#SEC2">Structure of this Manual</A>
+<LI><A NAME="SEC3" HREF="as.html#SEC3">ppcas, the GNU Assembler</A>
+<LI><A NAME="SEC4" HREF="as.html#SEC4">Object File Formats</A>
+<LI><A NAME="SEC5" HREF="as.html#SEC5">Command Line</A>
+<LI><A NAME="SEC6" HREF="as.html#SEC6">Input Files</A>
+<LI><A NAME="SEC7" HREF="as.html#SEC7">Output (Object) File</A>
+<LI><A NAME="SEC8" HREF="as.html#SEC8">Error and Warning Messages</A>
+</UL>
+<LI><A NAME="SEC9" HREF="as.html#SEC9">Command-Line Options</A>
+<UL>
+<LI><A NAME="SEC10" HREF="as.html#SEC10">Enable Listings: <CODE>-a[dhlns]</CODE></A>
+<LI><A NAME="SEC11" HREF="as.html#SEC11"><CODE>-D</CODE></A>
+<LI><A NAME="SEC12" HREF="as.html#SEC12">Work Faster: <CODE>-f</CODE></A>
+<LI><A NAME="SEC13" HREF="as.html#SEC13"><CODE>.include</CODE> search path: <CODE>-I</CODE> <VAR>path</VAR></A>
+<LI><A NAME="SEC14" HREF="as.html#SEC14">Difference Tables: <CODE>-K</CODE></A>
+<LI><A NAME="SEC15" HREF="as.html#SEC15">Include Local Labels: <CODE>-L</CODE></A>
+<LI><A NAME="SEC16" HREF="as.html#SEC16">Name the Object File: <CODE>-o</CODE></A>
+<LI><A NAME="SEC17" HREF="as.html#SEC17">Join Data and Text Sections: <CODE>-R</CODE></A>
+<LI><A NAME="SEC18" HREF="as.html#SEC18">Display Assembly Statistics: <CODE>--statistics</CODE></A>
+<LI><A NAME="SEC19" HREF="as.html#SEC19">Announce Version: <CODE>-v</CODE></A>
+<LI><A NAME="SEC20" HREF="as.html#SEC20">Suppress Warnings: <CODE>-W</CODE></A>
+<LI><A NAME="SEC21" HREF="as.html#SEC21">Generate Object File in Spite of Errors: <CODE>-Z</CODE></A>
+</UL>
+<LI><A NAME="SEC22" HREF="as.html#SEC22">Syntax</A>
+<UL>
+<LI><A NAME="SEC23" HREF="as.html#SEC23">Preprocessing</A>
+<LI><A NAME="SEC24" HREF="as.html#SEC24">Whitespace</A>
+<LI><A NAME="SEC25" HREF="as.html#SEC25">Comments</A>
+<LI><A NAME="SEC26" HREF="as.html#SEC26">Symbols</A>
+<LI><A NAME="SEC27" HREF="as.html#SEC27">Statements</A>
+<LI><A NAME="SEC28" HREF="as.html#SEC28">Constants</A>
+<UL>
+<LI><A NAME="SEC29" HREF="as.html#SEC29">Character Constants</A>
+<UL>
+<LI><A NAME="SEC30" HREF="as.html#SEC30">Strings</A>
+<LI><A NAME="SEC31" HREF="as.html#SEC31">Characters</A>
+</UL>
+<LI><A NAME="SEC32" HREF="as.html#SEC32">Number Constants</A>
+<UL>
+<LI><A NAME="SEC33" HREF="as.html#SEC33">Integers</A>
+<LI><A NAME="SEC34" HREF="as.html#SEC34">Bignums</A>
+<LI><A NAME="SEC35" HREF="as.html#SEC35">Flonums</A>
+</UL>
+</UL>
+</UL>
+<LI><A NAME="SEC36" HREF="as.html#SEC36">Sections and Relocation</A>
+<UL>
+<LI><A NAME="SEC37" HREF="as.html#SEC37">Background</A>
+<LI><A NAME="SEC38" HREF="as.html#SEC38">link3do Sections</A>
+<LI><A NAME="SEC39" HREF="as.html#SEC39">ppcas Internal Sections</A>
+<LI><A NAME="SEC40" HREF="as.html#SEC40">Sub-Sections</A>
+<LI><A NAME="SEC41" HREF="as.html#SEC41">bss Section</A>
+</UL>
+<LI><A NAME="SEC42" HREF="as.html#SEC42">Symbols</A>
+<UL>
+<LI><A NAME="SEC43" HREF="as.html#SEC43">Labels</A>
+<LI><A NAME="SEC44" HREF="as.html#SEC44">Giving Symbols Other Values</A>
+<LI><A NAME="SEC45" HREF="as.html#SEC45">Symbol Names</A>
+<LI><A NAME="SEC46" HREF="as.html#SEC46">The Special Dot Symbol</A>
+<LI><A NAME="SEC47" HREF="as.html#SEC47">Symbol Attributes</A>
+<UL>
+<LI><A NAME="SEC48" HREF="as.html#SEC48">Value</A>
+<LI><A NAME="SEC49" HREF="as.html#SEC49">Type</A>
+<LI><A NAME="SEC50" HREF="as.html#SEC50">Symbol Attributes: <CODE>a.out</CODE></A>
+<UL>
+<LI><A NAME="SEC51" HREF="as.html#SEC51">Descriptor</A>
+<LI><A NAME="SEC52" HREF="as.html#SEC52">Other</A>
+</UL>
+</UL>
+</UL>
+<LI><A NAME="SEC53" HREF="as.html#SEC53">Expressions</A>
+<UL>
+<LI><A NAME="SEC54" HREF="as.html#SEC54">Empty Expressions</A>
+<LI><A NAME="SEC55" HREF="as.html#SEC55">Integer Expressions</A>
+<UL>
+<LI><A NAME="SEC56" HREF="as.html#SEC56">Arguments</A>
+<LI><A NAME="SEC57" HREF="as.html#SEC57">Operators</A>
+<LI><A NAME="SEC58" HREF="as.html#SEC58">Prefix Operator</A>
+<LI><A NAME="SEC59" HREF="as.html#SEC59">Infix Operators</A>
+</UL>
+</UL>
+<LI><A NAME="SEC60" HREF="as.html#SEC60">Assembler Directives</A>
+<UL>
+<LI><A NAME="SEC61" HREF="as.html#SEC61"><CODE>.abort</CODE></A>
+<LI><A NAME="SEC62" HREF="as.html#SEC62"><CODE>.align <VAR>abs-expr</VAR> , <VAR>abs-expr</VAR></CODE></A>
+<LI><A NAME="SEC63" HREF="as.html#SEC63"><CODE>.app-file <VAR>string</VAR></CODE></A>
+<LI><A NAME="SEC64" HREF="as.html#SEC64"><CODE>.ascii "<VAR>string</VAR>"</CODE>...</A>
+<LI><A NAME="SEC65" HREF="as.html#SEC65"><CODE>.asciz "<VAR>string</VAR>"</CODE>...</A>
+<LI><A NAME="SEC66" HREF="as.html#SEC66"><CODE>.balign <VAR>abs-expr</VAR> , <VAR>abs-expr</VAR></CODE></A>
+<LI><A NAME="SEC67" HREF="as.html#SEC67"><CODE>.byte <VAR>expressions</VAR></CODE></A>
+<LI><A NAME="SEC68" HREF="as.html#SEC68"><CODE>.comm <VAR>symbol</VAR> , <VAR>length</VAR> </CODE></A>
+<LI><A NAME="SEC69" HREF="as.html#SEC69"><CODE>.data <VAR>subsection</VAR></CODE></A>
+<LI><A NAME="SEC70" HREF="as.html#SEC70"><CODE>.double <VAR>flonums</VAR></CODE></A>
+<LI><A NAME="SEC71" HREF="as.html#SEC71"><CODE>.eject</CODE></A>
+<LI><A NAME="SEC72" HREF="as.html#SEC72"><CODE>.else</CODE></A>
+<LI><A NAME="SEC73" HREF="as.html#SEC73"><CODE>.endif</CODE></A>
+<LI><A NAME="SEC74" HREF="as.html#SEC74"><CODE>.equ <VAR>symbol</VAR>, <VAR>expression</VAR></CODE></A>
+<LI><A NAME="SEC75" HREF="as.html#SEC75"><CODE>.extern</CODE></A>
+<LI><A NAME="SEC76" HREF="as.html#SEC76"><CODE>.file <VAR>string</VAR></CODE></A>
+<LI><A NAME="SEC77" HREF="as.html#SEC77"><CODE>.fill <VAR>repeat</VAR> , <VAR>size</VAR> , <VAR>value</VAR></CODE></A>
+<LI><A NAME="SEC78" HREF="as.html#SEC78"><CODE>.float <VAR>flonums</VAR></CODE></A>
+<LI><A NAME="SEC79" HREF="as.html#SEC79"><CODE>.global <VAR>symbol</VAR></CODE>, <CODE>.globl <VAR>symbol</VAR></CODE></A>
+<LI><A NAME="SEC80" HREF="as.html#SEC80"><CODE>.hword <VAR>expressions</VAR></CODE></A>
+<LI><A NAME="SEC81" HREF="as.html#SEC81"><CODE>.ident</CODE></A>
+<LI><A NAME="SEC82" HREF="as.html#SEC82"><CODE>.if <VAR>absolute expression</VAR></CODE></A>
+<LI><A NAME="SEC83" HREF="as.html#SEC83"><CODE>.include "<VAR>file</VAR>"</CODE></A>
+<LI><A NAME="SEC84" HREF="as.html#SEC84"><CODE>.int <VAR>expressions</VAR></CODE></A>
+<LI><A NAME="SEC85" HREF="as.html#SEC85"><CODE>.irp <VAR>symbol</VAR>,<VAR>values</VAR></CODE>...</A>
+<LI><A NAME="SEC86" HREF="as.html#SEC86"><CODE>.irpc <VAR>symbol</VAR>,<VAR>values</VAR></CODE>...</A>
+<LI><A NAME="SEC87" HREF="as.html#SEC87"><CODE>.lcomm <VAR>symbol</VAR> , <VAR>length</VAR></CODE></A>
+<LI><A NAME="SEC88" HREF="as.html#SEC88"><CODE>.lflags</CODE></A>
+<LI><A NAME="SEC89" HREF="as.html#SEC89"><CODE>.line <VAR>line-number</VAR></CODE></A>
+<LI><A NAME="SEC90" HREF="as.html#SEC90"><CODE>.ln <VAR>line-number</VAR></CODE></A>
+<LI><A NAME="SEC91" HREF="as.html#SEC91"><CODE>.list</CODE></A>
+<LI><A NAME="SEC92" HREF="as.html#SEC92"><CODE>.long <VAR>expressions</VAR></CODE></A>
+<LI><A NAME="SEC93" HREF="as.html#SEC93"><CODE>.macro</CODE></A>
+<LI><A NAME="SEC94" HREF="as.html#SEC94"><CODE>.nolist</CODE></A>
+<LI><A NAME="SEC95" HREF="as.html#SEC95"><CODE>.octa <VAR>bignums</VAR></CODE></A>
+<LI><A NAME="SEC96" HREF="as.html#SEC96"><CODE>.org <VAR>new-lc</VAR> , <VAR>fill</VAR></CODE></A>
+<LI><A NAME="SEC97" HREF="as.html#SEC97"><CODE>.p2align <VAR>abs-expr</VAR> , <VAR>abs-expr</VAR></CODE></A>
+<LI><A NAME="SEC98" HREF="as.html#SEC98"><CODE>.psize <VAR>lines</VAR> , <VAR>columns</VAR></CODE></A>
+<LI><A NAME="SEC99" HREF="as.html#SEC99"><CODE>.quad <VAR>bignums</VAR></CODE></A>
+<LI><A NAME="SEC100" HREF="as.html#SEC100"><CODE>.rept <VAR>count</VAR></CODE></A>
+<LI><A NAME="SEC101" HREF="as.html#SEC101"><CODE>.sbttl "<VAR>subheading</VAR>"</CODE></A>
+<LI><A NAME="SEC102" HREF="as.html#SEC102"><CODE>.set <VAR>symbol</VAR>, <VAR>expression</VAR></CODE></A>
+<LI><A NAME="SEC103" HREF="as.html#SEC103"><CODE>.short <VAR>expressions</VAR></CODE></A>
+<LI><A NAME="SEC104" HREF="as.html#SEC104"><CODE>.single <VAR>flonums</VAR></CODE></A>
+<LI><A NAME="SEC105" HREF="as.html#SEC105"><CODE>.space <VAR>size</VAR> , <VAR>fill</VAR></CODE></A>
+<LI><A NAME="SEC106" HREF="as.html#SEC106"><CODE>.stabd, .stabn, .stabs</CODE></A>
+<LI><A NAME="SEC107" HREF="as.html#SEC107"><CODE>.string</CODE> "<VAR>str</VAR>"</A>
+<LI><A NAME="SEC108" HREF="as.html#SEC108"><CODE>.text <VAR>subsection</VAR></CODE></A>
+<LI><A NAME="SEC109" HREF="as.html#SEC109"><CODE>.title "<VAR>heading</VAR>"</CODE></A>
+<LI><A NAME="SEC110" HREF="as.html#SEC110"><CODE>.word <VAR>expressions</VAR></CODE></A>
+<LI><A NAME="SEC111" HREF="as.html#SEC111">Deprecated Directives</A>
+</UL>
+<LI><A NAME="SEC112" HREF="as.html#SEC112">PowerPC Dependent Features</A>
+<UL>
+<LI><A NAME="SEC113" HREF="as.html#SEC113">PPC Options</A>
+<LI><A NAME="SEC114" HREF="as.html#SEC114">Syntax</A>
+<LI><A NAME="SEC115" HREF="as.html#SEC115">Local Labels</A>
+<UL>
+<LI><A NAME="SEC116" HREF="as.html#SEC116">Special Characters</A>
+</UL>
+</UL>
+<LI><A NAME="SEC117" HREF="as.html#SEC117">Acknowledgements</A>
+<LI><A NAME="SEC118" HREF="as.html#SEC118">Index</A>
+</UL>
+<HR>
+<P>This document was generated on 27 November 1995 using the
+<A HREF="http://wwwcn.cern.ch/dci/texi2html/">texi2html</A>
+translator version 1.39.</P>
+</BODY>
+</HTML>
